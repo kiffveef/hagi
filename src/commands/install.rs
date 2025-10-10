@@ -124,11 +124,11 @@ fn install_settings(claude_dir: &PathBuf, dry_run: bool) -> Result<()> {
 /// Update .gitignore in project root
 fn update_project_gitignore(project_dir: &PathBuf, dry_run: bool) -> Result<()> {
     let entries = vec![
-        ".claude/",
-        ".serena/",
-        "mcp.json",
-        "settings.json",
-        "settings.local.json",
+        "/.claude/",
+        "/.serena/",
+        "/mcp.json",
+        "/settings.json",
+        "/settings.local.json",
     ];
 
     if dry_run {
