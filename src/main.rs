@@ -103,18 +103,15 @@ fn main() -> Result<()> {
                 commands::install::install_project(dry_run)?;
             }
         }
-        Commands::Uninstall { global, yes: _ } => {
+        Commands::Uninstall { global, yes } => {
             if global {
-                println!("{}", "Uninstalling global configuration...".green());
-                println!("{}", "Not yet implemented".yellow());
+                commands::uninstall::uninstall_global(yes)?;
             } else {
-                println!("{}", "Uninstalling project configuration...".green());
-                println!("{}", "Not yet implemented".yellow());
+                commands::uninstall::uninstall_project(yes)?;
             }
         }
         Commands::Status => {
-            println!("{}", "Checking installation status...".green());
-            println!("{}", "Not yet implemented".yellow());
+            commands::status::status()?;
         }
         Commands::Update => {
             println!("{}", "Updating hagi...".green());
