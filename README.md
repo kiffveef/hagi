@@ -171,34 +171,6 @@ Options:
 
 ---
 
-## 開発状況
-
-### Phase 1: 基盤構築 ✅
-- [x] Rust CLI基盤
-- [x] 基本テンプレートファイル
-- [x] MCP設定テンプレート
-- [x] テンプレート埋め込み機能
-
-### Phase 2: コア機能 ✅
-- [x] `hagi install --global` / `hagi install -g` 実装
-- [x] `hagi install` 実装
-- [x] 安全対策機能(バックアップ、ドライラン)
-- [x] JSON設定のマージ機能
-- [x] `.gitignore`自動更新
-
-### Phase 3: 管理機能(計画中)
-- [ ] `hagi status`
-- [ ] `hagi uninstall`
-- [ ] MCP管理コマンド
-- [ ] 設定管理コマンド
-
-### Phase 4: 拡張機能(計画中)
-- [ ] `hagi update`
-- [ ] エラーハンドリング改善
-- [ ] 追加テンプレート(CLAUDE.md, instructions/, スラッシュコマンド)
-
----
-
 ## ライセンス
 
 MIT
