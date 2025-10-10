@@ -70,8 +70,12 @@ hagi install
 
 **セットアップ内容:**
 - `.claude/` ディレクトリ作成
-- `.claude/CLAUDE.md` - プロジェクトガイドライン
-- `.claude/instructions/` - 詳細インストラクション（10ファイル）
+- `.claude/CLAUDE.md` - プロジェクトガイドライン(テンプレート)
+- `.claude/instructions/` - 詳細インストラクション
+  - `git-workflow.md` - Git操作ルール(MUST/NEVER形式)
+  - `task-management.md` - TodoWriteツール使い方
+  - `tools.md` - 推奨ツール(rg/bat/fd等)
+- `.claude/commands/st.md` - sequential-thinkingスラッシュコマンド
 - `.claude/mcp.json` - プロジェクト用MCP設定
 - `.claude/settings.local.json` - パーミッション設定
 - `.gitignore` 更新(`/.claude/`, `/.serena/`, `/mcp.json`, `/settings.json`, `/settings.local.json`)

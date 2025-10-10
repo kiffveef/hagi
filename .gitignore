@@ -19,6 +19,9 @@ Thumbs.db
 /settings.json
 /settings.local.json
 
+# Exception: Track template files
+!templates/.claude/
+
 
 # Added by cargo
 
