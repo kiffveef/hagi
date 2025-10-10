@@ -26,8 +26,31 @@
 # Check current branch
 git branch --show-current
 
-# If on main, create feature branch
-git checkout -b feature/descriptive-name
+# If on main, create branch with appropriate prefix
+git checkout -b <prefix>/descriptive-name
+```
+
+**Branch Naming Convention:**
+- `feature/xxx` - New feature development
+- `fix/xxx` - Bug fixes
+- `refactor/xxx` - Code refactoring
+- `docs/xxx` - Documentation-only updates (typos, improvements, new guides)
+- `test/xxx` - Test infrastructure improvements (NOT for tests of new features)
+- `config/xxx` - Configuration changes
+- `perf/xxx` - Performance improvements
+
+**Important:**
+- When implementing a new feature in `feature/xxx`, include its tests AND documentation in the same branch
+- When fixing a bug in `fix/xxx`, include verification tests AND documentation updates in the same branch
+- `docs/xxx` is ONLY for: documentation-only changes (typo fixes, clarifications, new documentation without code changes)
+- `test/xxx` is ONLY for: adding tests to existing features, improving test infrastructure, increasing test coverage
+
+**Examples:**
+```bash
+git checkout -b feature/add-authentication  # includes code + tests + docs
+git checkout -b fix/login-error  # includes fix + verification tests + doc updates
+git checkout -b docs/fix-readme-typo  # documentation typo fix only
+git checkout -b test/improve-test-coverage  # adding tests to existing features
 ```
 
 ### 2. During Development

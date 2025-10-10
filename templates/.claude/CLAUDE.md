@@ -7,13 +7,7 @@
 
 ## ⚠️ 重要: 作業開始前の確認事項
 
-**Git操作ルール:**
-- ❌ mainブランチに直接コミットしない
-- ✅ 機能ブランチを作成してから作業開始
-- ✅ ファイル編集前に `git branch --show-current` でブランチ確認
-- ✅ ドキュメント更新後にmainにマージ
-
-**詳細は `.claude/instructions/git-workflow.md` を参照してください。**
+@instructions/git-workflow.md
 
 ---
 
@@ -41,29 +35,17 @@
 
 <!-- プロジェクト固有のブランチ運用ルール -->
 
-### ブランチ命名規則
-
-- `feature/xxx` - 新機能開発
-- `fix/xxx` - バグ修正
-- `refactor/xxx` - リファクタリング
-- `docs/xxx` - ドキュメント更新
-
 ---
 
 ## コミットメッセージ
 
 <!-- プロジェクト固有のコミットメッセージ形式 -->
 
-基本形式は `.claude/instructions/git-workflow.md` を参照してください。
-
 ---
 
 ## タスク管理
 
 <!-- プロジェクトのタスク管理方法 -->
-
-- `.claude/TODO.md` でタスク管理
-- TodoWriteツールと同期して使用
 
 ---
 
