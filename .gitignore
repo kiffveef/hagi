@@ -1,0 +1,17 @@
+# Rust
+/target/
+Cargo.lock
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude Code setup files (project root)
+/.claude/
+/mcp.json
+/settings.json
+/settings.local.json
