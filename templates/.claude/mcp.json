@@ -1,0 +1,51 @@
+{
+  "mcpServers": {
+    "sequential-thinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    },
+    "git": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-git",
+        "--repository",
+        "."
+      ],
+      "disabled": true
+    },
+    "github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "<your-github-token>"
+      },
+      "disabled": true
+    },
+    "context7": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upshift-protocol/context7"
+      ],
+      "disabled": true
+    },
+    "file-search": {
+      "command": "file-search-mcp",
+      "disabled": true
+    },
+    "serena": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "serena-mcp-server"
+      ],
+      "disabled": true
+    }
+  }
+}

@@ -18,3 +18,8 @@ Thumbs.db
 /mcp.json
 /settings.json
 /settings.local.json
+
+
+# Added by cargo
+
+/target
