@@ -186,6 +186,7 @@ hagi install --global --dry-run
 - `~/.claude/mcp.json`の作成・マージ
 - `~/.claude/settings.json`の作成・マージ
 - sequential-thinking MCPのみ有効化
+- 既存ファイルの自動バックアップ(タイムスタンプ付き、最新3世代のみ保持)
 
 ---
 
