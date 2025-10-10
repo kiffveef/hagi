@@ -2,6 +2,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use colored::*;
 
+mod commands;
 mod utils;
 
 #[derive(Parser)]
@@ -95,15 +96,10 @@ fn main() -> Result<()> {
 
     match cli.command {
         Commands::Install { global, dry_run } => {
-            if dry_run {
-                println!("{}", "[DRY RUN MODE]".yellow().bold());
-            }
             if global {
-                println!("{}", "Installing global configuration...".green());
-                println!("{}", "Not yet implemented".yellow());
+                commands::install::install_global(dry_run)?;
             } else {
-                println!("{}", "Installing project configuration...".green());
-                println!("{}", "Not yet implemented".yellow());
+                commands::install::install_project(dry_run)?;
             }
         }
         Commands::Uninstall { global, yes: _ } => {
