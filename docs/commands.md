@@ -1,0 +1,588 @@
+# hagiコマンドリファレンス
+
+hagiの全コマンド、オプション、使用例の詳細説明です。
+
+---
+
+## グローバルオプション
+
+### ヘルプ表示
+
+```bash
+hagi --help
+hagi -h
+```
+
+各コマンドの詳細ヘルプ:
+```bash
+hagi <COMMAND> --help
+hagi <COMMAND> -h
+```
+
+### バージョン表示
+
+```bash
+hagi --version
+hagi -V
+```
+
+---
+
+## install - インストール
+
+Claude Code向けの設定ファイルとテンプレートをインストールします。
+
+### グローバルセットアップ
+
+`~/.claude/`配下にMCP設定とパーミッション設定を配置します。
+
+```bash
+hagi install --global
+hagi install -g
+```
+
+**セットアップ内容:**
+- `~/.claude/mcp.json` - MCP設定(sequential-thinking、context7を有効化)
+- `~/.claude/settings.json` - パーミッション設定
+
+**動作:**
+1. `~/.claude/`ディレクトリを作成(存在しない場合)
+2. 既存ファイルのバックアップを作成(タイムスタンプ付き)
+3. 新規設定ファイルと既存設定をマージ
+4. 古いバックアップを自動削除(最新3世代のみ保持)
+
+**オプション:**
+
+**`--dry-run`**: ドライラン(変更内容の確認のみ)
+
+```bash
+hagi install -g --dry-run
+```
+
+実際にファイルを変更せず、以下の情報のみを表示します:
+- 作成されるファイル
+- バックアップされるファイル
+- マージされる設定内容
+
+### プロジェクトセットアップ
+
+プロジェクトルートに`.claude/`ディレクトリとテンプレートを配置します。
+
+```bash
+cd /path/to/your/project
+hagi install
+```
+
+**セットアップ内容:**
+- `.claude/` ディレクトリ作成
+- `.claude/CLAUDE.md` - プロジェクトガイドライン(テンプレート)
+- `.claude/instructions/` - 詳細インストラクション
+  - `git-workflow.md` - Git操作ルール(MUST/NEVER形式)
+  - `task-management.md` - TodoWriteツール使い方
+  - `tools.md` - 推奨ツール(rg/bat/fd等)
+- `.claude/commands/st.md` - sequential-thinkingスラッシュコマンド
+- `.claude/mcp.json` - プロジェクト用MCP設定
+- `.claude/settings.local.json` - パーミッション設定
+- `.gitignore` 更新(以下を追加)
+  - `/.claude/`
+  - `/.serena/`
+  - `/mcp.json`
+  - `/settings.json`
+  - `/settings.local.json`
+
+**動作:**
+1. プロジェクトルートに`.claude/`ディレクトリを作成
+2. テンプレートファイルをコピー(ディレクトリ構造を保持)
+3. `.gitignore`に必要なパターンを追加(既存エントリは保持)
+4. セットアップ完了メッセージを表示
+
+**オプション:**
+
+**`--dry-run`**: ドライラン(変更内容の確認のみ)
+
+```bash
+hagi install --dry-run
+```
+
+実際にファイルを作成せず、以下の情報のみを表示します:
+- 作成されるディレクトリ
+- コピーされるファイル一覧
+- `.gitignore`に追加されるパターン
+
+### 使用例
+
+**初回セットアップ(推奨フロー):**
+
+```bash
+# 1. グローバル設定をインストール(MCP設定)
+hagi install --global
+
+# 2. プロジェクトに移動
+cd ~/projects/my-rust-project
+
+# 3. プロジェクト設定をインストール
+hagi install
+
+# 4. Claude Codeを起動
+claude-code
+```
+
+**ドライランで確認してからインストール:**
+
+```bash
+# 変更内容を確認
+hagi install -g --dry-run
+
+# 問題なければ実行
+hagi install -g
+```
+
+**既存プロジェクトに追加:**
+
+```bash
+cd /path/to/existing/project
+hagi install
+# .gitignore、.claude/が作成される
+```
+
+---
+
+## uninstall - アンインストール
+
+hagiでインストールした設定を削除します。
+
+### グローバル設定の削除
+
+`~/.claude/`配下の設定を削除します。
+
+```bash
+hagi uninstall --global
+hagi uninstall -g
+```
+
+**削除対象:**
+- `~/.claude/mcp.json`
+- `~/.claude/settings.json`
+- `~/.claude/`ディレクトリ(空の場合)
+
+**動作:**
+1. 確認プロンプトを表示
+2. 削除前にバックアップを作成
+3. 指定ファイルを削除
+
+### プロジェクト設定の削除
+
+プロジェクトルートの`.claude/`ディレクトリを削除します。
+
+```bash
+hagi uninstall
+```
+
+**削除対象:**
+- `.claude/`ディレクトリ全体
+- `.gitignore`からhagi関連のパターンを削除
+  - `/.claude/`
+  - `/.serena/`
+  - `/mcp.json`
+  - `/settings.json`
+  - `/settings.local.json`
+
+**動作:**
+1. 確認プロンプトを表示
+2. 削除前にバックアップを作成
+3. `.claude/`ディレクトリを削除
+4. `.gitignore`から関連パターンを削除(他のエントリは保持)
+
+### オプション
+
+**`-y, --yes`**: 確認プロンプトをスキップ
+
+```bash
+hagi uninstall -y
+hagi uninstall --global -y
+```
+
+確認なしで即座に削除を実行します。
+
+### 使用例
+
+**プロジェクト設定のみ削除:**
+
+```bash
+cd /path/to/project
+hagi uninstall
+# 確認プロンプトが表示される
+```
+
+**グローバル設定を確認なしで削除:**
+
+```bash
+hagi uninstall -g -y
+# 即座に削除される
+```
+
+**完全にクリーンアップ:**
+
+```bash
+# プロジェクト設定を削除
+hagi uninstall
+
+# グローバル設定も削除
+hagi uninstall --global
+```
+
+---
+
+## status - ステータス確認
+
+hagiのインストール状態を確認します。
+
+```bash
+hagi status
+```
+
+**表示内容:**
+- グローバル設定のインストール状態
+  - `~/.claude/mcp.json`の存在確認
+  - `~/.claude/settings.json`の存在確認
+- プロジェクト設定のインストール状態
+  - `.claude/`ディレクトリの存在確認
+  - 各テンプレートファイルの存在確認
+- MCP設定の詳細
+  - 有効化されているMCPサーバー一覧
+  - 無効化されているMCPサーバー一覧
+- テンプレートファイルの状態
+  - `.claude/CLAUDE.md`
+  - `.claude/instructions/`
+  - `.claude/commands/`
+
+### 使用例
+
+**インストール状態の確認:**
+
+```bash
+cd /path/to/project
+hagi status
+```
+
+出力例:
+```
+[Global Configuration]
+✅ ~/.claude/mcp.json - installed
+✅ ~/.claude/settings.json - installed
+
+[Project Configuration]
+✅ .claude/ - installed
+✅ .claude/CLAUDE.md - installed
+✅ .claude/instructions/ - installed
+✅ .claude/commands/ - installed
+
+[MCP Servers]
+✅ sequential-thinking - enabled
+✅ context7 - enabled
+❌ serena - disabled
+❌ file-search - disabled
+❌ git - disabled
+❌ github - disabled
+```
+
+---
+
+## update - 更新
+
+hagiのテンプレートと設定を更新します。
+
+**⚠️ 将来実装予定**
+
+```bash
+hagi update
+```
+
+**予定される機能:**
+- テンプレートファイルの最新版への更新
+- MCP設定の新規サーバー追加
+- 既存プロジェクトへの変更反映オプション
+
+---
+
+## mcp - MCP管理
+
+MCPサーバーの管理コマンド。
+
+**⚠️ 将来実装予定**
+
+### list - MCPサーバー一覧
+
+```bash
+hagi mcp list
+```
+
+インストール済みMCPサーバーの一覧を表示します。
+
+**予定される出力:**
+```
+Name                Status    Description
+-------------------------------------------------
+sequential-thinking ✅ enabled  構造化思考支援
+context7            ✅ enabled  ライブラリドキュメント検索
+serena              ❌ disabled コード解析・セマンティック検索
+file-search         ❌ disabled 高速ファイル検索
+git                 ❌ disabled Git操作
+github              ❌ disabled GitHub連携
+```
+
+### info - MCPサーバー情報
+
+```bash
+hagi mcp info <SERVER_NAME>
+```
+
+特定のMCPサーバーの詳細情報を表示します。
+
+**例:**
+```bash
+hagi mcp info serena
+```
+
+**予定される出力:**
+```
+Name: serena
+Status: disabled
+Description: コード解析・セマンティック検索
+Command: npx -y serena-mcp-server
+Dependencies: Node.js v18+
+Cache: .serena/
+Documentation: https://github.com/...
+```
+
+### enable - MCPサーバー有効化
+
+```bash
+hagi mcp enable <SERVER_NAME>
+```
+
+指定したMCPサーバーを有効化します。
+
+**例:**
+```bash
+hagi mcp enable serena
+hagi mcp enable file-search
+```
+
+**動作:**
+1. `~/.claude/mcp.json`または`.claude/mcp.json`を読み込み
+2. 指定サーバーの`"disabled": true`を削除
+3. ファイルを保存(バックアップ付き)
+4. 再起動を促すメッセージを表示
+
+### disable - MCPサーバー無効化
+
+```bash
+hagi mcp disable <SERVER_NAME>
+```
+
+指定したMCPサーバーを無効化します。
+
+**例:**
+```bash
+hagi mcp disable serena
+```
+
+**動作:**
+1. `~/.claude/mcp.json`または`.claude/mcp.json`を読み込み
+2. 指定サーバーに`"disabled": true`を追加
+3. ファイルを保存(バックアップ付き)
+4. 再起動を促すメッセージを表示
+
+---
+
+## config - 設定管理
+
+hagiの設定管理コマンド。
+
+**⚠️ 将来実装予定**
+
+### show - 設定表示
+
+```bash
+hagi config show <CONFIG_TYPE>
+```
+
+指定した設定の内容を表示します。
+
+**例:**
+```bash
+hagi config show mcp        # MCP設定表示
+hagi config show global     # グローバル設定表示
+```
+
+### edit - 設定編集
+
+```bash
+hagi config edit <CONFIG_TYPE>
+```
+
+指定した設定をエディタで開きます。
+
+**例:**
+```bash
+hagi config edit mcp        # MCP設定編集
+```
+
+### validate - 設定検証
+
+```bash
+hagi config validate <CONFIG_TYPE>
+```
+
+設定ファイルの構文チェックと妥当性検証を行います。
+
+**例:**
+```bash
+hagi config validate mcp    # MCP設定検証
+```
+
+---
+
+## 実践的な使用例
+
+### ケース1: 新規プロジェクトのセットアップ
+
+```bash
+# 1. グローバル設定をインストール
+hagi install --global
+
+# 2. 新規プロジェクト作成
+cargo new my-project
+cd my-project
+
+# 3. プロジェクト設定をインストール
+hagi install
+
+# 4. 状態確認
+hagi status
+
+# 5. Claude Code起動
+claude-code
+```
+
+### ケース2: 既存プロジェクトへの追加
+
+```bash
+# 既存プロジェクトに移動
+cd ~/projects/existing-project
+
+# ドライランで確認
+hagi install --dry-run
+
+# 問題なければインストール
+hagi install
+
+# .gitignoreが更新されていることを確認
+bat -p .gitignore
+```
+
+### ケース3: 設定の更新
+
+```bash
+# グローバル設定を再インストール(マージされる)
+hagi install -g
+
+# プロジェクト設定を更新
+cd /path/to/project
+hagi install
+
+# 古いバックアップは自動削除される(最新3世代のみ保持)
+```
+
+### ケース4: クリーンアップ
+
+```bash
+# プロジェクト設定のみ削除
+cd /path/to/project
+hagi uninstall
+
+# グローバル設定も削除(確認なし)
+hagi uninstall -g -y
+```
+
+### ケース5: MCPサーバーの管理(将来実装)
+
+```bash
+# MCPサーバー一覧確認
+hagi mcp list
+
+# serenaを有効化
+hagi mcp enable serena
+
+# 詳細情報確認
+hagi mcp info serena
+
+# 状態確認
+hagi status
+
+# Claude Code再起動
+```
+
+---
+
+## トラブルシューティング
+
+### インストールに失敗する
+
+**症状:**
+```
+Error: Failed to create directory
+```
+
+**解決策:**
+1. ディレクトリの権限を確認
+2. `--dry-run`で何が起きるか確認
+3. 既存ファイルをバックアップしてから再実行
+
+### バックアップファイルが多すぎる
+
+**症状:**
+`.backup.20250110120000`のようなファイルが大量にある
+
+**解決策:**
+hagiは自動的に最新3世代のバックアップのみを保持します。古いバックアップは自動削除されますが、手動で削除したい場合:
+
+```bash
+# 古いバックアップを手動削除
+fd -e backup -X rm
+```
+
+### MCP設定が反映されない
+
+**症状:**
+`hagi install -g`後もMCPサーバーが動作しない
+
+**解決策:**
+1. Claude Codeを再起動
+2. MCP設定ファイルを確認
+   ```bash
+   bat -p ~/.claude/mcp.json
+   ```
+3. Node.js、uvがインストールされているか確認
+   ```bash
+   node --version
+   uv --version
+   ```
+
+詳細は[MCP導入ガイド](./mcp-setup.md)を参照してください。
+
+---
+
+## 関連ドキュメント
+
+- **[使い方ガイド](./usage.md)**: スラッシュコマンド(/st)の使い方、MCPサーバーの活用方法
+- **[MCP導入ガイド](./mcp-setup.md)**: MCPサーバーのインストール方法、設定、トラブルシューティング
+- **[README](../README.md)**: hagiの概要と基本的な使い方
+
+---
+
+## フィードバック
+
+コマンドに関する質問、バグ報告、機能要望は以下でお願いします:
+https://github.com/kiffveef/hagi/issues

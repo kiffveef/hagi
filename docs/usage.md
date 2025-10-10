@@ -218,5 +218,6 @@ Claude Codeを再起動してください。スラッシュコマンドは起動
 
 ## 次のステップ
 
+- [コマンドリファレンス](./commands.md): hagiコマンドの詳細説明
 - [MCP導入ガイド](./mcp-setup.md): MCPサーバーの詳細設定
-- [README](../README.md): hagiコマンドリファレンス
+- [README](../README.md): hagiの概要と基本的な使い方

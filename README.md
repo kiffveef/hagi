@@ -37,94 +37,26 @@ cargo install --git https://github.com/kiffveef/hagi hagi --force
 
 ---
 
-## 使い方
+## クイックスタート
 
 ### 1. グローバルセットアップ
 
-Claude Code用のグローバル設定を`~/.claude/`に配置します。
-
 ```bash
-# 設定をインストール
 hagi install --global
-# または
-hagi install -g
-
-# ドライラン（変更内容の確認のみ）
-hagi install -g --dry-run
 ```
 
-**セットアップ内容:**
-- `~/.claude/mcp.json` - MCP設定（sequential-thinkingのみ有効化）
-- `~/.claude/settings.json` - パーミッション設定
-
----
+`~/.claude/`配下にMCP設定とパーミッション設定を配置します。
 
 ### 2. プロジェクトセットアップ
-
-プロジェクトルートで実行し、`.claude/`ディレクトリとテンプレートを配置します。
 
 ```bash
 cd /path/to/your/project
 hagi install
 ```
 
-**セットアップ内容:**
-- `.claude/` ディレクトリ作成
-- `.claude/CLAUDE.md` - プロジェクトガイドライン(テンプレート)
-- `.claude/instructions/` - 詳細インストラクション
-  - `git-workflow.md` - Git操作ルール(MUST/NEVER形式)
-  - `task-management.md` - TodoWriteツール使い方
-  - `tools.md` - 推奨ツール(rg/bat/fd等)
-- `.claude/commands/st.md` - sequential-thinkingスラッシュコマンド
-- `.claude/mcp.json` - プロジェクト用MCP設定
-- `.claude/settings.local.json` - パーミッション設定
-- `.gitignore` 更新(`/.claude/`, `/.serena/`, `/mcp.json`, `/settings.json`, `/settings.local.json`)
+プロジェクトに`.claude/`ディレクトリとテンプレートを配置します。
 
----
-
-### 3. ステータス確認
-
-```bash
-hagi status
-```
-
-インストール状態、MCP設定、テンプレートの確認ができます。
-
----
-
-### 4. アンインストール
-
-```bash
-# プロジェクト設定を削除
-hagi uninstall
-
-# グローバル設定を削除
-hagi uninstall --global
-# または
-hagi uninstall -g
-
-# 確認なしで削除
-hagi uninstall -y
-```
-
----
-
-### 5. MCP管理（将来実装予定）
-
-```bash
-# MCPサーバー一覧
-hagi mcp list
-
-# MCPサーバー情報
-hagi mcp info serena
-
-# MCPサーバー有効化
-hagi mcp enable serena
-hagi mcp enable file-search
-
-# MCPサーバー無効化
-hagi mcp disable serena
-```
+詳細な使い方は[コマンドリファレンス](./docs/commands.md)を参照してください。
 
 ---
 
@@ -145,34 +77,26 @@ hagi mcp disable serena
 
 ## ドキュメント
 
+- **[コマンドリファレンス](./docs/commands.md)**: 全コマンドの詳細説明、オプション、使用例
 - **[使い方ガイド](./docs/usage.md)**: スラッシュコマンド(/st)の使い方、MCPサーバーの活用方法
 - **[MCP導入ガイド](./docs/mcp-setup.md)**: MCPサーバーのインストール方法、設定、トラブルシューティング
 - **インストールガイド** (作成予定): hagiのインストール詳細手順
-- **コマンドリファレンス** (作成予定): 全コマンドの詳細説明
 - **開発ガイド** (作成予定): hagiへの貢献方法
 
 ---
 
 ## コマンド一覧
 
-```
-hagi <COMMAND>
+| コマンド | 説明 |
+|---------|------|
+| `install` | グローバル/プロジェクト設定のインストール |
+| `uninstall` | 設定の削除 |
+| `status` | インストール状態確認 |
+| `update` | テンプレート更新(将来実装) |
+| `mcp` | MCP管理(将来実装) |
+| `config` | 設定管理(将来実装) |
 
-Commands:
-  install    Install hagi configuration (global or project-specific)
-  uninstall  Uninstall hagi configuration
-  status     Show installation status
-  update     Update hagi templates and configuration
-  mcp        MCP server management commands
-  config     Configuration management commands
-  help       Print this message or the help of the given subcommand(s)
-
-Options:
-  -h, --help     Print help
-  -V, --version  Print version
-```
-
-詳細は `hagi <COMMAND> --help` で確認できます。
+詳細は[コマンドリファレンス](./docs/commands.md)または`hagi <COMMAND> --help`で確認できます。
 
 ---
 
