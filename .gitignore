@@ -10,6 +10,9 @@ Cargo.lock
 .DS_Store
 Thumbs.db
 
+# Environment variables
+.env
+
 # Claude Code setup files (project root)
 /.claude/
 /mcp.json
