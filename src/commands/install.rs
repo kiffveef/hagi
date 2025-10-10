@@ -3,7 +3,7 @@ use colored::*;
 use std::env;
 use std::path::PathBuf;
 
-use crate::utils;
+use crate::{templates, utils};
 
 /// Install global configuration to ~/.claude/
 pub fn install_global(dry_run: bool) -> Result<()> {
@@ -15,7 +15,6 @@ pub fn install_global(dry_run: bool) -> Result<()> {
 
     // Get paths
     let claude_dir = utils::claude_dir()?;
-    let template_dir = get_template_dir()?;
 
     // Create ~/.claude/ directory
     if dry_run {
@@ -25,10 +24,10 @@ pub fn install_global(dry_run: bool) -> Result<()> {
     }
 
     // Install mcp.json
-    install_mcp_config(&claude_dir, &template_dir, dry_run)?;
+    install_mcp_config(&claude_dir, dry_run)?;
 
-    // Install settings.json (from settings.local.json template)
-    install_settings(&claude_dir, &template_dir, dry_run)?;
+    // Install settings.json (from settings.local.json template, renamed)
+    install_settings(&claude_dir, dry_run)?;
 
     if dry_run {
         println!("{}", "\nDry run completed. No files were modified.".yellow());
@@ -53,7 +52,6 @@ pub fn install_project(dry_run: bool) -> Result<()> {
     // Get paths
     let project_dir = env::current_dir().context("Failed to get current directory")?;
     let claude_dir = project_dir.join(".claude");
-    let template_dir = get_template_dir()?;
 
     // Create .claude/ directory
     if dry_run {
@@ -62,8 +60,8 @@ pub fn install_project(dry_run: bool) -> Result<()> {
         utils::ensure_dir(&claude_dir)?;
     }
 
-    // Copy template files
-    copy_project_templates(&claude_dir, &template_dir, dry_run)?;
+    // Copy all template files (preserving directory structure)
+    templates::copy_all_templates(&claude_dir, dry_run)?;
 
     // Update .gitignore
     update_project_gitignore(&project_dir, dry_run)?;
@@ -81,53 +79,12 @@ pub fn install_project(dry_run: bool) -> Result<()> {
     Ok(())
 }
 
-/// Get the template directory path
-fn get_template_dir() -> Result<PathBuf> {
-    // Try to find templates directory relative to the executable
-    let exe_path = env::current_exe().context("Failed to get executable path")?;
-
-    // When running with cargo run, exe is in target/debug/
-    // When installed, exe is in ~/.cargo/bin/
-    // Templates should be in the repository root
-
-    // For development: check if we're in the hagi repository
-    let mut template_dir = exe_path
-        .parent()
-        .and_then(|p| p.parent())
-        .and_then(|p| p.parent())
-        .map(|p| p.join("templates/.claude"))
-        .context("Failed to determine template directory")?;
-
-    if !template_dir.exists() {
-        // Try relative to current directory (for cargo run)
-        template_dir = PathBuf::from("templates/.claude");
-    }
-
-    if !template_dir.exists() {
-        anyhow::bail!(
-            "Template directory not found: {}\n\
-            Please ensure hagi is installed correctly or run from the repository root.",
-            template_dir.display()
-        );
-    }
-
-    Ok(template_dir)
-}
-
-/// Install MCP configuration
-fn install_mcp_config(
-    claude_dir: &PathBuf,
-    template_dir: &PathBuf,
-    dry_run: bool,
-) -> Result<()> {
+/// Install MCP configuration from embedded template
+fn install_mcp_config(claude_dir: &PathBuf, dry_run: bool) -> Result<()> {
     let target = claude_dir.join("mcp.json");
-    let template = template_dir.join("mcp.json");
-
-    if !template.exists() {
-        anyhow::bail!("Template not found: {}", template.display());
-    }
-
-    let template_content = utils::read_json_file(&template)?;
+    let template_str = templates::get_template("mcp.json")?;
+    let template_content: serde_json::Value = serde_json::from_str(template_str)
+        .context("Failed to parse mcp.json template")?;
 
     if dry_run {
         if target.exists() {
@@ -135,7 +92,7 @@ fn install_mcp_config(
         } else {
             println!("{} {}", "Would create:".yellow(), target.display());
         }
-        println!("  Template: {}", template.display());
+        println!("  Template: embedded mcp.json");
     } else {
         utils::merge_json_file(&target, &template_content)?;
     }
@@ -143,20 +100,12 @@ fn install_mcp_config(
     Ok(())
 }
 
-/// Install settings configuration
-fn install_settings(
-    claude_dir: &PathBuf,
-    template_dir: &PathBuf,
-    dry_run: bool,
-) -> Result<()> {
+/// Install settings configuration from embedded template (rename settings.local.json → settings.json)
+fn install_settings(claude_dir: &PathBuf, dry_run: bool) -> Result<()> {
     let target = claude_dir.join("settings.json");
-    let template = template_dir.join("settings.local.json");
-
-    if !template.exists() {
-        anyhow::bail!("Template not found: {}", template.display());
-    }
-
-    let template_content = utils::read_json_file(&template)?;
+    let template_str = templates::get_template("settings.local.json")?;
+    let template_content: serde_json::Value = serde_json::from_str(template_str)
+        .context("Failed to parse settings.local.json template")?;
 
     if dry_run {
         if target.exists() {
@@ -164,54 +113,9 @@ fn install_settings(
         } else {
             println!("{} {}", "Would create:".yellow(), target.display());
         }
-        println!("  Template: {}", template.display());
+        println!("  Template: embedded settings.local.json → settings.json");
     } else {
         utils::merge_json_file(&target, &template_content)?;
-    }
-
-    Ok(())
-}
-
-/// Copy project template files
-fn copy_project_templates(
-    claude_dir: &PathBuf,
-    template_dir: &PathBuf,
-    dry_run: bool,
-) -> Result<()> {
-    // For now, just copy mcp.json and settings.local.json
-    // CLAUDE.md and instructions/ will be added in Phase 2c
-
-    let files = vec![
-        ("mcp.json", "mcp.json"),
-        ("settings.local.json", "settings.local.json"),
-    ];
-
-    for (template_name, target_name) in files {
-        let template = template_dir.join(template_name);
-        let target = claude_dir.join(target_name);
-
-        if !template.exists() {
-            println!(
-                "{} Template not found: {} (skipping)",
-                "⚠".yellow(),
-                template.display()
-            );
-            continue;
-        }
-
-        if dry_run {
-            if target.exists() {
-                println!("{} {}", "Would overwrite:".yellow(), target.display());
-            } else {
-                println!("{} {}", "Would create:".yellow(), target.display());
-            }
-            println!("  From: {}", template.display());
-        } else {
-            if target.exists() {
-                utils::backup_file(&target)?;
-            }
-            utils::copy_file(&template, &target)?;
-        }
     }
 
     Ok(())
