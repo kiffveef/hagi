@@ -29,13 +29,10 @@ hagiは、Claude Codeの開発環境を素早くセットアップするため�
 cargo install --git https://github.com/kiffveef/hagi hagi
 ```
 
-### ソースからビルド
+### 更新
 
 ```bash
-git clone https://github.com/kiffveef/hagi.git
-cd hagi
-cargo build --release
-cargo install --path .
+cargo install --git https://github.com/kiffveef/hagi hagi --force
 ```
 
 ---
@@ -49,9 +46,11 @@ Claude Code用のグローバル設定を`~/.claude/`に配置します。
 ```bash
 # 設定をインストール
 hagi install --global
+# または
+hagi install -g
 
 # ドライラン（変更内容の確認のみ）
-hagi install --global --dry-run
+hagi install -g --dry-run
 ```
 
 **セットアップ内容:**
@@ -75,7 +74,7 @@ hagi install
 - `.claude/instructions/` - 詳細インストラクション（10ファイル）
 - `.claude/mcp.json` - プロジェクト用MCP設定
 - `.claude/settings.local.json` - パーミッション設定
-- `.gitignore` 更新
+- `.gitignore` 更新(`/.claude/`, `/.serena/`, `/mcp.json`, `/settings.json`, `/settings.local.json`)
 
 ---
 
@@ -97,9 +96,11 @@ hagi uninstall
 
 # グローバル設定を削除
 hagi uninstall --global
+# または
+hagi uninstall -g
 
 # 確認なしで削除
-hagi uninstall --yes
+hagi uninstall -y
 ```
 
 ---
@@ -176,21 +177,25 @@ Options:
 - [x] Rust CLI基盤
 - [x] 基本テンプレートファイル
 - [x] MCP設定テンプレート
+- [x] テンプレート埋め込み機能
 
-### Phase 2: コア機能（開発中）
-- [ ] `hagi install --global` 実装
-- [ ] `hagi install` 実装
-- [ ] 安全対策機能（バックアップ、ドライラン）
+### Phase 2: コア機能 ✅
+- [x] `hagi install --global` / `hagi install -g` 実装
+- [x] `hagi install` 実装
+- [x] 安全対策機能(バックアップ、ドライラン)
+- [x] JSON設定のマージ機能
+- [x] `.gitignore`自動更新
 
-### Phase 3: 管理機能（計画中）
+### Phase 3: 管理機能(計画中)
 - [ ] `hagi status`
 - [ ] `hagi uninstall`
 - [ ] MCP管理コマンド
 - [ ] 設定管理コマンド
 
-### Phase 4: 拡張機能（計画中）
+### Phase 4: 拡張機能(計画中)
 - [ ] `hagi update`
 - [ ] エラーハンドリング改善
+- [ ] 追加テンプレート(CLAUDE.md, instructions/, スラッシュコマンド)
 
 ---
 
