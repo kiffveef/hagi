@@ -3,6 +3,10 @@ use colored::*;
 use std::fs;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
+use std::time::SystemTime;
+
+/// Maximum number of backup files to keep (default)
+pub const DEFAULT_MAX_BACKUPS: usize = 3;
 
 /// Get the home directory path
 pub fn home_dir() -> Result<PathBuf> {
@@ -66,6 +70,68 @@ pub fn backup_file(path: &Path) -> Result<PathBuf> {
     Ok(backup_path)
 }
 
+/// Clean up old backup files, keeping only the most recent N backups
+pub fn cleanup_old_backups(original_path: &Path, max_backups: usize) -> Result<()> {
+    if !original_path.exists() {
+        return Ok(());
+    }
+
+    let parent_dir = original_path
+        .parent()
+        .context("Failed to get parent directory")?;
+
+    let filename = original_path
+        .file_name()
+        .and_then(|f| f.to_str())
+        .context("Invalid filename")?;
+
+    // Find all backup files for this original file
+    let backup_pattern = format!("{}.backup.", filename);
+    let mut backup_files: Vec<(PathBuf, SystemTime)> = Vec::new();
+
+    if let Ok(entries) = fs::read_dir(parent_dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                if name.starts_with(&backup_pattern) {
+                    if let Ok(metadata) = fs::metadata(&path) {
+                        if let Ok(modified) = metadata.modified() {
+                            backup_files.push((path, modified));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Sort by modification time (newest first)
+    backup_files.sort_by(|a, b| b.1.cmp(&a.1));
+
+    // Remove old backups beyond max_backups
+    let to_remove: Vec<_> = backup_files
+        .iter()
+        .skip(max_backups)
+        .map(|(path, _)| path)
+        .collect();
+
+    for path in to_remove {
+        fs::remove_file(path)
+            .with_context(|| format!("Failed to remove old backup: {}", path.display()))?;
+        println!("{} {}", "Removed old backup:".dimmed(), path.display());
+    }
+
+    if backup_files.len() > max_backups {
+        println!(
+            "{} Kept {} most recent backups for {}",
+            "Cleaned:".green(),
+            max_backups,
+            filename
+        );
+    }
+
+    Ok(())
+}
+
 /// Merge two JSON values (second value takes precedence for conflicts)
 pub fn merge_json(
     base: &mut serde_json::Value,
@@ -112,6 +178,8 @@ pub fn write_json_file(path: &Path, value: &serde_json::Value) -> Result<()> {
 pub fn merge_json_file(target_path: &Path, new_content: &serde_json::Value) -> Result<()> {
     let mut base = if target_path.exists() {
         backup_file(target_path)?;
+        // Clean up old backups after creating new one
+        cleanup_old_backups(target_path, DEFAULT_MAX_BACKUPS)?;
         read_json_file(target_path)?
     } else {
         serde_json::json!({})
