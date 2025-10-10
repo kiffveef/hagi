@@ -32,8 +32,7 @@
       "args": [
         "-y",
         "@upshift-protocol/context7"
-      ],
-      "disabled": true
+      ]
     },
     "file-search": {
       "command": "file-search-mcp",
