@@ -114,8 +114,7 @@ fn main() -> Result<()> {
             commands::status::status()?;
         }
         Commands::Update => {
-            println!("{}", "Updating hagi...".green());
-            println!("{}", "Not yet implemented".yellow());
+            commands::update::update()?;
         }
         Commands::Mcp { command } => match command {
             McpCommands::List => {

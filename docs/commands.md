@@ -290,15 +290,42 @@ hagi status
 
 ## update - 更新
 
-hagiのテンプレートと設定を更新します。
-
-**⚠️ 将来実装予定**
+hagiツール自体を最新版に更新します。
 
 ```bash
 hagi update
 ```
 
-**予定される機能:**
+**動作:**
+1. 現在のバージョンを表示
+2. 更新確認プロンプトを表示
+3. GitHub リポジトリから最新版を取得
+4. `cargo install --force`で上書きインストール
+5. 新しいバージョンを表示
+
+**出力例:**
+```
+Updating hagi...
+
+Current version: 0.1.0
+
+Do you want to update hagi to the latest version? [Y/n]: y
+
+Fetching latest version from GitHub...
+(cargo installの出力)
+
+✅ hagi updated successfully!
+
+New version:
+  hagi 0.2.0
+```
+
+**注意:**
+- インターネット接続が必要です
+- cargo がインストールされている必要があります
+- 更新には数分かかる場合があります
+
+**将来実装予定:**
 - テンプレートファイルの最新版への更新
 - MCP設定の新規サーバー追加
 - 既存プロジェクトへの変更反映オプション
