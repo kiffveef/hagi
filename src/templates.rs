@@ -19,24 +19,53 @@ pub fn get_template(filename: &str) -> Result<&'static str> {
 
 /// Copy all templates to target directory (preserving directory structure)
 pub fn copy_all_templates(target_dir: &Path, dry_run: bool) -> Result<()> {
-    copy_dir_recursive(&TEMPLATES, target_dir, dry_run)
+    copy_all_templates_with_skip(target_dir, dry_run, &[])
+}
+
+/// Copy all templates to target directory with skip list
+pub fn copy_all_templates_with_skip(target_dir: &Path, dry_run: bool, skip_paths: &[String]) -> Result<()> {
+    copy_dir_recursive(&TEMPLATES, target_dir, dry_run, skip_paths)
 }
 
 /// Recursively copy directory structure from embedded templates
-fn copy_dir_recursive(dir: &Dir, target_base: &Path, dry_run: bool) -> Result<()> {
+fn copy_dir_recursive(dir: &Dir, target_base: &Path, dry_run: bool, skip_paths: &[String]) -> Result<()> {
     for entry in dir.entries() {
         match entry {
             include_dir::DirEntry::Dir(sub_dir) => {
-                let target_subdir = target_base.join(sub_dir.path());
+                let relative_path = sub_dir.path();
+
+                // Check if this directory should be skipped
+                if should_skip(relative_path, skip_paths) {
+                    if dry_run {
+                        println!("{} {}", "Would skip directory:".yellow(), relative_path.display());
+                    } else {
+                        println!("{} {}", "Skipped directory:".yellow(), relative_path.display());
+                    }
+                    continue;
+                }
+
+                let target_subdir = target_base.join(relative_path);
                 if dry_run {
                     println!("{} {}", "Would create:".yellow(), target_subdir.display());
                 } else {
                     utils::ensure_dir(&target_subdir)?;
                 }
-                copy_dir_recursive(sub_dir, target_base, dry_run)?;
+                copy_dir_recursive(sub_dir, target_base, dry_run, skip_paths)?;
             }
             include_dir::DirEntry::File(file) => {
-                let target_file = target_base.join(file.path());
+                let relative_path = file.path();
+
+                // Check if this file should be skipped
+                if should_skip(relative_path, skip_paths) {
+                    if dry_run {
+                        println!("{} {}", "Would skip file:".yellow(), relative_path.display());
+                    } else {
+                        println!("{} {}", "Skipped file:".yellow(), relative_path.display());
+                    }
+                    continue;
+                }
+
+                let target_file = target_base.join(relative_path);
                 let content = file
                     .contents_utf8()
                     .context("Template file is not valid UTF-8")?;
@@ -63,4 +92,29 @@ fn copy_dir_recursive(dir: &Dir, target_base: &Path, dry_run: bool) -> Result<()
         }
     }
     Ok(())
+}
+
+/// Check if a path should be skipped based on skip_paths
+fn should_skip(path: &Path, skip_paths: &[String]) -> bool {
+    for skip in skip_paths {
+        let skip_path = Path::new(skip);
+
+        // Match exact file name or directory name
+        if path == skip_path {
+            return true;
+        }
+
+        // Match if path starts with skip_path (directory prefix)
+        if path.starts_with(skip_path) {
+            return true;
+        }
+
+        // Match file name only (for convenience)
+        if let Some(file_name) = path.file_name() {
+            if file_name.to_string_lossy() == skip.as_str() {
+                return true;
+            }
+        }
+    }
+    false
 }
