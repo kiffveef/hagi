@@ -254,6 +254,72 @@ pub fn update_gitignore(project_dir: &Path, entries: &[&str]) -> Result<()> {
     Ok(())
 }
 
+/// Expand shell-like environment variable syntax to absolute paths
+///
+/// Supports the following patterns:
+/// - `${HOME}` → actual home directory path
+/// - `${XDG_CACHE_HOME:-$HOME/.cache}` → XDG_CACHE_HOME or fallback
+/// - `${XDG_DATA_HOME:-$HOME/.local/share}` → XDG_DATA_HOME or fallback
+///
+/// # Examples
+/// ```
+/// let expanded = expand_env_vars("${HOME}/.config")?;
+/// // Returns: "/home/username/.config"
+/// ```
+pub fn expand_env_vars(input: &str) -> Result<String> {
+    let home = std::env::var("HOME")
+        .context("HOME environment variable not set")?;
+
+    let xdg_cache = std::env::var("XDG_CACHE_HOME")
+        .unwrap_or_else(|_| format!("{}/.cache", home));
+
+    let xdg_data = std::env::var("XDG_DATA_HOME")
+        .unwrap_or_else(|_| format!("{}/.local/share", home));
+
+    let mut result = input.to_string();
+
+    // Replace ${HOME}
+    result = result.replace("${HOME}", &home);
+
+    // Replace ${XDG_CACHE_HOME:-$HOME/.cache}
+    result = result.replace(
+        "${XDG_CACHE_HOME:-$HOME/.cache}",
+        &xdg_cache
+    );
+
+    // Replace ${XDG_DATA_HOME:-$HOME/.local/share}
+    result = result.replace(
+        "${XDG_DATA_HOME:-$HOME/.local/share}",
+        &xdg_data
+    );
+
+    Ok(result)
+}
+
+/// Recursively expand environment variables in JSON values
+///
+/// Traverses JSON structure and replaces shell-like environment variable syntax
+/// with absolute paths in all string values.
+pub fn expand_json_env_vars(value: &mut serde_json::Value) -> Result<()> {
+    match value {
+        serde_json::Value::String(s) => {
+            *s = expand_env_vars(s)?;
+        }
+        serde_json::Value::Array(arr) => {
+            for item in arr {
+                expand_json_env_vars(item)?;
+            }
+        }
+        serde_json::Value::Object(map) => {
+            for (_, v) in map {
+                expand_json_env_vars(v)?;
+            }
+        }
+        _ => {}
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
