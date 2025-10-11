@@ -5,7 +5,35 @@
 
 ---
 
-## ⚠️ 重要: 作業開始前の確認事項
+## 📋 Current Tasks
+
+@TODO.md
+
+---
+
+## Top-Level Rules
+
+@instructions/efficiency.md
+
+@instructions/communication.md
+
+@instructions/documentation.md
+
+@instructions/tools.md
+
+---
+
+## Programming Rules
+
+@instructions/code-quality.md
+
+@instructions/code-style.md
+
+@instructions/best-practices.md
+
+@instructions/task-management.md
+
+@instructions/security.md
 
 @instructions/git-workflow.md
 
