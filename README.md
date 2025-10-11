@@ -112,13 +112,6 @@ MIT
 
 ---
 
-## フィードバック・バグ報告
-
-Issue・Pull Requestは歓迎します:
-https://github.com/kiffveef/hagi/issues
-
----
-
 ## 参考リンク
 
 - [Claude Code公式ドキュメント](https://docs.claude.com/en/docs/claude-code/)
