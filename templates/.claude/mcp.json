@@ -66,14 +66,16 @@
       "disabled": true
     },
     "file-search": {
-      "command": "file-search-mcp",
+      "command": "${HOME}/.local/opt/mcp-servers/file-search-mcp/target/release/file-search-mcp",
       "disabled": true
     },
     "serena": {
-      "command": "npx",
+      "command": "uvx",
       "args": [
-        "-y",
-        "serena-mcp-server"
+        "--from",
+        "git+https://github.com/oraios/serena",
+        "serena",
+        "start-mcp-server"
       ],
       "disabled": true,
       "env": {
