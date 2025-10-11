@@ -309,8 +309,6 @@ hagi update
 
 MCPサーバーの管理コマンド。
 
-**⚠️ 将来実装予定**
-
 ### list - MCPサーバー一覧
 
 ```bash
@@ -319,16 +317,16 @@ hagi mcp list
 
 インストール済みMCPサーバーの一覧を表示します。
 
-**予定される出力:**
+**出力例:**
 ```
-Name                Status    Description
--------------------------------------------------
-sequential-thinking ✅ enabled  構造化思考支援
-context7            ✅ enabled  ライブラリドキュメント検索
-serena              ❌ disabled コード解析・セマンティック検索
-file-search         ❌ disabled 高速ファイル検索
-git                 ❌ disabled Git操作
-github              ❌ disabled GitHub連携
+MCP Servers:
+
+  sequential-thinking [enabled] - Structured thinking and problem-solving
+  context7 [enabled] - Library documentation and code examples
+  serena [disabled] - Code analysis and semantic search
+  file-search [disabled] - Fast file search and analysis
+  git [disabled] - Git operations and repository management
+  github [disabled] - GitHub integration (issues, PRs, releases)
 ```
 
 ### info - MCPサーバー情報
@@ -341,18 +339,17 @@ hagi mcp info <SERVER_NAME>
 
 **例:**
 ```bash
-hagi mcp info serena
+hagi mcp info github
 ```
 
-**予定される出力:**
+**出力例:**
 ```
-Name: serena
+MCP Server: github
 Status: disabled
-Description: コード解析・セマンティック検索
-Command: npx -y serena-mcp-server
-Dependencies: Node.js v18+
-Cache: .serena/
-Documentation: https://github.com/...
+Command: npx -y @modelcontextprotocol/server-github
+Environment:
+  GITHUB_PERSONAL_ACCESS_TOKEN: <your-github-token> (not set)
+Description: GitHub integration (issues, PRs, releases)
 ```
 
 ### enable - MCPサーバー有効化
@@ -370,10 +367,16 @@ hagi mcp enable file-search
 ```
 
 **動作:**
-1. `~/.claude/mcp.json`または`.claude/mcp.json`を読み込み
-2. 指定サーバーの`"disabled": true`を削除
-3. ファイルを保存(バックアップ付き)
-4. 再起動を促すメッセージを表示
+1. `~/.claude/mcp.json`を読み込み
+2. 指定サーバーの`"disabled": true`フィールドを削除
+3. バックアップを作成(タイムスタンプ付き)
+4. 古いバックアップを自動削除(最新3世代のみ保持)
+5. ファイルを保存
+6. 再起動を促すメッセージを表示
+
+**注意:**
+- 環境変数が必要なサーバー(github等)を有効化する際は警告が表示されます
+- 設定変更後はClaude Codeの再起動が必要です
 
 ### disable - MCPサーバー無効化
 
@@ -389,18 +392,22 @@ hagi mcp disable serena
 ```
 
 **動作:**
-1. `~/.claude/mcp.json`または`.claude/mcp.json`を読み込み
+1. `~/.claude/mcp.json`を読み込み
 2. 指定サーバーに`"disabled": true`を追加
-3. ファイルを保存(バックアップ付き)
-4. 再起動を促すメッセージを表示
+3. バックアップを作成(タイムスタンプ付き)
+4. 古いバックアップを自動削除(最新3世代のみ保持)
+5. ファイルを保存
+6. 再起動を促すメッセージを表示
+
+**注意:**
+- 重要なサーバー(sequential-thinking、context7)を無効化する際は警告が表示されます
+- 設定変更後はClaude Codeの再起動が必要です
 
 ---
 
 ## config - 設定管理
 
 hagiの設定管理コマンド。
-
-**⚠️ 将来実装予定**
 
 ### show - 設定表示
 
@@ -410,23 +417,31 @@ hagi config show <CONFIG_TYPE>
 
 指定した設定の内容を表示します。
 
+**対応する設定タイプ:**
+- `mcp` - `~/.claude/mcp.json` (MCP設定)
+- `global` - `~/.claude/settings.json` (グローバル設定)
+- `hook` - フック設定 (将来実装予定)
+
 **例:**
 ```bash
 hagi config show mcp        # MCP設定表示
 hagi config show global     # グローバル設定表示
 ```
 
-### edit - 設定編集
-
-```bash
-hagi config edit <CONFIG_TYPE>
+**出力例:**
 ```
+Configuration: mcp
+File: /home/user/.claude/mcp.json
 
-指定した設定をエディタで開きます。
-
-**例:**
-```bash
-hagi config edit mcp        # MCP設定編集
+{
+  "mcpServers": {
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+    },
+    ...
+  }
+}
 ```
 
 ### validate - 設定検証
@@ -435,12 +450,52 @@ hagi config edit mcp        # MCP設定編集
 hagi config validate <CONFIG_TYPE>
 ```
 
-設定ファイルの構文チェックと妥当性検証を行います。
+設定ファイルのJSON構文チェックを行います。
 
 **例:**
 ```bash
 hagi config validate mcp    # MCP設定検証
+hagi config validate global # グローバル設定検証
 ```
+
+**出力例:**
+```
+✅ Configuration is valid: /home/user/.claude/mcp.json
+```
+
+**エラー時:**
+```
+❌ Configuration is invalid: /home/user/.claude/mcp.json
+
+Error: Expected value at line 5 column 3
+
+Tip: Use 'jq' to format and validate JSON manually:
+  jq . /home/user/.claude/mcp.json
+```
+
+### edit - 設定編集
+
+```bash
+hagi config edit <CONFIG_TYPE>
+```
+
+指定した設定を`$EDITOR`で開きます。
+
+**例:**
+```bash
+hagi config edit mcp        # MCP設定編集
+hagi config edit global     # グローバル設定編集
+```
+
+**動作:**
+1. 設定ファイルのバックアップを作成
+2. 古いバックアップを自動削除(最新3世代のみ保持)
+3. `$EDITOR`でファイルを開く(`$EDITOR`未設定時はvim)
+4. 編集完了後、validateを実行して確認することを推奨
+
+**注意:**
+- 編集後は`hagi config validate`で構文チェックを推奨
+- 設定変更後はClaude Codeの再起動が必要です
 
 ---
 
@@ -506,7 +561,7 @@ hagi uninstall
 hagi uninstall -g -y
 ```
 
-### ケース5: MCPサーバーの管理(将来実装)
+### ケース5: MCPサーバーの管理
 
 ```bash
 # MCPサーバー一覧確認
@@ -521,7 +576,26 @@ hagi mcp info serena
 # 状態確認
 hagi status
 
-# Claude Code再起動
+# Claude Code再起動して設定を反映
+```
+
+### ケース6: 設定の確認と編集
+
+```bash
+# MCP設定の内容確認
+hagi config show mcp
+
+# 設定の妥当性検証
+hagi config validate mcp
+
+# MCP設定を編集
+hagi config edit mcp
+# (エディタが開く)
+
+# 編集後に検証
+hagi config validate mcp
+
+# Claude Code再起動して設定を反映
 ```
 
 ---
