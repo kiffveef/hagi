@@ -337,9 +337,43 @@ git clone https://github.com/doobidoo/mcp-memory-service.git
 cd mcp-memory-service
 uv sync
 
-# 3. 動作確認
+# 3. パッチ適用(HF_HOME環境変数問題の修正)
+# v8.4.3およびv8.5.0でHF_HOMEが上書きされる問題を修正
+curl -fsSL https://raw.githubusercontent.com/kiffveef/hagi/main/patches/mcp-memory-service-hf-home-fix.patch | git apply
+
+# 4. .env ファイルを作成
+curl -fsSL https://raw.githubusercontent.com/kiffveef/hagi/main/templates/mcp-memory-service/.env.template -o .env
+
+# または手動で .env を作成:
+cat > .env << 'EOF'
+# MCP Memory Service Configuration
+MCP_MEMORY_STORAGE_BACKEND=sqlite_vec
+HF_HOME=${HOME}/.cache/huggingface
+TRANSFORMERS_CACHE=${HOME}/.cache/huggingface
+SENTENCE_TRANSFORMERS_HOME=${HOME}/.cache/huggingface
+MCP_MEMORY_SQLITE_PATH=${HOME}/.local/share/mcp-memory-service/primary_sqlite_vec.db
+MCP_MEMORY_CHROMA_PATH=${HOME}/.local/share/mcp-memory-service/chroma_db
+MCP_MEMORY_BACKUPS_PATH=${HOME}/.local/share/mcp-memory-service/backups
+EOF
+
+# 5. データディレクトリを作成
+mkdir -p ~/.local/share/mcp-memory-service/{chroma_db,backups}
+
+# 6. 埋め込みモデルをダウンロード(初回のみ、~50MB)
+# sentence-transformers/all-MiniLM-L6-v2モデルを事前にダウンロード
+uv run python -c "from sentence_transformers import SentenceTransformer; print('Downloading model...'); model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2'); print('Model downloaded successfully')"
+
+# 7. 動作確認
 uv run memory server --help
 ```
+
+**パッチ詳細:**
+
+mcp-memory-serviceのv8.4.3およびv8.5.0には、低メモリシステム(8GB未満)で環境変数を無条件に上書きする問題があります。このパッチは、ユーザーが設定したHF_HOME等の環境変数を尊重するように修正します。
+
+- **影響を受けるバージョン**: v8.4.3, v8.5.0
+- **修正内容**: `server.py`の環境変数設定を既存の値を確認してから設定するように変更
+- **パッチファイル**: [patches/mcp-memory-service-hf-home-fix.patch](https://github.com/kiffveef/hagi/blob/main/patches/mcp-memory-service-hf-home-fix.patch)
 
 **データ保存場所:**
 - データベース: `~/.local/share/mcp-memory-service/chroma_db/`

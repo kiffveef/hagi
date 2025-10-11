@@ -1,0 +1,44 @@
+From: hagi <hagi@local>
+Date: Sat, 12 Oct 2025 01:00:00 +0000
+Subject: [PATCH] Fix HF_HOME override issue in low-memory systems
+
+This patch prevents mcp-memory-service from overriding user-configured
+HF_HOME, TRANSFORMERS_CACHE, and SENTENCE_TRANSFORMERS_HOME environment
+variables on systems with less than 8GB RAM.
+
+Without this fix, the server unconditionally sets these variables to
+non-existent paths, causing model loading failures even when models
+are properly cached.
+
+Issue: Low-memory system configuration overwrites user environment variables
+Fix: Check if variables are already set before applying defaults
+
+Affects: mcp-memory-service v8.4.3 and v8.5.0
+
+---
+ src/mcp_memory_service/server.py | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/src/mcp_memory_service/server.py b/src/mcp_memory_service/server.py
+index 8ed7f6e..276734b 100644
+--- a/src/mcp_memory_service/server.py
++++ b/src/mcp_memory_service/server.py
+@@ -273,9 +273,13 @@ def configure_environment():
+         logger.info("Configuring for low-memory system")
+         # Use BACKUPS_PATH parent directory for model caches
+         cache_base = os.path.dirname(BACKUPS_PATH)
+-        os.environ["TRANSFORMERS_CACHE"] = os.path.join(cache_base, "model_cache")
+-        os.environ["HF_HOME"] = os.path.join(cache_base, "hf_cache")
+-        os.environ["SENTENCE_TRANSFORMERS_HOME"] = os.path.join(cache_base, "st_cache")
++        # Only set if not already configured by user
++        if "TRANSFORMERS_CACHE" not in os.environ:
++            os.environ["TRANSFORMERS_CACHE"] = os.path.join(cache_base, "model_cache")
++        if "HF_HOME" not in os.environ:
++            os.environ["HF_HOME"] = os.path.join(cache_base, "hf_cache")
++        if "SENTENCE_TRANSFORMERS_HOME" not in os.environ:
++            os.environ["SENTENCE_TRANSFORMERS_HOME"] = os.path.join(cache_base, "st_cache")
+
+ # Configure environment before any imports that might use it
+ configure_environment()
+--
+2.43.0
