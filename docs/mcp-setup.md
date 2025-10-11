@@ -299,6 +299,33 @@ uv run memory server --help
 **データ保存場所:**
 - データベース: `~/.local/share/mcp-memory-service/chroma_db/`
 - バックアップ: `~/.local/share/mcp-memory-service/backups/`
+- Hugging Faceキャッシュ: `~/.cache/huggingface/`
+
+**環境変数の説明:**
+
+mcp-memory-serviceは以下の環境変数で動作を制御します(すべてXDG Base Directory準拠):
+
+- `MCP_MEMORY_STORAGE_BACKEND`: ストレージバックエンド
+  - 設定値: `sqlite_vec`(推奨)
+  - 用途: ベクトル検索エンジンの選択
+
+- `MCP_MEMORY_CHROMA_PATH`: データベース保存先
+  - デフォルト: `~/.local/share/mcp-memory-service/chroma_db/`
+  - XDG準拠: `${XDG_DATA_HOME:-$HOME/.local/share}/mcp-memory-service/chroma_db`
+  - 用途: 記憶データの永続化
+
+- `MCP_MEMORY_BACKUPS_PATH`: バックアップ保存先
+  - デフォルト: `~/.local/share/mcp-memory-service/backups/`
+  - XDG準拠: `${XDG_DATA_HOME:-$HOME/.local/share}/mcp-memory-service/backups`
+  - 用途: データのバックアップ
+
+- `HF_HOME`: Hugging Faceモデルキャッシュ
+  - デフォルト: `~/.cache/huggingface/`
+  - XDG準拠: `${XDG_CACHE_HOME:-$HOME/.cache}/huggingface`
+  - 用途: ONNX埋め込みモデルのキャッシュ
+  - **重要**: 未設定の場合、非推奨の`TRANSFORMERS_CACHE`が使用され警告が表示されます
+
+すべての環境変数は`~/.claude/mcp.json`に設定済みです。
 
 **有効化方法:**
 
@@ -586,6 +613,42 @@ Failed to start memory server
    cd ~/.local/opt/mcp-servers/mcp-memory-service
    uv run memory server
    ```
+
+---
+
+### mcp-memory-service で TRANSFORMERS_CACHE 警告
+
+**症状:**
+```
+FutureWarning: Using `TRANSFORMERS_CACHE` is deprecated and will be removed in v5 of Transformers. Use `HF_HOME` instead.
+```
+
+**原因:**
+- `HF_HOME`環境変数が未設定
+- Transformers v5で`TRANSFORMERS_CACHE`が削除される予定
+
+**解決方法:**
+
+最新のhagiテンプレートでは`HF_HOME`が設定済みです。以下で確認:
+
+```bash
+cat ~/.claude/mcp.json | grep -A 5 '"memory"'
+```
+
+`HF_HOME`が含まれていない場合、手動で追加:
+
+```json
+"memory": {
+  "env": {
+    "MCP_MEMORY_STORAGE_BACKEND": "sqlite_vec",
+    "MCP_MEMORY_CHROMA_PATH": "${XDG_DATA_HOME:-$HOME/.local/share}/mcp-memory-service/chroma_db",
+    "MCP_MEMORY_BACKUPS_PATH": "${XDG_DATA_HOME:-$HOME/.local/share}/mcp-memory-service/backups",
+    "HF_HOME": "${XDG_CACHE_HOME:-$HOME/.cache}/huggingface"
+  }
+}
+```
+
+変更後、Claude Codeを再起動すると警告が消えます。
 
 ---
 
