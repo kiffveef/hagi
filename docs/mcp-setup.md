@@ -40,14 +40,25 @@
 
 ## MCPサーバー一覧
 
+### 🔥 推奨構成(Windows + WSL2最適化)
+
+軽量・高速・完全ローカル動作を重視した構成です。
+
+| MCP | 用途 | インストール方法 | デフォルト状態 | 備考 |
+|-----|------|------------------|----------------|------|
+| sequential-thinking | 構造化思考支援 | npx (自動) | ✅ 有効 | 軽量、起動即座 |
+| context7 | 公式ドキュメント検索 | npx (自動) | ✅ 有効 | 軽量、API keyなしで基本機能利用可 |
+| one-search | Web検索 | npx (自動) | ❌ 無効 | DuckDuckGo推奨(Puppeteerなし) |
+| memory | 長期記憶管理 | uv + Git (手動) | ❌ 無効 | 完全ローカル(SQLite-vec + ONNX) |
+
+### その他のMCP
+
 | MCP | 用途 | インストール方法 | デフォルト状態 |
 |-----|------|------------------|----------------|
-| sequential-thinking | 構造化思考支援 | npx (自動) | ✅ 有効 |
 | serena | コード解析・セマンティック検索 | npx (自動) | ❌ 無効 |
 | file-search | 高速ファイル検索 | cargo install (手動) | ❌ 無効 |
 | git | Git操作 | uvx (自動) | ❌ 無効 |
 | github | GitHub連携 | npx (自動) | ❌ 無効 |
-| context7 | ライブラリドキュメント検索 | npx (自動) | ❌ 無効 |
 
 ---
 
@@ -159,14 +170,130 @@ echo "GITHUB_PERSONAL_ACCESS_TOKEN=your_token_here" > .env
 
 ---
 
-### 6. context7 (自動インストール)
+### 6. context7 (自動インストール、デフォルト有効)
+
+`hagi install --global`実行時にnpx経由で自動的にインストールされます。
+
+**手動確認:**
+```bash
+npx -y @upstash/context7-mcp
+```
+
+**特徴:**
+- 公式ドキュメント検索(バージョン指定対応)
+- API keyなしで基本機能が使える(制限あり)
+- 軽量、起動高速
+
+**API key設定(オプション):**
+
+より高度な機能を使用したい場合、`~/.claude/mcp.json`を編集:
+```json
+"context7": {
+  "env": {
+    "CONTEXT7_API_KEY": "your_api_key_here"
+  }
+}
+```
+
+---
+
+### 7. one-search (自動インストール、デフォルト無効)
 
 有効化時にnpx経由で自動的にインストールされます。
 
 **手動確認:**
 ```bash
-npx -y @upshift-protocol/context7
+npx -y one-search-mcp
 ```
+
+**特徴:**
+- マルチエンジンWeb検索(DuckDuckGo、Bing、SearXNG、Tavily)
+- Windows + WSL2推奨: DuckDuckGoプロバイダー(Puppeteerなし)
+
+**プロバイダー選択:**
+
+`~/.claude/mcp.json`で設定変更可能:
+```json
+"one-search": {
+  "disabled": false,
+  "env": {
+    "SEARCH_PROVIDER": "duckduckgo"  // 推奨: 軽量、高速
+  }
+}
+```
+
+**プロバイダー一覧:**
+- `duckduckgo` - 推奨(WSL2環境で軽量)
+- `bing` - Bing API keyが必要
+- `searxng` - セルフホストSearXNGインスタンスが必要
+- `tavily` - Tavily API keyが必要
+
+**有効化方法:**
+
+```bash
+# 将来のhagiコマンド(実装予定)
+hagi mcp enable one-search
+
+# または手動で~/.claude/mcp.jsonを編集
+# "disabled": true → false に変更
+```
+
+---
+
+### 8. memory (mcp-memory-service) (手動インストール、デフォルト無効)
+
+完全ローカルで動作する長期記憶管理システムです。
+
+**特徴:**
+- 完全ローカル動作(SQLite-vec + ONNX埋め込み)
+- 外部LLM不要
+- プライバシー保護(クラウドにデータ送信なし)
+- XDG Base Directory準拠
+- 軽量(~50MB)
+
+**前提条件:**
+- Python3
+- uv (Python package manager)
+- Git
+
+**インストール手順:**
+
+```bash
+# 1. リポジトリをクローン
+mkdir -p ~/.local/opt/mcp-servers
+cd ~/.local/opt/mcp-servers
+git clone https://github.com/doobidoo/mcp-memory-service.git
+
+# 2. 依存関係をインストール
+cd mcp-memory-service
+uv sync
+
+# 3. 動作確認
+uv run memory server --help
+```
+
+**データ保存場所:**
+- データベース: `~/.local/share/mcp-memory-service/chroma_db/`
+- バックアップ: `~/.local/share/mcp-memory-service/backups/`
+
+**有効化方法:**
+
+```bash
+# 将来のhagiコマンド(実装予定)
+hagi mcp enable memory
+
+# または手動で~/.claude/mcp.jsonを編集
+# "disabled": true → false に変更
+```
+
+**スラッシュコマンド連携:**
+
+`/research`コマンドがmemoryと自動連携します:
+- 調査結果を自動保存
+- 同一トピック検索時に過去の調査を表示
+- メモリ更新機能
+
+詳細は`templates/.claude/commands/research.md`を参照してください。
 
 ---
 
@@ -185,8 +312,15 @@ hagi install --global --dry-run
 **セットアップ内容:**
 - `~/.claude/mcp.json`の作成・マージ
 - `~/.claude/settings.json`の作成・マージ
-- sequential-thinking MCPのみ有効化
+- デフォルト有効MCP:
+  - sequential-thinking(構造化思考支援)
+  - context7(公式ドキュメント検索)
+- デフォルト無効MCP(手動で有効化可能):
+  - one-search(Web検索)
+  - memory(長期記憶管理)
+  - serena、file-search、git、github
 - 既存ファイルの自動バックアップ(タイムスタンプ付き、最新3世代のみ保持)
+- 依存関係チェック(Node.js、uv、Python3、Git)と警告表示
 
 ---
 
@@ -363,14 +497,130 @@ Failed to connect to MCP server
 
 ---
 
+### one-search接続エラー
+
+**症状:**
+```
+Failed to connect to one-search MCP
+```
+
+**解決方法:**
+1. Node.js確認:
+   ```bash
+   node --version  # v18以降推奨
+   ```
+
+2. プロバイダー設定確認:
+   ```bash
+   cat ~/.claude/mcp.json | jq '.mcpServers["one-search"].env'
+   ```
+
+3. DuckDuckGoプロバイダーに変更(WSL2推奨):
+   ```json
+   "one-search": {
+     "env": {
+       "SEARCH_PROVIDER": "duckduckgo"
+     }
+   }
+   ```
+
+4. Puppeteer依存のプロバイダーを避ける(WSL2環境)
+
+---
+
+### mcp-memory-service起動エラー
+
+**症状:**
+```
+Failed to start memory server
+```
+
+**解決方法:**
+1. インストール確認:
+   ```bash
+   ls ~/.local/opt/mcp-servers/mcp-memory-service/
+   ```
+
+2. uv環境確認:
+   ```bash
+   cd ~/.local/opt/mcp-servers/mcp-memory-service
+   uv sync
+   ```
+
+3. Python3確認:
+   ```bash
+   python3 --version
+   ```
+
+4. データディレクトリ作成:
+   ```bash
+   mkdir -p ~/.local/share/mcp-memory-service/{chroma_db,backups}
+   ```
+
+5. 手動起動テスト:
+   ```bash
+   cd ~/.local/opt/mcp-servers/mcp-memory-service
+   uv run memory server
+   ```
+
+---
+
+### context7 API制限
+
+**症状:**
+```
+Rate limit exceeded
+```
+
+**解決方法:**
+1. API keyなしの基本機能を使用している場合、レート制限があります
+
+2. API keyを取得して設定:
+   ```bash
+   # ~/.claude/mcp.jsonを編集
+   {
+     "context7": {
+       "env": {
+         "CONTEXT7_API_KEY": "your_api_key"
+       }
+     }
+   }
+   ```
+
+---
+
+### Windows + WSL2環境でのMCP起動遅延
+
+**症状:**
+- MCP起動に時間がかかる(3秒以上)
+
+**解決方法:**
+1. Docker依存のMCPを無効化
+2. DuckDuckGoプロバイダー使用(Puppeteerなし)
+3. npx版MCPを優先(sequential-thinking、context7、one-search)
+4. WSL2のメモリ制限を確認:
+   ```bash
+   # ~/.wslconfig
+   [wsl2]
+   memory=4GB
+   processors=2
+   ```
+
+---
+
 ## 参考リンク
 
+### 推奨構成(Phase 2d)
+- [context7 MCP](https://github.com/upstash/context7-mcp) - 公式ドキュメント検索
+- [one-search MCP](https://github.com/supercorp-ai/one-search-mcp) - マルチエンジンWeb検索
+- [mcp-memory-service](https://github.com/doobidoo/mcp-memory-service) - 完全ローカル長期記憶管理
+
+### その他のMCP
 - [sequential-thinking MCP](https://github.com/modelcontextprotocol/servers)
 - [serena MCP](https://github.com/serena-ai/serena-mcp)
 - [file-search MCP](https://github.com/Kurogoma4D/file-search-mcp)
 - [git MCP](https://github.com/modelcontextprotocol/servers)
 - [github MCP](https://github.com/modelcontextprotocol/servers)
-- [context7 MCP](https://github.com/upshift-protocol/context7)
 
 ---
 
