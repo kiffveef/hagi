@@ -123,9 +123,6 @@ fn cleanup_gitignore(project_dir: &std::path::Path) -> Result<()> {
     let hagi_patterns = vec![
         "/.claude/",
         "/.serena/",
-        "/mcp.json",
-        "/settings.json",
-        "/settings.local.json",
     ];
 
     let mut lines: Vec<String> = content.lines().map(|s| s.to_string()).collect();
