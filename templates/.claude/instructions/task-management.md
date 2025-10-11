@@ -1,5 +1,54 @@
 # Task Management
 
+## 🚨 CRITICAL: TodoWrite ↔ TODO.md Bidirectional Sync
+
+**THE MOST IMPORTANT RULE FOR /st --todo:**
+
+```bash
+# EVERY TIME you use TodoWrite tool:
+# 1. Use TodoWrite to update task status
+# 2. IMMEDIATELY write changes to .claude/TODO.md using Edit tool
+# 3. This is BIDIRECTIONAL - both MUST stay synchronized
+```
+
+**WHY THIS MATTERS:**
+- TodoWrite is session-only memory - lost when session ends
+- `.claude/TODO.md` is persistent storage across sessions
+- Missing sync = lost progress tracking
+- **This rule is violated frequently**
+
+**MANDATORY WORKFLOW:**
+```
+1. Read .claude/TODO.md (if exists)
+2. Use TodoWrite tool to update status
+3. **IMMEDIATELY Edit .claude/TODO.md** with same changes
+4. Repeat for EVERY TodoWrite call
+```
+
+**Example of CORRECT behavior:**
+```
+# User: /st --todo "Fix authentication bug"
+
+# STEP 1: Read existing TODO.md
+[Read .claude/TODO.md]
+
+# STEP 2: Update TodoWrite
+[TodoWrite: mark task as in_progress]
+
+# STEP 3: IMMEDIATELY update TODO.md
+[Edit .claude/TODO.md: mark same task as in_progress]
+
+# STEP 4: Do work...
+
+# STEP 5: Update TodoWrite when done
+[TodoWrite: mark task as completed]
+
+# STEP 6: IMMEDIATELY update TODO.md
+[Edit .claude/TODO.md: mark same task as completed]
+```
+
+---
+
 ## TodoWrite Tool Usage
 
 **When to use TodoWrite tool:**
@@ -38,10 +87,24 @@ Use these states to track progress:
 
 ## .claude/TODO.md Integration
 
-If `.claude/TODO.md` exists in the project:
-- Read it first before creating TodoWrite tasks
-- Synchronize TodoWrite with TODO.md content
-- Keep both in sync during task execution
+**CRITICAL REQUIREMENT - NOT OPTIONAL:**
+
+If `.claude/TODO.md` exists in the project, you MUST:
+
+1. ✅ **MUST read TODO.md FIRST** before any TodoWrite operation
+2. ✅ **MUST synchronize TodoWrite → TODO.md** after EVERY TodoWrite call
+3. ✅ **MUST use Edit tool immediately** - never delay TODO.md updates
+4. ✅ **MUST keep both in perfect sync** throughout task execution
+
+**NEVER do:**
+- ❌ NEVER use TodoWrite without reading TODO.md first
+- ❌ NEVER skip TODO.md update after TodoWrite
+- ❌ NEVER batch multiple TodoWrite updates before syncing to TODO.md
+- ❌ NEVER assume TODO.md will update automatically
+
+**This is BIDIRECTIONAL synchronization:**
+- TodoWrite → TODO.md (after every TodoWrite call)
+- TODO.md → TodoWrite (at start of /st --todo session)
 
 ## Example Usage
 
