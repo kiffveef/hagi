@@ -64,6 +64,101 @@ Claude Codeが以下のステップで問題を分析します:
 
 ---
 
+### /research - 統合調査 (Phase 2d)
+
+one-search + context7 + mcp-memory-serviceを組み合わせた包括的なリサーチコマンド。
+
+#### 基本的な使い方
+
+```
+/research Rust async programming
+/research "Axum0.7 CORS configuration"
+```
+
+#### ワークフロー
+
+1. **Step 0**: 自動メモリチェック(過去の調査を確認)
+2. **Step 1**: Web検索(one-search) - 実践例、チュートリアル
+3. **Step 2**: 公式ドキュメント(context7) - 正確な仕様
+4. **Step 3**: 統合・分析 - 両方の情報を総合
+5. **Step 3b**: 現在のコードベース統合(serena) - プロジェクトへの適用提案 [Phase 2e]
+6. **Step 4**: メモリ保存(mcp-memory-service) - 長期記憶に保存
+
+#### オプション
+
+```
+/research <topic> --no-save          # メモリに保存しない
+/research <topic> --force            # メモリチェックをスキップ
+/research <topic> --memory-only      # メモリ検索のみ
+```
+
+#### 特徴
+
+- 過去の調査結果を自動検出して再利用
+- 公式ドキュメント(context7)とWeb検索(one-search)の両方を活用
+- 調査結果を長期記憶に自動保存
+- 現在のプロジェクトへの適用提案(serena統合、Phase 2e)
+
+---
+
+### /code-pattern - パターン検索 (Phase 2e)
+
+serena + mcp-memory-serviceで過去のコーディングパターンを検索・分析します。
+
+#### 基本的な使い方
+
+```
+/code-pattern error handling in async functions
+/code-pattern "REST API pagination implementation"
+/code-pattern authentication middleware
+```
+
+#### ワークフロー
+
+1. **Step 1**: 現在のコードベース検索(serena) - 現在のプロジェクトのパターン
+2. **Step 2**: 過去パターン検索(mcp-memory-service) - 長期記憶からパターン検索
+3. **Step 3**: パターン比較・分析 - 実装アプローチの比較
+4. **Step 4**: 推奨事項 - ベストプラクティスと改善提案
+
+#### オプション
+
+```
+/code-pattern <description> --current-only   # 現在のコードベースのみ
+/code-pattern <description> --memory-only    # 過去パターンのみ
+```
+
+#### 特徴
+
+- 現在のコードと過去のパターンを横断的に検索
+- 実装アプローチの比較・分析
+- ベストプラクティスの提案
+- リファクタリング・改善の具体的な提案
+- パターン分析結果を長期記憶に保存
+
+#### 使用例
+
+```
+# エラーハンドリングパターンを検索
+/code-pattern error handling in async functions
+
+# 出力例:
+## Error Handling Pattern Analysis
+### Current Project (serena)
+- src/handlers.rs:45 - Result<T, E>パターン
+- src/api.rs:123 - anyhowパターン
+
+### Past Projects (memory)
+- web-api-v2: thiserrorカスタムエラー型
+- data-processor: バックトレース付きエラー
+
+### Recommendations
+1. thiserror + anyhowの組み合わせを推奨
+2. 具体的なリファクタリング提案
+3. 再利用可能なコンポーネント
+```
+
+---
+
 ## MCPサーバーの活用
 
 hagiでセットアップされるMCPサーバーの使い方を説明します。
@@ -96,20 +191,86 @@ hagiでセットアップされるMCPサーバーの使い方を説明します�
 
 Context7が自動的にTokioの公式ドキュメントから情報を取得します。
 
-### その他のMCPサーバー (デフォルト無効)
+### Phase 2d追加MCPサーバー (デフォルト無効)
 
-以下のMCPサーバーはデフォルトで無効化されています。必要に応じて有効化してください。
+#### one-search
 
-#### serena
-コード解析・セマンティック検索を提供。
+マルチエンジンWeb検索を提供。DuckDuckGo、Bing、SearXNG、Tavilyに対応。
+
+**用途:**
+- Web検索で実践例、チュートリアルを探す
+- `/research`コマンドと連携
 
 **有効化方法:**
-`.claude/mcp.json`または`~/.claude/mcp.json`の`serena`セクションから`"disabled": true`を削除
+```bash
+# 将来のhagiコマンド
+hagi mcp enable one-search
 
-**注意:**
-- `.serena/`ディレクトリにキャッシュが作成される
-- メモリ使用量が増加する可能性がある
-- `.gitignore`に`.serena/`が自動追加される
+# または手動で~/.claude/mcp.jsonを編集
+```
+
+**推奨設定:**
+Windows + WSL2環境では`DuckDuckGo`プロバイダーを推奨(Puppeteerなし、軽量)
+
+#### memory (mcp-memory-service)
+
+完全ローカルの長期記憶管理。SQLite-vec + ONNX埋め込み。
+
+**用途:**
+- 調査結果、コーディングパターンの長期保存
+- プロジェクト横断的な知識管理
+- `/research`、`/code-pattern`コマンドと連携
+
+**セットアップ:**
+```bash
+# 1. リポジトリクローン
+mkdir -p ~/.local/opt/mcp-servers
+git clone https://github.com/doobidoo/mcp-memory-service.git ~/.local/opt/mcp-servers/mcp-memory-service
+
+# 2. 依存関係インストール
+cd ~/.local/opt/mcp-servers/mcp-memory-service
+uv sync
+```
+
+**有効化方法:**
+```bash
+hagi mcp enable memory
+```
+
+**特徴:**
+- 完全ローカル(外部API不要、プライバシー保護)
+- 軽量(~50MB、Docker不要)
+- XDG Base Directory準拠
+
+### Phase 2e追加MCPサーバー (デフォルト無効)
+
+#### serena
+
+セマンティックコード解析・検索を提供。
+
+**用途:**
+- 現在のプロジェクトのコード検索・解析
+- `/code-pattern`コマンドで現在のパターン検索
+- `/research`コマンドStep 3bで適用提案
+
+**有効化方法:**
+```bash
+hagi mcp enable serena
+```
+
+**キャッシュ管理:**
+- グローバルキャッシュ: `~/.cache/serena` (XDG準拠)
+- プロジェクトキャッシュ: `.serena/` (自動的に`.gitignore`追加)
+- 定期クリーンアップ推奨: `find .serena/ -type f -mtime +30 -delete`
+
+**LSP対応言語:**
+Python、TypeScript/JavaScript、Rust、Go、PHP、Java、C/C++
+
+**連携:**
+- `memory` (mcp-memory-service)と組み合わせて短期・長期記憶統合
+- 現在のコード(serena) + 過去のパターン(memory)で最適解を提案
+
+### その他のMCPサーバー (デフォルト無効)
 
 #### file-search
 高速ファイル検索を提供。

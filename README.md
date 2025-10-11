@@ -10,7 +10,7 @@ hagiは、Claude Codeの開発環境を素早くセットアップするため�
 
 - **グローバルセットアップ**: `~/.claude/`配下にMCP設定とパーミッション設定を配置
 - **プロジェクトセットアップ**: プロジェクトごとの`.claude/`ディレクトリとテンプレートを配置
-- **MCP管理**: sequential-thinking、serena、file-search、git、github、context7の統合設定
+- **MCP管理**: sequential-thinking、context7(Phase 2d)、serena(Phase 2e)、one-search、memory、file-search、git、githubの統合設定
 - **安全な操作**: バックアップ自動作成・世代管理(最新3世代保持)、ドライラン、確認プロンプト機能
 
 ---
@@ -62,14 +62,16 @@ hagi install
 
 ## セットアップされるMCP
 
-| MCP | 用途 | デフォルト状態 |
-|-----|------|----------------|
-| sequential-thinking | 構造化思考支援 | ✅ 有効 |
-| context7 | ライブラリドキュメント検索 | ✅ 有効 |
-| serena | コード解析・セマンティック検索 | ❌ 無効 |
-| file-search | 高速ファイル検索 | ❌ 無効 |
-| git | Git操作 | ❌ 無効 |
-| github | GitHub連携 | ❌ 無効 |
+| MCP | 用途 | デフォルト状態 | 備考 |
+|-----|------|----------------|------|
+| sequential-thinking | 構造化思考支援 | ✅ 有効 | Phase 2a |
+| context7 | 公式ドキュメント検索 | ✅ 有効 | Phase 2d |
+| one-search | Web検索(DuckDuckGo他) | ❌ 無効 | Phase 2d、軽量 |
+| memory | 長期記憶管理(完全ローカル) | ❌ 無効 | Phase 2d、SQLite-vec |
+| serena | コード解析・セマンティック検索 | ❌ 無効 | Phase 2e、XDG準拠 |
+| file-search | 高速ファイル検索 | ❌ 無効 | Rust+Tantivy |
+| git | Git操作 | ❌ 無効 | uvx経由 |
+| github | GitHub連携 | ❌ 無効 | PAT必要 |
 
 詳細なインストール方法とトラブルシューティングは [MCP導入ガイド](./docs/mcp-setup.md) を参照してください。
 

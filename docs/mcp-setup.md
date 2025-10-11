@@ -50,12 +50,12 @@
 | context7 | 公式ドキュメント検索 | npx (自動) | ✅ 有効 | 軽量、API keyなしで基本機能利用可 |
 | one-search | Web検索 | npx (自動) | ❌ 無効 | DuckDuckGo推奨(Puppeteerなし) |
 | memory | 長期記憶管理 | uv + Git (手動) | ❌ 無効 | 完全ローカル(SQLite-vec + ONNX) |
+| serena | セマンティックコード解析 | npx (自動) | ❌ 無効 | XDG準拠、キャッシュ管理 |
 
 ### その他のMCP
 
 | MCP | 用途 | インストール方法 | デフォルト状態 |
 |-----|------|------------------|----------------|
-| serena | コード解析・セマンティック検索 | npx (自動) | ❌ 無効 |
 | file-search | 高速ファイル検索 | cargo install (手動) | ❌ 無効 |
 | git | Git操作 | uvx (自動) | ❌ 無効 |
 | github | GitHub連携 | npx (自動) | ❌ 無効 |
@@ -75,7 +75,7 @@ npx -y @modelcontextprotocol/server-sequential-thinking
 
 ---
 
-### 2. serena (自動インストール)
+### 2. serena (自動インストール、デフォルト無効) - Phase 2e
 
 有効化時にnpx経由で自動的にインストールされます。
 
@@ -84,10 +84,34 @@ npx -y @modelcontextprotocol/server-sequential-thinking
 npx -y serena-mcp-server
 ```
 
-**注意事項:**
-- プロジェクトルートに`.serena/`ディレクトリが作成されます
-- メモリ肥大化を防ぐため、`.gitignore`に自動追加されます
-- 定期的なクリーンアップ推奨(30日以上経過したファイル削除)
+**特徴:**
+- セマンティックコード検索・解析
+- LSP対応言語: Python、TypeScript/JavaScript、Rust、Go、PHP、Java、C/C++
+- プロジェクトごとのキャッシュ管理
+
+**キャッシュ管理:**
+- デフォルトキャッシュ: `~/.cache/serena` (XDG Base Directory準拠)
+- プロジェクトキャッシュ: `.serena/` (自動的に`.gitignore`に追加済み)
+- 定期クリーンアップ推奨: 30日以上経過したファイル削除
+
+**クリーンアップスクリプト:**
+```bash
+# プロジェクトルートで実行
+find .serena/ -type f -mtime +30 -delete
+```
+
+**有効化方法:**
+```bash
+# 将来のhagiコマンド(実装予定)
+hagi mcp enable serena
+
+# または手動で~/.claude/mcp.jsonを編集
+# "disabled": true → false に変更
+```
+
+**連携:**
+- `/code-pattern`コマンド: serena + mcp-memory-serviceで過去パターン検索
+- `/research`コマンド: Step 3bで現在のコードベースとの統合提案
 
 ---
 
@@ -610,14 +634,14 @@ Rate limit exceeded
 
 ## 参考リンク
 
-### 推奨構成(Phase 2d)
-- [context7 MCP](https://github.com/upstash/context7-mcp) - 公式ドキュメント検索
-- [one-search MCP](https://github.com/supercorp-ai/one-search-mcp) - マルチエンジンWeb検索
-- [mcp-memory-service](https://github.com/doobidoo/mcp-memory-service) - 完全ローカル長期記憶管理
+### 推奨構成(Phase 2d-2e)
+- [context7 MCP](https://github.com/upstash/context7-mcp) - 公式ドキュメント検索 (Phase 2d)
+- [one-search MCP](https://github.com/supercorp-ai/one-search-mcp) - マルチエンジンWeb検索 (Phase 2d)
+- [mcp-memory-service](https://github.com/doobidoo/mcp-memory-service) - 完全ローカル長期記憶管理 (Phase 2d)
+- [serena MCP](https://github.com/serena-ai/serena-mcp) - セマンティックコード解析 (Phase 2e)
 
 ### その他のMCP
 - [sequential-thinking MCP](https://github.com/modelcontextprotocol/servers)
-- [serena MCP](https://github.com/serena-ai/serena-mcp)
 - [file-search MCP](https://github.com/Kurogoma4D/file-search-mcp)
 - [git MCP](https://github.com/modelcontextprotocol/servers)
 - [github MCP](https://github.com/modelcontextprotocol/servers)
