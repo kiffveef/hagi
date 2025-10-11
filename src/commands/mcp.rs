@@ -106,15 +106,67 @@ pub fn info(name: &str) -> Result<()> {
     Ok(())
 }
 
-/// Enable an MCP server
-pub fn enable(name: &str) -> Result<()> {
+/// Enable multiple MCP servers
+pub fn enable_multiple(names: &[String]) -> Result<()> {
+    if names.is_empty() {
+        println!("{}", "❌ No MCP server names provided.".red());
+        println!("Usage: hagi mcp enable <NAME> [NAME...]");
+        return Ok(());
+    }
+
+    let mut success_count = 0;
+    let mut failed_count = 0;
+    let mut env_warnings = Vec::new();
+
+    for name in names {
+        match enable_single(name) {
+            Ok(needs_env) => {
+                success_count += 1;
+                if needs_env {
+                    env_warnings.push(name.clone());
+                }
+            }
+            Err(e) => {
+                println!("{} {} - {}", "❌".red(), name, e);
+                failed_count += 1;
+            }
+        }
+    }
+
+    // Summary
+    println!();
+    if success_count > 0 {
+        println!("{} {} server(s) enabled.", "✅".green(), success_count);
+    }
+    if failed_count > 0 {
+        println!("{} {} server(s) failed.", "❌".red(), failed_count);
+    }
+
+    if success_count > 0 {
+        println!();
+        println!("{}", "Note: Restart Claude Code to apply changes.".yellow());
+    }
+
+    // Environment variable warnings
+    if !env_warnings.is_empty() {
+        println!();
+        println!("{}", "⚠️ Warning: The following servers require environment variables:".yellow());
+        for name in &env_warnings {
+            println!("  - {}", name.cyan());
+        }
+        println!("Edit ~/.claude/mcp.json and configure required variables.");
+    }
+
+    Ok(())
+}
+
+/// Enable a single MCP server (internal function)
+fn enable_single(name: &str) -> Result<bool> {
     let claude_dir = utils::claude_dir()?;
     let mcp_path = claude_dir.join("mcp.json");
 
     if !mcp_path.exists() {
-        println!("{}", "❌ mcp.json not found.".red());
-        println!("Run 'hagi install --global' first.");
-        return Ok(());
+        return Err(anyhow::anyhow!("mcp.json not found. Run 'hagi install --global' first."));
     }
 
     let mut mcp_config = utils::read_json_file(&mcp_path)?;
@@ -123,18 +175,15 @@ pub fn enable(name: &str) -> Result<()> {
         .context("Invalid mcp.json structure")?;
 
     if !servers.contains_key(name) {
-        println!("{} {}", "❌ MCP server not found:".red(), name);
-        println!();
-        println!("Available servers:");
-        for server_name in servers.keys() {
-            println!("  - {}", server_name.cyan());
-        }
-        return Ok(());
+        return Err(anyhow::anyhow!("MCP server not found"));
     }
 
-    // Backup before modification
-    utils::backup_file(&mcp_path)?;
-    utils::cleanup_old_backups(&mcp_path, utils::DEFAULT_MAX_BACKUPS)?;
+    // Backup before modification (only on first server in batch)
+    static BACKUP_DONE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+    if !BACKUP_DONE.swap(true, std::sync::atomic::Ordering::SeqCst) {
+        utils::backup_file(&mcp_path)?;
+        utils::cleanup_old_backups(&mcp_path, utils::DEFAULT_MAX_BACKUPS)?;
+    }
 
     // Remove disabled field or set to false
     if let Some(server_config) = servers.get_mut(name) {
@@ -145,34 +194,73 @@ pub fn enable(name: &str) -> Result<()> {
 
     utils::write_json_file(&mcp_path, &mcp_config)?;
 
-    println!();
-    println!(
-        "{} MCP server '{}' enabled successfully!",
-        "✅".green(),
-        name.cyan().bold()
-    );
-    println!();
-    println!("{}", "Note: Restart Claude Code to apply changes.".yellow());
+    println!("{} MCP server '{}' enabled", "✅".green(), name.cyan().bold());
 
-    // Warning for servers requiring environment variables
-    if needs_env_setup(name) {
+    // Return whether this server needs env setup
+    Ok(needs_env_setup(name))
+}
+
+/// Disable multiple MCP servers
+pub fn disable_multiple(names: &[String]) -> Result<()> {
+    if names.is_empty() {
+        println!("{}", "❌ No MCP server names provided.".red());
+        println!("Usage: hagi mcp disable <NAME> [NAME...]");
+        return Ok(());
+    }
+
+    let mut success_count = 0;
+    let mut failed_count = 0;
+    let mut critical_warnings = Vec::new();
+
+    for name in names {
+        match disable_single(name) {
+            Ok(is_critical) => {
+                success_count += 1;
+                if is_critical {
+                    critical_warnings.push(name.clone());
+                }
+            }
+            Err(e) => {
+                println!("{} {} - {}", "❌".red(), name, e);
+                failed_count += 1;
+            }
+        }
+    }
+
+    // Summary
+    println!();
+    if success_count > 0 {
+        println!("{} {} server(s) disabled.", "✅".green(), success_count);
+    }
+    if failed_count > 0 {
+        println!("{} {} server(s) failed.", "❌".red(), failed_count);
+    }
+
+    if success_count > 0 {
         println!();
-        println!("{}", "⚠️ Warning: This server requires environment variables.".yellow());
-        println!("Edit ~/.claude/mcp.json and configure required variables.");
+        println!("{}", "Note: Restart Claude Code to apply changes.".yellow());
+    }
+
+    // Critical server warnings
+    if !critical_warnings.is_empty() {
+        println!();
+        println!("{}", "⚠️ Warning: You disabled recommended server(s):".yellow());
+        for name in &critical_warnings {
+            println!("  - {}", name.cyan());
+        }
+        println!("This may affect Claude Code functionality.");
     }
 
     Ok(())
 }
 
-/// Disable an MCP server
-pub fn disable(name: &str) -> Result<()> {
+/// Disable a single MCP server (internal function)
+fn disable_single(name: &str) -> Result<bool> {
     let claude_dir = utils::claude_dir()?;
     let mcp_path = claude_dir.join("mcp.json");
 
     if !mcp_path.exists() {
-        println!("{}", "❌ mcp.json not found.".red());
-        println!("Run 'hagi install --global' first.");
-        return Ok(());
+        return Err(anyhow::anyhow!("mcp.json not found. Run 'hagi install --global' first."));
     }
 
     let mut mcp_config = utils::read_json_file(&mcp_path)?;
@@ -181,18 +269,15 @@ pub fn disable(name: &str) -> Result<()> {
         .context("Invalid mcp.json structure")?;
 
     if !servers.contains_key(name) {
-        println!("{} {}", "❌ MCP server not found:".red(), name);
-        println!();
-        println!("Available servers:");
-        for server_name in servers.keys() {
-            println!("  - {}", server_name.cyan());
-        }
-        return Ok(());
+        return Err(anyhow::anyhow!("MCP server not found"));
     }
 
-    // Backup before modification
-    utils::backup_file(&mcp_path)?;
-    utils::cleanup_old_backups(&mcp_path, utils::DEFAULT_MAX_BACKUPS)?;
+    // Backup before modification (only on first server in batch)
+    static BACKUP_DONE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+    if !BACKUP_DONE.swap(true, std::sync::atomic::Ordering::SeqCst) {
+        utils::backup_file(&mcp_path)?;
+        utils::cleanup_old_backups(&mcp_path, utils::DEFAULT_MAX_BACKUPS)?;
+    }
 
     // Set disabled to true
     if let Some(server_config) = servers.get_mut(name) {
@@ -203,26 +288,10 @@ pub fn disable(name: &str) -> Result<()> {
 
     utils::write_json_file(&mcp_path, &mcp_config)?;
 
-    println!();
-    println!(
-        "{} MCP server '{}' disabled successfully!",
-        "✅".green(),
-        name.cyan().bold()
-    );
-    println!();
-    println!("{}", "Note: Restart Claude Code to apply changes.".yellow());
+    println!("{} MCP server '{}' disabled", "✅".green(), name.cyan().bold());
 
-    // Warning for critical servers
-    if is_critical_server(name) {
-        println!();
-        println!(
-            "{}",
-            "⚠️ Warning: You disabled a recommended server.".yellow()
-        );
-        println!("This may affect Claude Code functionality.");
-    }
-
-    Ok(())
+    // Return whether this is a critical server
+    Ok(is_critical_server(name))
 }
 
 /// Get description for a known MCP server

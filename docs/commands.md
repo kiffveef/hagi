@@ -412,52 +412,120 @@ Description: GitHub integration (issues, PRs, releases)
 ### enable - MCPサーバー有効化
 
 ```bash
-hagi mcp enable <SERVER_NAME>
+hagi mcp enable <SERVER_NAME> [SERVER_NAME...]
 ```
 
-指定したMCPサーバーを有効化します。
+指定したMCPサーバーを有効化します。複数のサーバーを同時に指定できます。
 
 **例:**
 ```bash
+# 単一サーバーを有効化
 hagi mcp enable serena
-hagi mcp enable file-search
+
+# 複数のサーバーを同時に有効化
+hagi mcp enable serena file-search git
+
+# 全てのサーバーを有効化
+hagi mcp enable serena file-search git github memory
 ```
 
 **動作:**
 1. `~/.claude/mcp.json`を読み込み
 2. 指定サーバーの`"disabled": true`フィールドを削除
-3. バックアップを作成(タイムスタンプ付き)
+3. バックアップを作成(タイムスタンプ付き、バッチ処理時は1回のみ)
 4. 古いバックアップを自動削除(最新3世代のみ保持)
 5. ファイルを保存
-6. 再起動を促すメッセージを表示
+6. 成功/失敗の集計を表示
+7. 再起動を促すメッセージを表示
+
+**出力例:**
+```bash
+$ hagi mcp enable serena file-search git
+✅ MCP server 'serena' enabled
+✅ MCP server 'file-search' enabled
+✅ MCP server 'git' enabled
+
+✅ 3 server(s) enabled.
+
+Note: Restart Claude Code to apply changes.
+```
+
+**エラー処理:**
+存在しないサーバー名を指定した場合、そのサーバーのみエラーとなり、他のサーバーは正常に処理されます。
+
+```bash
+$ hagi mcp enable serena invalid-name file-search
+✅ MCP server 'serena' enabled
+❌ invalid-name - MCP server not found
+✅ MCP server 'file-search' enabled
+
+✅ 2 server(s) enabled.
+❌ 1 server(s) failed.
+
+Note: Restart Claude Code to apply changes.
+```
 
 **注意:**
-- 環境変数が必要なサーバー(github等)を有効化する際は警告が表示されます
+- 環境変数が必要なサーバー(github等)を有効化する際は集約された警告が表示されます
 - 設定変更後はClaude Codeの再起動が必要です
 
 ### disable - MCPサーバー無効化
 
 ```bash
-hagi mcp disable <SERVER_NAME>
+hagi mcp disable <SERVER_NAME> [SERVER_NAME...]
 ```
 
-指定したMCPサーバーを無効化します。
+指定したMCPサーバーを無効化します。複数のサーバーを同時に指定できます。
 
 **例:**
 ```bash
+# 単一サーバーを無効化
 hagi mcp disable serena
+
+# 複数のサーバーを同時に無効化
+hagi mcp disable serena file-search git
+
+# 使わないサーバーをまとめて無効化
+hagi mcp disable git github memory
 ```
 
 **動作:**
 1. `~/.claude/mcp.json`を読み込み
 2. 指定サーバーに`"disabled": true`を追加
-3. バックアップを作成(タイムスタンプ付き)
+3. バックアップを作成(タイムスタンプ付き、バッチ処理時は1回のみ)
 4. 古いバックアップを自動削除(最新3世代のみ保持)
 5. ファイルを保存
-6. 再起動を促すメッセージを表示
+6. 成功/失敗の集計を表示
+7. 再起動を促すメッセージを表示
+
+**出力例:**
+```bash
+$ hagi mcp disable file-search git github
+✅ MCP server 'file-search' disabled
+✅ MCP server 'git' disabled
+✅ MCP server 'github' disabled
+
+✅ 3 server(s) disabled.
+
+Note: Restart Claude Code to apply changes.
+```
+
+**エラー処理:**
+存在しないサーバー名を指定した場合、そのサーバーのみエラーとなり、他のサーバーは正常に処理されます。
+
+```bash
+$ hagi mcp disable serena invalid-name
+✅ MCP server 'serena' disabled
+❌ invalid-name - MCP server not found
+
+✅ 1 server(s) disabled.
+❌ 1 server(s) failed.
+
+Note: Restart Claude Code to apply changes.
+```
 
 **注意:**
-- 重要なサーバー(sequential-thinking、context7)を無効化する際は警告が表示されます
+- 重要なサーバー(sequential-thinking、context7)を無効化する際は集約された警告が表示されます
 - 設定変更後はClaude Codeの再起動が必要です
 
 ---
@@ -624,11 +692,17 @@ hagi uninstall -g -y
 # MCPサーバー一覧確認
 hagi mcp list
 
-# serenaを有効化
+# 単一サーバーを有効化
 hagi mcp enable serena
+
+# 複数のサーバーを同時に有効化
+hagi mcp enable serena file-search git
 
 # 詳細情報確認
 hagi mcp info serena
+
+# 使わないサーバーをまとめて無効化
+hagi mcp disable git github memory
 
 # 状態確認
 hagi status
