@@ -67,10 +67,16 @@ enum McpCommands {
     List,
     /// Show MCP server information
     Info { name: String },
-    /// Enable MCP server
-    Enable { name: String },
-    /// Disable MCP server
-    Disable { name: String },
+    /// Enable MCP server(s)
+    Enable {
+        /// MCP server name(s) to enable
+        names: Vec<String>,
+    },
+    /// Disable MCP server(s)
+    Disable {
+        /// MCP server name(s) to disable
+        names: Vec<String>,
+    },
 }
 
 #[derive(Subcommand)]
@@ -126,11 +132,11 @@ fn main() -> Result<()> {
             McpCommands::Info { name } => {
                 commands::mcp::info(&name)?;
             }
-            McpCommands::Enable { name } => {
-                commands::mcp::enable(&name)?;
+            McpCommands::Enable { names } => {
+                commands::mcp::enable_multiple(&names)?;
             }
-            McpCommands::Disable { name } => {
-                commands::mcp::disable(&name)?;
+            McpCommands::Disable { names } => {
+                commands::mcp::disable_multiple(&names)?;
             }
         },
         Commands::Config { command } => match command {
