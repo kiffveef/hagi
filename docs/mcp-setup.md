@@ -75,13 +75,20 @@ npx -y @modelcontextprotocol/server-sequential-thinking
 
 ---
 
-### 2. serena (自動インストール、デフォルト無効) - Phase 2e
+### 2. serena (uvx経由インストール、デフォルト無効) - Phase 2e
 
-有効化時にnpx経由で自動的にインストールされます。
+有効化時にuvx経由でGitHubリポジトリから自動的にインストールされます。
+
+**前提条件:**
+- uv (Python package manager)
+
+**インストール方法:**
+
+serenaはuvxが自動的にGitHubから取得するため、手動インストールは不要です。
 
 **手動確認:**
 ```bash
-npx -y serena-mcp-server
+uvx --from git+https://github.com/oraios/serena serena start-mcp-server --help
 ```
 
 **特徴:**
@@ -90,7 +97,7 @@ npx -y serena-mcp-server
 - プロジェクトごとのキャッシュ管理
 
 **キャッシュ管理:**
-- デフォルトキャッシュ: `~/.cache/serena` (XDG Base Directory準拠)
+- デフォルトキャッシュ: `~/.cache/serena/`
 - プロジェクトキャッシュ: `.serena/` (自動的に`.gitignore`に追加済み)
 - 定期クリーンアップ推奨: 30日以上経過したファイル削除
 
@@ -102,7 +109,6 @@ find .serena/ -type f -mtime +30 -delete
 
 **有効化方法:**
 ```bash
-# 将来のhagiコマンド(実装予定)
 hagi mcp enable serena
 
 # または手動で~/.claude/mcp.jsonを編集
@@ -113,36 +119,73 @@ hagi mcp enable serena
 - `/code-pattern`コマンド: serena + mcp-memory-serviceで過去パターン検索
 - `/research`コマンド: Step 3bで現在のコードベースとの統合提案
 
+**トラブルシューティング:**
+
+uvが見つからない場合:
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+source ~/.cargo/env
+```
+
+初回起動が遅い場合:
+- GitHubからクローンするため初回は時間がかかります
+- 2回目以降はuvxがキャッシュするため高速になります
+
 ---
 
-### 3. file-search (手動インストール必須)
+### 3. file-search (手動ビルド必須、上級者向け)
+
+**リポジトリ:** https://github.com/Kurogoma4D/file-search-mcp
+
+**特徴:**
+- Rust + Tantivy実装による高速全文検索
+- スコアベースのランキング
+- バイナリファイル自動除外
+
+⚠️ **注意:** ソースからのビルドが必要です。事前ビルド済みバイナリは提供されていません。
+
+**前提条件:**
+- Rust toolchain (rustup経由)
 
 **インストール手順:**
 
-#### 方法1: cargo install (推奨)
 ```bash
-cargo install --git https://github.com/Kurogoma4D/file-search-mcp.git
-```
+# 1. Rustツールチェインをインストール(未インストールの場合)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source ~/.cargo/env
 
-#### 方法2: ソースからビルド
-```bash
+# 2. インストール先ディレクトリを作成
+mkdir -p ~/.local/opt/mcp-servers
+
+# 3. リポジトリクローン
+cd ~/.local/opt/mcp-servers
 git clone https://github.com/Kurogoma4D/file-search-mcp.git
 cd file-search-mcp
+
+# 4. リリースビルド
 cargo build --release
-# バイナリをパスに追加
-cp target/release/file-search-mcp ~/.cargo/bin/
+
+# 5. バイナリ確認
+ls -la target/release/file-search-mcp
 ```
 
-**インストール確認:**
+**有効化方法:**
 ```bash
-which file-search-mcp
-# 出力例: /home/user/.cargo/bin/file-search-mcp
+hagi mcp enable file-search
+
+# または手動で~/.claude/mcp.jsonを編集
+# "disabled": true → false に変更
 ```
 
-**パスが通っていない場合:**
+**トラブルシューティング:**
+
+ビルドエラーが出る場合:
 ```bash
-export PATH="$HOME/.cargo/bin:$PATH"
-# .bashrcや.zshrcに追加推奨
+# Rustツールチェインを最新化
+rustup update
+
+# クリーンビルド
+cargo clean && cargo build --release
 ```
 
 ---
@@ -163,6 +206,9 @@ uvx mcp-server-git --repository .
 
 ### 5. github (自動インストール + PAT設定)
 
+⚠️ **非推奨警告:**
+現在使用しているnpmパッケージ`@modelcontextprotocol/server-github`は非推奨です。GitHubは公式MCPを`github/github-mcp-server`に移行していますが、DockerまたはHTTP経由での利用が必要なため、hagiの軽量セットアップの方針に合わず、既存設定を維持しています。
+
 有効化時にnpx経由で自動的にインストールされます。
 
 **前提条件:**
@@ -178,12 +224,7 @@ uvx mcp-server-git --repository .
 
 **設定方法:**
 
-プロジェクトルートに`.env`ファイルを作成:
-```bash
-echo "GITHUB_PERSONAL_ACCESS_TOKEN=your_token_here" > .env
-```
-
-または、`~/.claude/mcp.json`を直接編集:
+`~/.claude/mcp.json`を直接編集:
 ```json
 "github": {
   "env": {
@@ -191,6 +232,10 @@ echo "GITHUB_PERSONAL_ACCESS_TOKEN=your_token_here" > .env
   }
 }
 ```
+
+**将来的な対応:**
+- パッケージが削除された場合は、GitHub公式MCPへの移行を検討
+- または別のGitHub連携ツールへの切り替えを検討
 
 ---
 
