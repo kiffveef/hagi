@@ -26,9 +26,14 @@ If the user includes `--search` in their request:
 
 If the user includes `--todo` in their request:
 - MUST use TodoWrite tool to track progress through each step
-- If `.claude/TODO.md` exists in the project, read it first and synchronize with TodoWrite tool
+- If `.claude/TODO.md` exists in the project:
+  1. Read `.claude/TODO.md` first
+  2. Use TodoWrite tool to update task status
+  3. **IMMEDIATELY write back changes to `.claude/TODO.md` using Edit tool**
+  4. This is BIDIRECTIONAL synchronization - both tools must stay in sync
 - Create todos at the beginning with all identified steps
 - Update todo status as you progress through the analysis
 - Mark each step as completed immediately after finishing it
+- **CRITICAL**: Every TodoWrite call MUST be followed by updating `.claude/TODO.md`
 
 Apply sequential thinking to analyze and solve the problem presented by the user.
