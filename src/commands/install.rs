@@ -103,8 +103,12 @@ pub fn install_project(dry_run: bool, skip_paths: &[String]) -> Result<()> {
 fn install_mcp_config(claude_dir: &PathBuf, dry_run: bool) -> Result<()> {
     let target = claude_dir.join("mcp.json");
     let template_str = templates::get_template("mcp.json")?;
-    let template_content: serde_json::Value = serde_json::from_str(template_str)
+    let mut template_content: serde_json::Value = serde_json::from_str(template_str)
         .context("Failed to parse mcp.json template")?;
+
+    // Expand environment variables (${HOME}, ${XDG_CACHE_HOME:-...}, etc.)
+    utils::expand_json_env_vars(&mut template_content)
+        .context("Failed to expand environment variables in mcp.json")?;
 
     if dry_run {
         if target.exists() {
@@ -112,7 +116,7 @@ fn install_mcp_config(claude_dir: &PathBuf, dry_run: bool) -> Result<()> {
         } else {
             println!("{} {}", "Would create:".yellow(), target.display());
         }
-        println!("  Template: embedded mcp.json");
+        println!("  Template: embedded mcp.json (with environment variables expanded)");
     } else {
         utils::merge_json_file(&target, &template_content)?;
     }
