@@ -60,6 +60,7 @@
       "mcp__one-search__one_search",
       "mcp__one-search__one_scrape",
       "mcp__one-search__one_map",
+      "mcp__memory__*",
       "mcp__sequential-thinking__*",
       "mcp__git__*",
       "mcp__github__*",
