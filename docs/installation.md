@@ -47,11 +47,6 @@ curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
 sudo apt-get install -y nodejs
 ```
 
-**macOS (Homebrew):**
-```bash
-brew install node
-```
-
 **Windows (nvm-windows):**
 ```bash
 # https://github.com/coreybutler/nvm-windows/releases から最新版をダウンロード
