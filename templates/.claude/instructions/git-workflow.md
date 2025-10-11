@@ -1,34 +1,61 @@
 # Git Operations
 
+## 🚨 CRITICAL: Read This BEFORE Every File Edit
+
+**THE MOST IMPORTANT RULE - BROKEN REPEATEDLY:**
+
+```bash
+# STEP 1: CHECK BRANCH **BEFORE** EDITING ANY FILE
+git branch --show-current
+
+# STEP 2: IF ON main, CREATE BRANCH **IMMEDIATELY**
+git checkout -b <prefix>/descriptive-name
+
+# STEP 3: ONLY THEN edit files
+```
+
+**WHY THIS MATTERS:**
+- Editing files on `main` breaks the workflow
+- Creates merge conflicts
+- Wastes time fixing mistakes
+- **This rule is violated in EVERY session**
+
+---
+
 ## ⚠️ Critical Rules - MUST Follow
 
 **NEVER do the following:**
+- ❌ **NEVER edit files without checking branch first** - **CHECK BRANCH BEFORE EVERY Edit/Write**
 - ❌ **NEVER commit to `main` branch directly** - Always create a feature branch first
 - ❌ **NEVER track `.claude/` directory in git** - Project root `.claude/` should never be tracked
 - ❌ **NEVER start implementation without creating a feature branch** - Code changes require a branch
 - ❌ **NEVER merge untested code to `main`** - Test before merging
 - ❌ **NEVER use `git add .` blindly** - Review what you're staging
-- ❌ **NEVER commit without checking current branch** - Verify branch before committing
 
-**MUST do the following:**
-- ✅ **MUST create a feature branch before any code changes** - Use `git checkout -b feature/xxx`
-- ✅ **MUST check current branch before editing files** - Run `git branch --show-current`
-- ✅ **MUST verify `.claude/` is in `.gitignore`** - Ensure setup files are ignored
-- ✅ **MUST review changes before committing** - Use `git status` and `git diff`
-- ✅ **MUST write meaningful commit messages** - Follow project conventions
-- ✅ **MUST update documentation before merging to main** - Docs are part of implementation
+**MUST do the following (IN THIS ORDER):**
+1. ✅ **MUST check current branch FIRST** - `git branch --show-current` **BEFORE ANY Edit/Write**
+2. ✅ **MUST create branch if on main** - `git checkout -b <prefix>/xxx` **BEFORE editing**
+3. ✅ **MUST then edit files** - Only after steps 1-2
+4. ✅ **MUST verify `.claude/` is in `.gitignore`** - Ensure setup files are ignored
+5. ✅ **MUST review changes before committing** - Use `git status` and `git diff`
+6. ✅ **MUST write meaningful commit messages** - Follow project conventions
+7. ✅ **MUST update documentation before merging to main** - Docs are part of implementation
 
 ## Branch Workflow
 
-### 1. Before Starting Work
+### 1. Before Starting Work (MANDATORY FIRST STEP)
+
+**DO THIS BEFORE TOUCHING ANY FILE:**
 
 ```bash
-# Check current branch
+# MANDATORY: Check current branch
 git branch --show-current
 
-# If on main, create branch with appropriate prefix
+# If on main, CREATE BRANCH IMMEDIATELY
 git checkout -b <prefix>/descriptive-name
 ```
+
+**REMEMBER: This is step 1, not step 2 or 3. FIRST.**
 
 **Branch Naming Convention:**
 - `feature/xxx` - New feature development
