@@ -25,6 +25,10 @@ enum Commands {
         /// Dry run mode (show what would be done without making changes)
         #[arg(long)]
         dry_run: bool,
+
+        /// Skip specific files or directories (can be used multiple times)
+        #[arg(long = "skip", value_name = "PATH")]
+        skip: Vec<String>,
     },
 
     /// Uninstall hagi configuration
@@ -95,11 +99,11 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Install { global, dry_run } => {
+        Commands::Install { global, dry_run, skip } => {
             if global {
                 commands::install::install_global(dry_run)?;
             } else {
-                commands::install::install_project(dry_run)?;
+                commands::install::install_project(dry_run, &skip)?;
             }
         }
         Commands::Uninstall { global, yes } => {

@@ -53,12 +53,21 @@ pub fn install_global(dry_run: bool) -> Result<()> {
 }
 
 /// Install project-specific configuration to .claude/
-pub fn install_project(dry_run: bool) -> Result<()> {
+pub fn install_project(dry_run: bool, skip_paths: &[String]) -> Result<()> {
     if dry_run {
         println!("{}", "[DRY RUN MODE]".yellow().bold());
     }
 
     println!("{}", "Installing project configuration...".green());
+
+    // Show skip list if provided
+    if !skip_paths.is_empty() {
+        println!("\n{}", "Skipping the following paths:".yellow());
+        for path in skip_paths {
+            println!("  - {}", path);
+        }
+        println!();
+    }
 
     // Get paths
     let project_dir = env::current_dir().context("Failed to get current directory")?;
@@ -71,8 +80,8 @@ pub fn install_project(dry_run: bool) -> Result<()> {
         utils::ensure_dir(&claude_dir)?;
     }
 
-    // Copy all template files (preserving directory structure)
-    templates::copy_all_templates(&claude_dir, dry_run)?;
+    // Copy template files with skip list
+    templates::copy_all_templates_with_skip(&claude_dir, dry_run, skip_paths)?;
 
     // Update .gitignore
     update_project_gitignore(&project_dir, dry_run)?;

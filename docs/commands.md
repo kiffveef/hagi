@@ -106,6 +106,32 @@ hagi install --dry-run
 - コピーされるファイル一覧
 - `.gitignore`に追加されるパターン
 
+**`--skip <PATH>`**: 特定のファイルやディレクトリをスキップ(複数指定可能)
+
+```bash
+# CLAUDE.mdをスキップ
+hagi install --skip CLAUDE.md
+
+# instructionsディレクトリをスキップ
+hagi install --skip instructions
+
+# 複数のファイル/ディレクトリをスキップ
+hagi install --skip CLAUDE.md --skip instructions
+
+# 特定のファイルをスキップ
+hagi install --skip instructions/git-workflow.md
+```
+
+**スキップ対象の指定方法:**
+- ファイル名のみ: `CLAUDE.md` (`.claude/CLAUDE.md`がスキップされる)
+- ディレクトリ名: `instructions` (`.claude/instructions/`配下すべてがスキップされる)
+- 相対パス: `instructions/git-workflow.md` (特定ファイルのみスキップ)
+
+**ユースケース:**
+- 既存のCLAUDE.mdを保持したい場合: `--skip CLAUDE.md`
+- カスタマイズ済みのinstructionsを保持したい場合: `--skip instructions`
+- mcp.jsonのみを更新したい場合: `--skip CLAUDE.md --skip instructions --skip commands`
+
 ### 使用例
 
 **初回セットアップ(推奨フロー):**
@@ -140,6 +166,17 @@ hagi install -g
 cd /path/to/existing/project
 hagi install
 # .gitignore、.claude/が作成される
+```
+
+**カスタマイズ済みファイルを保持しながら更新:**
+
+```bash
+# CLAUDE.mdとinstructionsは既存のものを保持
+hagi install --skip CLAUDE.md --skip instructions
+
+# または、ドライランで確認してから実行
+hagi install --dry-run --skip CLAUDE.md --skip instructions
+hagi install --skip CLAUDE.md --skip instructions
 ```
 
 ---
