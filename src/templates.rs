@@ -17,11 +17,6 @@ pub fn get_template(filename: &str) -> Result<&'static str> {
         .with_context(|| format!("Template not found: {}", filename))
 }
 
-/// Copy all templates to target directory (preserving directory structure)
-pub fn copy_all_templates(target_dir: &Path, dry_run: bool) -> Result<()> {
-    copy_all_templates_with_skip(target_dir, dry_run, &[])
-}
-
 /// Copy all templates to target directory with skip list
 pub fn copy_all_templates_with_skip(target_dir: &Path, dry_run: bool, skip_paths: &[String]) -> Result<()> {
     copy_dir_recursive(&TEMPLATES, target_dir, dry_run, skip_paths)
