@@ -41,7 +41,8 @@
       "env": {
         "MCP_MEMORY_STORAGE_BACKEND": "sqlite_vec",
         "MCP_MEMORY_CHROMA_PATH": "${XDG_DATA_HOME:-$HOME/.local/share}/mcp-memory-service/chroma_db",
-        "MCP_MEMORY_BACKUPS_PATH": "${XDG_DATA_HOME:-$HOME/.local/share}/mcp-memory-service/backups"
+        "MCP_MEMORY_BACKUPS_PATH": "${XDG_DATA_HOME:-$HOME/.local/share}/mcp-memory-service/backups",
+        "HF_HOME": "${XDG_CACHE_HOME:-$HOME/.cache}/huggingface"
       }
     },
     "git": {
