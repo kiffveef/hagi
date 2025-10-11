@@ -74,7 +74,10 @@
         "-y",
         "serena-mcp-server"
       ],
-      "disabled": true
+      "disabled": true,
+      "env": {
+        "SERENA_CACHE_DIR": "${XDG_CACHE_HOME:-$HOME/.cache}/serena"
+      }
     }
   }
 }

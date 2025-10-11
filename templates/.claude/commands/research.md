@@ -112,7 +112,52 @@ Synthesize information from both sources:
 - Links to official documentation
 - Links to useful articles/tutorials
 
-### Step 4: Memory Storage (mem0-mcp)
+### Step 3b: Current Codebase Integration (serena) [Optional]
+
+If serena MCP is available and the topic is relevant to the current project, integrate findings with the current codebase.
+
+**Instructions for Claude:**
+
+1. **Check if serena is available:**
+   - Look for serena MCP in available tools
+   - Skip this step if serena is not available
+
+2. **Analyze current codebase:**
+   - Use serena to search for relevant code in current project
+   - Find similar patterns or related implementations
+   - Identify potential integration points
+
+3. **Provide integration suggestions:**
+   - How to apply the research findings to current code
+   - Refactoring opportunities based on best practices found
+   - Code examples adapted to current project structure
+   - Migration steps if applicable
+
+**Example scenarios:**
+- Researching "Rust async programming" → Find async code in current project and suggest improvements
+- Researching "Next.js 14 App Router" → Locate current routing code and propose migration path
+- Researching "Axum 0.7 CORS" → Find existing CORS configuration and suggest updates
+
+**Output format:**
+```markdown
+### Current Project Integration (serena)
+
+**Relevant code found:**
+- `src/handlers.rs:45` - Current async handler implementation
+- `src/routes.rs:23` - Route definitions
+
+**Suggested improvements:**
+1. Apply best practice from research: [specific recommendation]
+2. Refactor code at `src/handlers.rs:45` using pattern from [source]
+3. Add missing error handling based on community recommendations
+
+**Migration steps:**
+1. Update dependency versions
+2. Refactor handlers to use new pattern
+3. Test thoroughly
+```
+
+### Step 4: Memory Storage (mcp-memory-service)
 
 Save or update key learnings in long-term memory.
 
@@ -195,6 +240,20 @@ Present the research results in the following structure:
 - Best practice 1
 - Best practice 2
 - ...
+
+### Current Project Integration (serena) [If Available]
+
+**Relevant code found:**
+- `path/to/file.rs:line` - Description of relevant code
+
+**Suggested improvements:**
+1. Improvement 1 with specific code location
+2. Improvement 2 with refactoring suggestion
+
+**Migration steps:**
+1. Step 1
+2. Step 2
+3. Step 3
 
 ### Memory Status
 
