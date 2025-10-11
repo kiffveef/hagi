@@ -86,9 +86,6 @@ hagi install
 - `.gitignore` 更新(以下を追加)
   - `/.claude/`
   - `/.serena/`
-  - `/mcp.json`
-  - `/settings.json`
-  - `/settings.local.json`
 
 **動作:**
 1. プロジェクトルートに`.claude/`ディレクトリを作成
@@ -183,15 +180,11 @@ hagi uninstall
 - `.gitignore`からhagi関連のパターンを削除
   - `/.claude/`
   - `/.serena/`
-  - `/mcp.json`
-  - `/settings.json`
-  - `/settings.local.json`
 
 **動作:**
 1. 確認プロンプトを表示
-2. 削除前にバックアップを作成
-3. `.claude/`ディレクトリを削除
-4. `.gitignore`から関連パターンを削除(他のエントリは保持)
+2. `.claude/`ディレクトリを削除
+3. `.gitignore`から関連パターンを削除(他のエントリは保持)
 
 ### オプション
 
