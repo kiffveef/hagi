@@ -119,34 +119,27 @@ fn main() -> Result<()> {
         }
         Commands::Mcp { command } => match command {
             McpCommands::List => {
-                println!("{}", "Listing MCP servers...".green());
-                println!("{}", "Not yet implemented".yellow());
+                commands::mcp::list()?;
             }
             McpCommands::Info { name } => {
-                println!("{} {}", "MCP server info:".green(), name);
-                println!("{}", "Not yet implemented".yellow());
+                commands::mcp::info(&name)?;
             }
             McpCommands::Enable { name } => {
-                println!("{} {}", "Enabling MCP server:".green(), name);
-                println!("{}", "Not yet implemented".yellow());
+                commands::mcp::enable(&name)?;
             }
             McpCommands::Disable { name } => {
-                println!("{} {}", "Disabling MCP server:".green(), name);
-                println!("{}", "Not yet implemented".yellow());
+                commands::mcp::disable(&name)?;
             }
         },
         Commands::Config { command } => match command {
             ConfigCommands::Show { config_type } => {
-                println!("{} {}", "Showing configuration:".green(), config_type);
-                println!("{}", "Not yet implemented".yellow());
+                commands::config::show(&config_type)?;
             }
             ConfigCommands::Edit { config_type } => {
-                println!("{} {}", "Editing configuration:".green(), config_type);
-                println!("{}", "Not yet implemented".yellow());
+                commands::config::edit(&config_type)?;
             }
             ConfigCommands::Validate { config_type } => {
-                println!("{} {}", "Validating configuration:".green(), config_type);
-                println!("{}", "Not yet implemented".yellow());
+                commands::config::validate(&config_type)?;
             }
         },
     }
