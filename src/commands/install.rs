@@ -2,6 +2,7 @@ use anyhow::{Context, Result};
 use colored::*;
 use std::env;
 use std::path::PathBuf;
+use std::process::Command;
 
 use crate::{templates, utils};
 
@@ -12,6 +13,16 @@ pub fn install_global(dry_run: bool) -> Result<()> {
     }
 
     println!("{}", "Installing global configuration...".green());
+
+    // Check dependencies
+    let warnings = check_dependencies();
+    if !warnings.is_empty() {
+        println!("\n{}", "⚠ Warning: Missing dependencies".yellow().bold());
+        for warning in &warnings {
+            println!("\n{}", warning);
+        }
+        println!();
+    }
 
     // Get paths
     let claude_dir = utils::claude_dir()?;
@@ -138,4 +149,60 @@ fn update_project_gitignore(project_dir: &PathBuf, dry_run: bool) -> Result<()> 
     }
 
     Ok(())
+}
+
+/// Check if a command exists in PATH
+fn command_exists(cmd: &str) -> bool {
+    Command::new("which")
+        .arg(cmd)
+        .output()
+        .map(|output| output.status.success())
+        .unwrap_or(false)
+}
+
+/// Check dependencies and show warnings
+fn check_dependencies() -> Vec<String> {
+    let mut warnings = Vec::new();
+
+    // Node.js check
+    if !command_exists("node") {
+        warnings.push(format!(
+            "{}\n  {}\n\n  {}:\n    curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -\n    sudo apt-get install -y nodejs",
+            "Node.js not found".red(),
+            "Required for: context7, sequential-thinking, one-search",
+            "Install"
+        ));
+    }
+
+    // uv check
+    if !command_exists("uv") {
+        warnings.push(format!(
+            "{}\n  {}\n\n  {}:\n    curl -LsSf https://astral.sh/uv/install.sh | sh",
+            "uv not found".red(),
+            "Required for: mcp-memory-service",
+            "Install"
+        ));
+    }
+
+    // Python3 check
+    if !command_exists("python3") {
+        warnings.push(format!(
+            "{}\n  {}\n\n  {}:\n    sudo apt-get update\n    sudo apt-get install -y python3 python3-pip",
+            "Python3 not found".red(),
+            "Required for: mcp-memory-service setup",
+            "Install"
+        ));
+    }
+
+    // Git check
+    if !command_exists("git") {
+        warnings.push(format!(
+            "{}\n  {}\n\n  {}:\n    sudo apt-get install -y git",
+            "Git not found".red(),
+            "Required for: mcp-memory-service clone",
+            "Install"
+        ));
+    }
+
+    warnings
 }

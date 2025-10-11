@@ -7,6 +7,43 @@
         "@modelcontextprotocol/server-sequential-thinking"
       ]
     },
+    "context7": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ],
+      "env": {
+        "CONTEXT7_API_KEY": ""
+      }
+    },
+    "one-search": {
+      "disabled": true,
+      "command": "npx",
+      "args": [
+        "-y",
+        "one-search-mcp"
+      ],
+      "env": {
+        "SEARCH_PROVIDER": "duckduckgo"
+      }
+    },
+    "memory": {
+      "disabled": true,
+      "command": "uv",
+      "args": [
+        "--directory",
+        "${HOME}/.local/opt/mcp-servers/mcp-memory-service",
+        "run",
+        "memory",
+        "server"
+      ],
+      "env": {
+        "MCP_MEMORY_STORAGE_BACKEND": "sqlite_vec",
+        "MCP_MEMORY_CHROMA_PATH": "${XDG_DATA_HOME:-$HOME/.local/share}/mcp-memory-service/chroma_db",
+        "MCP_MEMORY_BACKUPS_PATH": "${XDG_DATA_HOME:-$HOME/.local/share}/mcp-memory-service/backups"
+      }
+    },
     "git": {
       "command": "uvx",
       "args": [
@@ -26,13 +63,6 @@
         "GITHUB_PERSONAL_ACCESS_TOKEN": "<your-github-token>"
       },
       "disabled": true
-    },
-    "context7": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@upshift-protocol/context7"
-      ]
     },
     "file-search": {
       "command": "file-search-mcp",
