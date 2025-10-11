@@ -99,7 +99,7 @@ hagi install
 | `config show` | 設定内容表示 | ✅ 実装済 |
 | `config validate` | 設定検証 | ✅ 実装済 |
 | `config edit` | 設定編集 | ✅ 実装済 |
-| `update` | テンプレート更新 | ⏳ 将来実装 |
+| `update` | hagiツール自体の更新 | ✅ 実装済 |
 
 詳細は[コマンドリファレンス](./docs/commands.md)または`hagi <COMMAND> --help`で確認できます。
 
