@@ -1,18 +1,12 @@
 # Code Style
 
-- **一貫性のあるスタイル**: プロジェクト既存のコードスタイルに従うこと。
-- **意味のある命名**: 変数名、関数名、クラス名は、その役割を明確に表現すること。
-- **適切なコメント**: コードの「なぜ」を説明するコメントを書くこと。「何を」しているかは、コード自体で明確にすること。
+- **Match project style**: Follow existing code conventions
+- **Clear naming**: Names should express purpose
+- **Comment "why"**: Explain reasoning, not mechanics
 
-## Version Notation
-- **バージョン表記**: ライブラリ・フレームワーク名とバージョン番号の間にスペースを入れないこと
-  - ✅ 正しい: `Rust1.75`, `Axum0.7`, `Python3.12`
-  - ❌ 間違い: `Rust 1.75`, `Axum 0.7`, `Python 3.12`
-
-## Punctuation
-- **括弧の使用**: 括弧を使う場合は必ず半角括弧 `()` を使用すること
-  - ✅ 正しい: `Web検索(DuckDuckGo)`, `設定ファイル(mcp.json)`
-  - ❌ 間違い: `Web検索(DuckDuckGo)`, `設定ファイル(mcp.json)`
+## Formatting
+- **Versions**: No spaces - `Rust1.75`, `Python3.12` (not `Rust 1.75`)
+- **Parentheses**: Half-width `()` only (not full-width `()`)
 
 ## Comment Style Rules
 
