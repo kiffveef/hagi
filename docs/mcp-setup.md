@@ -321,7 +321,9 @@ hagi mcp enable one-search
 - 軽量(~50MB)
 
 **前提条件:**
-- Python3
+- **Python 3.10-3.13** (3.14は未対応)
+  - 推奨: Python 3.13
+  - 理由: PyTorch 2.8.0がPython 3.14をサポートしていない
 - uv (Python package manager)
 - Git
 
@@ -333,9 +335,10 @@ mkdir -p ~/.local/opt/mcp-servers
 cd ~/.local/opt/mcp-servers
 git clone https://github.com/doobidoo/mcp-memory-service.git
 
-# 2. 依存関係をインストール
+# 2. Python 3.13で仮想環境を作成し、依存関係をインストール
 cd mcp-memory-service
-uv sync
+uv venv --python 3.13
+uv pip install -e .
 
 # 3. パッチ適用(HF_HOME環境変数問題の修正)
 # v8.4.3およびv8.5.0でHF_HOMEが上書きされる問題を修正

@@ -34,6 +34,8 @@
       "args": [
         "--directory",
         "${HOME}/.local/opt/mcp-servers/mcp-memory-service",
+        "--python",
+        "3.13",
         "run",
         "memory",
         "server"
