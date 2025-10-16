@@ -67,6 +67,16 @@
       },
       "disabled": true
     },
+    "github-graphql": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-github-graphql"
+      ],
+      "env": {
+        "GITHUB_TOKEN": "<your-github-token>"
+      },
+      "disabled": true
+    },
     "file-search": {
       "command": "${HOME}/.local/opt/mcp-servers/file-search-mcp/target/release/file-search-mcp",
       "disabled": true
