@@ -78,7 +78,8 @@ hagi install
 | serena | コード解析・セマンティック検索 | ❌ 無効 | Phase 2e、XDG準拠 |
 | file-search | 高速ファイル検索 | ❌ 無効 | Rust+Tantivy |
 | git | Git操作 | ❌ 無効 | uvx経由 |
-| github | GitHub連携 | ❌ 無効 | PAT必要 |
+| github | GitHub REST API連携 | ❌ 無効 | .env PAT対応 |
+| github-graphql | GitHub GraphQL API連携 | ❌ 無効 | .env PAT対応、トークン効率高 |
 
 詳細なインストール方法とトラブルシューティングは [MCP導入ガイド](./docs/mcp-setup.md) を参照してください。
 

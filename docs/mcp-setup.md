@@ -58,7 +58,8 @@
 |-----|------|------------------|----------------|
 | file-search | 高速ファイル検索 | cargo install (手動) | ❌ 無効 |
 | git | Git操作 | uvx (自動) | ❌ 無効 |
-| github | GitHub連携 | npx (自動) | ❌ 無効 |
+| github | GitHub REST API連携 | npx (自動) | ❌ 無効 |
+| github-graphql | GitHub GraphQL API連携 | uvx (自動) | ❌ 無効 |
 
 ---
 
@@ -204,18 +205,23 @@ uvx mcp-server-git --repository .
 
 ---
 
-### 5. github (自動インストール + PAT設定)
+### 5. github (GitHub REST API、自動インストール + .env PAT対応)
 
 ⚠️ **非推奨警告:**
 現在使用しているnpmパッケージ`@modelcontextprotocol/server-github`は非推奨です。GitHubは公式MCPを`github/github-mcp-server`に移行していますが、DockerまたはHTTP経由での利用が必要なため、hagiの軽量セットアップの方針に合わず、既存設定を維持しています。
 
 有効化時にnpx経由で自動的にインストールされます。
 
+**特徴:**
+- GitHub REST API v3を使用
+- Issues、Pull Requests、Repositoriesの操作
+- Web検索に比べて10-50倍トークン効率が高い
+
 **前提条件:**
-- GitHub Personal Access Token (PAT)の発行が必要
+- GitHub Personal Access Token(PAT)の発行が必要
 
 **PAT発行手順:**
-1. GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
+1. GitHub → Settings → Developer settings → Personal access tokens → Tokens(classic)
 2. "Generate new token (classic)" をクリック
 3. スコープを選択:
    - `repo` (リポジトリアクセス)
@@ -224,13 +230,77 @@ uvx mcp-server-git --repository .
 
 **設定方法:**
 
-`~/.claude/mcp.json`を直接編集:
+**方法1: .envファイルで管理(推奨)**
+
+プロジェクトルートに`.env`ファイルを作成:
+
+```bash
+# .env
+GITHUB_PERSONAL_ACCESS_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+**重要:** `.env`ファイルは必ず`.gitignore`に追加してください:
+
+```bash
+echo ".env" >> .gitignore
+```
+
+**方法2: シェル環境変数で管理**
+
+```bash
+# ~/.bashrc または ~/.zshrc
+export GITHUB_PERSONAL_ACCESS_TOKEN="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+# 設定反映
+source ~/.bashrc
+```
+
+**方法3: mcp.jsonに直接記載(非推奨)**
+
+⚠️ セキュリティリスクがあるため、.envまたはシェル環境変数を推奨します。
+
 ```json
 "github": {
   "env": {
-    "GITHUB_PERSONAL_ACCESS_TOKEN": "your_token_here"
+    "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   }
 }
+```
+
+**有効化方法:**
+
+```bash
+# .envファイルを作成してから有効化
+hagi mcp enable github
+
+# または手動で~/.claude/mcp.jsonを編集
+# "disabled": true → false に変更
+```
+
+**hagiのトークン検証機能:**
+
+`hagi mcp enable github`実行時、以下の順序でトークンの存在を確認します:
+
+1. プロジェクトルートの`.env`ファイルをチェック
+2. シェル環境変数 `GITHUB_PERSONAL_ACCESS_TOKEN`をチェック
+3. トークンが見つかれば、確認メッセージを表示
+4. 見つからなければ、設定方法のガイダンスを表示
+
+**重要:** hagiはトークンを`~/.claude/mcp.json`に書き込みません。トークンは.envファイルまたはシェル環境変数で管理し、Claude Codeが実行時に読み込みます。
+
+**動作確認:**
+
+```bash
+# トークンがロードされたか確認
+hagi mcp info github
+
+# 出力例:
+# MCP Server: github
+# Status: enabled
+# Command: npx -y @modelcontextprotocol/server-github
+# Environment:
+#   GITHUB_PERSONAL_ACCESS_TOKEN: *** (set)
+# Description: GitHub REST API integration (issues, PRs, repos)
 ```
 
 **将来的な対応:**
@@ -239,7 +309,132 @@ uvx mcp-server-git --repository .
 
 ---
 
-### 6. context7 (自動インストール、デフォルト有効)
+### 6. github-graphql (GitHub GraphQL API、自動インストール + .env PAT対応)
+
+**特徴:**
+- GitHub GraphQL API v4を使用
+- REST APIより10-50倍トークン効率が高い(必要なフィールドのみ取得)
+- バッチクエリ対応(複数リソースを1回のリクエストで取得)
+- 複雑な条件検索が可能
+
+**前提条件:**
+- GitHub Personal Access Token(PAT)の発行が必要
+
+**PAT発行手順:**
+
+github MCPと同じ手順でトークンを発行できます。
+
+1. GitHub → Settings → Developer settings → Personal access tokens → Tokens(classic)
+2. "Generate new token (classic)" をクリック
+3. スコープを選択:
+   - `repo` (リポジトリアクセス)
+   - `read:org` (組織情報読み取り)
+4. トークンをコピー
+
+**設定方法:**
+
+**方法1: .envファイルで管理(推奨)**
+
+プロジェクトルートに`.env`ファイルを作成:
+
+```bash
+# .env
+GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+# 注意: github REST APIとは環境変数名が異なります
+# - github REST: GITHUB_PERSONAL_ACCESS_TOKEN
+# - github GraphQL: GITHUB_TOKEN
+```
+
+**重要:** `.env`ファイルは必ず`.gitignore`に追加してください:
+
+```bash
+echo ".env" >> .gitignore
+```
+
+**方法2: シェル環境変数で管理**
+
+```bash
+# ~/.bashrc または ~/.zshrc
+export GITHUB_TOKEN="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+# 設定反映
+source ~/.bashrc
+```
+
+**方法3: mcp.jsonに直接記載(非推奨)**
+
+⚠️ セキュリティリスクがあるため、.envまたはシェル環境変数を推奨します。
+
+```json
+"github-graphql": {
+  "env": {
+    "GITHUB_TOKEN": "ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  }
+}
+```
+
+**有効化方法:**
+
+```bash
+# .envファイルを作成してから有効化
+hagi mcp enable github-graphql
+
+# または手動で~/.claude/mcp.jsonを編集
+# "disabled": true → false に変更
+```
+
+**hagiのトークン検証機能:**
+
+`hagi mcp enable github-graphql`実行時、以下の順序でトークンの存在を確認します:
+
+1. プロジェクトルートの`.env`ファイルをチェック
+2. シェル環境変数 `GITHUB_TOKEN`をチェック
+3. トークンが見つかれば、確認メッセージを表示
+4. 見つからなければ、設定方法のガイダンスを表示
+
+**重要:** hagiはトークンを`~/.claude/mcp.json`に書き込みません。トークンは.envファイルまたはシェル環境変数で管理し、Claude Codeが実行時に読み込みます。
+
+**動作確認:**
+
+```bash
+# トークンがロードされたか確認
+hagi mcp info github-graphql
+
+# 出力例:
+# MCP Server: github-graphql
+# Status: enabled
+# Command: uvx mcp-server-github-graphql
+# Environment:
+#   GITHUB_TOKEN: *** (set)
+# Description: GitHub GraphQL API (advanced queries, batch ops)
+```
+
+**GraphQL vs REST APIの比較:**
+
+| 項目 | REST API(github) | GraphQL API(github-graphql) |
+|------|------------------|-----------------------------|
+| トークン効率 | 標準 | 10-50倍高い |
+| バッチクエリ | 不可 | 可能 |
+| 必要なフィールドのみ取得 | 不可 | 可能 |
+| 複雑な検索 | 制限あり | 柔軟 |
+| インストール | npx(自動) | uvx(自動) |
+| 環境変数名 | `GITHUB_PERSONAL_ACCESS_TOKEN` | `GITHUB_TOKEN` |
+
+**どちらを使うべきか:**
+
+- **github-graphql推奨**: トークン効率を重視する場合、複雑なクエリが必要な場合
+- **github使用**: シンプルな操作のみの場合、既存のREST API連携がある場合
+
+**両方を同時に有効化することも可能です。**
+
+```bash
+hagi mcp enable github github-graphql
+```
+
+---
+
+### 7. context7 (自動インストール、デフォルト有効)
 
 `hagi install --global`実行時にnpx経由で自動的にインストールされます。
 
@@ -266,7 +461,7 @@ npx -y @upstash/context7-mcp
 
 ---
 
-### 7. one-search (自動インストール、デフォルト無効)
+### 8. one-search (自動インストール、デフォルト無効)
 
 有効化時にnpx経由で自動的にインストールされます。
 
@@ -309,7 +504,7 @@ hagi mcp enable one-search
 
 ---
 
-### 8. memory (mcp-memory-service) (手動インストール、デフォルト無効)
+### 9. memory (mcp-memory-service) (手動インストール、デフォルト無効)
 
 完全ローカルで動作する長期記憶管理システムです。
 
@@ -543,25 +738,52 @@ Command not found: file-search-mcp
 
 ---
 
-### github MCPでPATエラー
+### github/github-graphql MCPでPATエラー
 
 **症状:**
 ```
 Error: GITHUB_PERSONAL_ACCESS_TOKEN is not set
+# または
+Error: GITHUB_TOKEN is not set
 ```
 
 **解決方法:**
+
 1. `.env`ファイル確認:
    ```bash
+   # プロジェクトルートで確認
    cat .env
+
+   # github REST APIの場合
+   # GITHUB_PERSONAL_ACCESS_TOKEN=ghp_...
+
+   # github-graphqlの場合
+   # GITHUB_TOKEN=ghp_...
    ```
 
 2. トークンの再発行:
    - 有効期限切れの場合、GitHubで再発行
+   - github: `GITHUB_PERSONAL_ACCESS_TOKEN`
+   - github-graphql: `GITHUB_TOKEN`
 
-3. mcp.json確認:
+3. シェル環境変数確認:
+   ```bash
+   echo $GITHUB_PERSONAL_ACCESS_TOKEN
+   echo $GITHUB_TOKEN
+   ```
+
+4. mcp.json確認:
    ```bash
    cat ~/.claude/mcp.json | jq '.mcpServers.github.env'
+   cat ~/.claude/mcp.json | jq '.mcpServers["github-graphql"].env'
+   ```
+
+5. 再有効化(トークンを再注入):
+   ```bash
+   # .envファイルを修正してから
+   hagi mcp enable github
+   # または
+   hagi mcp enable github-graphql
    ```
 
 ---
