@@ -46,10 +46,24 @@ hagi install -g
 - `~/.claude/settings.json` - パーミッション設定
 
 **動作:**
-1. `~/.claude/`ディレクトリを作成(存在しない場合)
-2. 既存ファイルのバックアップを作成(タイムスタンプ付き)
-3. 新規設定ファイルと既存設定をマージ
-4. 古いバックアップを自動削除(最新3世代のみ保持)
+1. 依存関係チェック(Node.js、uv、Python3、Git)
+2. `~/.claude/`ディレクトリを作成(存在しない場合)
+3. 既存ファイルのバックアップを作成(タイムスタンプ付き)
+4. 新規設定ファイルと既存設定をマージ
+5. 古いバックアップを自動削除(最新3世代のみ保持)
+
+**依存関係チェック:**
+
+グローバルセットアップ時に以下のツールの存在を自動チェックします:
+
+| ツール | 必要なMCP | インストールコマンド |
+|--------|-----------|---------------------|
+| Node.js | context7、sequential-thinking、one-search | `curl -fsSL https://deb.nodesource.com/setup_18.x \| sudo -E bash -` <br> `sudo apt-get install -y nodejs` |
+| uv | mcp-memory-service | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
+| Python3 | mcp-memory-service setup | `sudo apt-get update` <br> `sudo apt-get install -y python3 python3-pip` |
+| Git | mcp-memory-service clone | `sudo apt-get install -y git` |
+
+**重要**: 依存関係が不足していても、インストール処理は継続されます(警告のみ表示)。不足しているツールは後でインストール可能です。
 
 **オプション:**
 
