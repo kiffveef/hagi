@@ -1,6 +1,8 @@
 #!/bin/bash
 
-# Check if committing to main/master branch
+# Check if committing to protected branches
+# To add more protected branches, add them to the condition below:
+# if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ] || [ "$BRANCH" = "custom" ]; then
 BRANCH=$(git branch --show-current)
 
 if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
