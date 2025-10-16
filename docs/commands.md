@@ -487,11 +487,12 @@ hagi mcp enable memory one-search --global
 **動作:**
 1. 対象の設定ファイルを読み込み(グローバルまたはローカル)
 2. 指定サーバーの`"disabled": true`フィールドを削除
-3. バックアップを作成(タイムスタンプ付き、バッチ処理時は1回のみ)
-4. 古いバックアップを自動削除(最新3世代のみ保持)
-5. ファイルを保存
-6. 成功/失敗の集計を表示
-7. 再起動を促すメッセージを表示
+3. **github/github-graphql MCPの場合、.envファイルまたはシェル環境変数からPATの存在を確認(検証のみ、書き込みなし)**
+4. バックアップを作成(タイムスタンプ付き、バッチ処理時は1回のみ)
+5. 古いバックアップを自動削除(最新3世代のみ保持)
+6. ファイルを保存
+7. 成功/失敗の集計を表示
+8. 再起動を促すメッセージを表示
 
 **出力例:**
 ```bash
@@ -501,6 +502,38 @@ $ hagi mcp enable serena file-search git
 ✅ MCP server 'git' enabled
 
 ✅ 3 server(s) enabled.
+
+Note: Restart Claude Code to apply changes.
+```
+
+**GitHub MCPのトークン検証例:**
+```bash
+$ hagi mcp enable github github-graphql
+✅ MCP server 'github' enabled
+   ✓ GITHUB_PERSONAL_ACCESS_TOKEN found in environment
+✅ MCP server 'github-graphql' enabled
+   ✓ GITHUB_TOKEN found in environment
+
+✅ 2 server(s) enabled.
+
+Note: Restart Claude Code to apply changes.
+```
+
+**トークンが見つからない場合:**
+```bash
+$ hagi mcp enable github
+✅ MCP server 'github' enabled
+   ⚠ GITHUB_PERSONAL_ACCESS_TOKEN not found in .env or environment
+   Set up with one of:
+     1. Create .env file: echo 'GITHUB_PERSONAL_ACCESS_TOKEN=your_token' > .env
+     2. Export in shell: export GITHUB_PERSONAL_ACCESS_TOKEN=your_token
+     3. Edit ~/.claude/mcp.json manually
+
+✅ 1 server(s) enabled.
+
+⚠️ Warning: The following servers require environment variables:
+  - github
+Edit ~/.claude/mcp.json and configure required variables.
 
 Note: Restart Claude Code to apply changes.
 ```
