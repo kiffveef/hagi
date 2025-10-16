@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Check if committing to main/master branch
+BRANCH=$(git branch --show-current)
+
+if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
+    echo "❌ ERROR: Direct commits to '$BRANCH' branch are not allowed!"
+    echo ""
+    echo "Please create a feature branch first:"
+    echo "  git checkout -b feature/your-feature-name"
+    echo ""
+    echo "Or move your changes to a new branch:"
+    echo "  git checkout -b feature/your-feature-name"
+    echo "  git branch -D $BRANCH  # (after confirming the new branch)"
+    echo ""
+    exit 1
+fi
+
+exit 0
