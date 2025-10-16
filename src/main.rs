@@ -71,11 +71,17 @@ enum McpCommands {
     Enable {
         /// MCP server name(s) to enable
         names: Vec<String>,
+        /// Enable in global configuration (~/.claude/mcp.json)
+        #[arg(short, long)]
+        global: bool,
     },
     /// Disable MCP server(s)
     Disable {
         /// MCP server name(s) to disable
         names: Vec<String>,
+        /// Disable in global configuration (~/.claude/mcp.json)
+        #[arg(short, long)]
+        global: bool,
     },
 }
 
@@ -132,11 +138,11 @@ fn main() -> Result<()> {
             McpCommands::Info { name } => {
                 commands::mcp::info(&name)?;
             }
-            McpCommands::Enable { names } => {
-                commands::mcp::enable_multiple(&names)?;
+            McpCommands::Enable { names, global } => {
+                commands::mcp::enable_multiple(&names, global)?;
             }
-            McpCommands::Disable { names } => {
-                commands::mcp::disable_multiple(&names)?;
+            McpCommands::Disable { names, global } => {
+                commands::mcp::disable_multiple(&names, global)?;
             }
         },
         Commands::Config { command } => match command {
