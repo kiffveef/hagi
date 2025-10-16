@@ -60,6 +60,13 @@ pub fn install_project(dry_run: bool, skip_paths: &[String]) -> Result<()> {
 
     println!("{}", "Installing project configuration...".green());
 
+    // Check if current directory is a git repository
+    if !is_git_repository() {
+        println!("\n{}", "⚠ Not a git repository. Initializing git...".yellow());
+        initialize_git_repository(dry_run)?;
+        println!();
+    }
+
     // Show skip list if provided
     if !skip_paths.is_empty() {
         println!("\n{}", "Skipping the following paths:".yellow());
@@ -161,6 +168,49 @@ fn update_project_gitignore(project_dir: &PathBuf, dry_run: bool) -> Result<()> 
         utils::update_gitignore(project_dir, &entries)?;
     }
 
+    Ok(())
+}
+
+/// Check if current directory is a git repository
+fn is_git_repository() -> bool {
+    Command::new("git")
+        .args(["rev-parse", "--git-dir"])
+        .output()
+        .map(|output| output.status.success())
+        .unwrap_or(false)
+}
+
+/// Initialize git repository in current directory
+fn initialize_git_repository(dry_run: bool) -> Result<()> {
+    if dry_run {
+        println!("{}", "  Would run: git init".yellow());
+        println!("{}", "  Would run: git commit --allow-empty -m \"🌱 init\"".yellow());
+        return Ok(());
+    }
+
+    // Initialize git repository
+    let status = Command::new("git")
+        .arg("init")
+        .status()
+        .context("Failed to run git init")?;
+
+    if !status.success() {
+        anyhow::bail!("git init failed");
+    }
+
+    println!("{}", "  ✅ Git repository initialized".green());
+
+    // Create empty initial commit
+    let commit_status = Command::new("git")
+        .args(["commit", "--allow-empty", "-m", "🌱 init"])
+        .status()
+        .context("Failed to run git commit")?;
+
+    if !commit_status.success() {
+        anyhow::bail!("git commit failed");
+    }
+
+    println!("{}", "  ✅ Initial commit created".green());
     Ok(())
 }
 
