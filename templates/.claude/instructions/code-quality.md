@@ -1,5 +1,5 @@
 # Code Quality
 
-- **ハードコーディングの回避**: 絶対に必要な場合を除き、値をハードコーディングしないこと。設定ファイルや環境変数を使用すること。
-- **型安全性の確保**: 型定義を明確にし、型エラーを未然に防ぐこと。
-- **エラーハンドリングの徹底**: 適切なエラーハンドリングを実装し、エラーメッセージは具体的で理解しやすいものにすること。
+- **Avoid hardcoding**: Use config files or environment variables instead of hardcoded values, unless absolutely necessary.
+- **Ensure type safety**: Define types clearly to prevent type errors.
+- **Implement proper error handling**: Write clear, specific error messages that are easy to understand.

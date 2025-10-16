@@ -1,5 +1,5 @@
 # Best Practices
 
-- **DRY原則の遵守**: 同じコードの繰り返しを避け、再利用可能な関数やモジュールに抽出すること。
-- **単一責任の原則**: 関数やクラスは一つの責任のみを持つように設計すること。
-- **テスタビリティ**: テストしやすいコードを書くこと。依存性注入やモック可能な設計を意識すること。
+- **Follow DRY principle**: Avoid code repetition; extract reusable functions or modules.
+- **Single responsibility principle**: Design functions and classes to have one responsibility only.
+- **Testability**: Write testable code; consider dependency injection and mockable design.
