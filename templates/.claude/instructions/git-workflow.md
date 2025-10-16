@@ -27,16 +27,16 @@ git checkout -b <prefix>/descriptive-name
 **NEVER do the following:**
 - ❌ **NEVER edit files without checking branch first** - **CHECK BRANCH BEFORE EVERY Edit/Write**
 - ❌ **NEVER commit to `main` branch directly** - Always create a feature branch first
-- ❌ **NEVER track `.claude/` directory in git** - Project root `.claude/` should never be tracked
 - ❌ **NEVER start implementation without creating a feature branch** - Code changes require a branch
 - ❌ **NEVER merge untested code to `main`** - Test before merging
 - ❌ **NEVER use `git add .` blindly** - Review what you're staging
+- ❌ **NEVER commit build artifacts or secrets** - Verify .gitignore is properly configured
 
 **MUST do the following (IN THIS ORDER):**
 1. ✅ **MUST check current branch FIRST** - `git branch --show-current` **BEFORE ANY Edit/Write**
 2. ✅ **MUST create branch if on main** - `git checkout -b <prefix>/xxx` **BEFORE editing**
 3. ✅ **MUST then edit files** - Only after steps 1-2
-4. ✅ **MUST verify `.claude/` is in `.gitignore`** - Ensure setup files are ignored
+4. ✅ **MUST verify ignored files are in `.gitignore`** - Ensure build artifacts, secrets, etc. are ignored
 5. ✅ **MUST review changes before committing** - Use `git status` and `git diff`
 6. ✅ **MUST write meaningful commit messages** - Follow project conventions
 7. ✅ **MUST update documentation before merging to main** - Docs are part of implementation
@@ -115,6 +115,11 @@ git merge feature/descriptive-name
 **Line 2**: Empty line
 **Line 3+**: Japanese bullet points with brief work descriptions (if needed)
 
+**🚨 CRITICAL: NO Claude Code Signature**
+- ❌ **NEVER include Claude Code signature** (`🤖 Generated with [Claude Code]...`)
+- ❌ **NEVER include Co-Authored-By: Claude** line
+- ✅ **Keep commit messages clean and professional**
+
 ### Icon Prefixes
 
 - 🌱 `first`: Initial commit
@@ -142,18 +147,22 @@ git merge feature/descriptive-name
 
 ## What NOT to Track in Git
 
-**Project Root Files (NEVER track):**
-- `/.claude/` - Setup-generated configuration
-- `/mcp.json` - MCP configuration
-- `/settings.json` - Claude settings
-- `/settings.local.json` - Local settings
-- `/.serena/` - Serena cache directory
-- `.env*` - Environment variables
+**Common files to exclude:**
+- Build artifacts and compiled code
+- Dependency directories (node_modules/, target/, etc.)
+- Environment-specific configuration files
+- IDE-specific settings
+- Temporary files and caches
+- Files containing secrets or credentials
 
 **Always Verify:**
 ```bash
-# Check .gitignore includes these patterns
-cat .gitignore | grep -E "\.claude|mcp.json|settings"
+# Check .gitignore before committing
+cat .gitignore
+
+# Review what will be committed
+git status
+git diff --cached
 ```
 
 ## Recovery from Mistakes
@@ -172,14 +181,17 @@ git reset --hard origin/main
 git checkout feature/emergency-branch
 ```
 
-### If you accidentally staged `.claude/`:
+### If you accidentally staged files:
 
 ```bash
-# Unstage the directory
-git reset HEAD .claude/
+# Unstage specific files
+git reset HEAD path/to/file
 
-# Verify .gitignore
-echo "/.claude/" >> .gitignore
+# Unstage all files
+git reset HEAD .
+
+# Verify what's staged
+git status
 ```
 
 ## Safety Checks

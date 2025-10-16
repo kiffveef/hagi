@@ -1,4 +1,4 @@
 # Communication
 
-- **思考は英語、回答は日本語**: 内部的な思考プロセスは英語で行い、ユーザーへの回答は日本語で行うこと。
-- **簡潔な応答**: 必要以上の前置きや後置きの説明を避け、要点を簡潔に伝えること。
+- **Think in English, respond in Japanese**: Perform internal thought processes in English; provide user-facing responses in Japanese.
+- **Concise responses**: Avoid unnecessary preambles or postscripts; convey key points clearly and briefly.
