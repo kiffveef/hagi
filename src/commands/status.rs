@@ -113,68 +113,97 @@ fn check_project_configuration() -> Result<()> {
 fn check_mcp_servers() -> Result<()> {
     println!("{}", "[MCP Servers]".cyan().bold());
 
-    // Try to read global mcp.json first, then project mcp.json
-    let mcp_config_path = if let Ok(claude_dir) = utils::claude_dir() {
+    // Read global configuration
+    let global_config = if let Ok(claude_dir) = utils::claude_dir() {
         let global_mcp = claude_dir.join("mcp.json");
         if global_mcp.exists() {
-            global_mcp
+            Some(utils::read_json_file(&global_mcp)?)
         } else {
-            let project_dir = env::current_dir().context("Failed to get current directory")?;
-            project_dir.join(".claude/mcp.json")
+            None
         }
     } else {
-        let project_dir = env::current_dir().context("Failed to get current directory")?;
-        project_dir.join(".claude/mcp.json")
+        None
     };
 
-    if !mcp_config_path.exists() {
+    // Read project-local configuration
+    let project_dir = env::current_dir().context("Failed to get current directory")?;
+    let local_mcp = project_dir.join(".claude/mcp.json");
+    let local_config = if local_mcp.exists() {
+        Some(utils::read_json_file(&local_mcp)?)
+    } else {
+        None
+    };
+
+    if global_config.is_none() && local_config.is_none() {
         println!("{} {}", "✗".red(), "No MCP configuration found");
         println!("\nRun {} to install MCP configuration", "hagi install --global".yellow());
         return Ok(());
     }
 
-    // Read and parse MCP configuration
-    let mcp_config = utils::read_json_file(&mcp_config_path)?;
-    let servers = mcp_config
-        .get("mcpServers")
-        .and_then(|v| v.as_object())
-        .context("Invalid MCP configuration format")?;
+    // Compare configurations and show differences
+    println!();
+    println!("{}", "Global vs Local Configuration:".yellow().bold());
+    println!();
 
-    let mut enabled_servers = Vec::new();
-    let mut disabled_servers = Vec::new();
+    use std::collections::{HashMap, HashSet};
 
-    for (name, config) in servers {
-        let is_disabled = config
-            .get("disabled")
-            .and_then(|v| v.as_bool())
-            .unwrap_or(false);
+    // Extract server status from both configs
+    let global_servers = extract_server_status(&global_config);
+    let local_servers = extract_server_status(&local_config);
 
-        if is_disabled {
-            disabled_servers.push(name.clone());
-        } else {
-            enabled_servers.push(name.clone());
+    // Get all server names from both configs
+    let all_servers: HashSet<String> = global_servers
+        .keys()
+        .chain(local_servers.keys())
+        .cloned()
+        .collect();
+
+    let mut differences_found = false;
+
+    for name in all_servers.iter() {
+        let global_enabled = global_servers.get(name).copied().unwrap_or(false);
+        let local_enabled = local_servers.get(name).copied().unwrap_or(false);
+
+        // Only show servers that exist in at least one config
+        if global_servers.contains_key(name) || local_servers.contains_key(name) {
+            if global_enabled != local_enabled {
+                differences_found = true;
+                let global_status = if global_enabled { "enabled".green() } else { "disabled".red() };
+                let local_status = if local_enabled { "enabled".green() } else { "disabled".red() };
+                println!("  {} {} [global: {}, local: {}]",
+                    "⚠".yellow(), name.cyan(), global_status, local_status);
+            } else {
+                let status = if global_enabled { "enabled".green() } else { "disabled".dimmed() };
+                println!("  {} {} [{}]", "✓".dimmed(), name.cyan(), status);
+            }
         }
     }
 
-    // Display enabled servers
-    if !enabled_servers.is_empty() {
-        println!("\n{}", "Enabled:".green());
-        for name in enabled_servers {
-            println!("  {} {}", "✓".green(), name);
-        }
-    }
-
-    // Display disabled servers
-    if !disabled_servers.is_empty() {
-        println!("\n{}", "Disabled:".dimmed());
-        for name in disabled_servers {
-            println!("  {} {}", "○".dimmed(), name);
-        }
-    }
-
-    if servers.is_empty() {
-        println!("{} {}", "○".dimmed(), "No MCP servers configured");
+    if !differences_found {
+        println!();
+        println!("{}", "✓ No configuration differences between global and local".green());
     }
 
     Ok(())
+}
+
+/// Extract server names and their enabled status from config
+fn extract_server_status(config: &Option<serde_json::Value>) -> std::collections::HashMap<String, bool> {
+    use std::collections::HashMap;
+
+    let mut result = HashMap::new();
+
+    if let Some(config) = config {
+        if let Some(servers) = config.get("mcpServers").and_then(|v| v.as_object()) {
+            for (name, server_config) in servers {
+                let is_enabled = !server_config
+                    .get("disabled")
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(false);
+                result.insert(name.clone(), is_enabled);
+            }
+        }
+    }
+
+    result
 }

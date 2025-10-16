@@ -288,8 +288,9 @@ hagi status
   - `.claude/`ディレクトリの存在確認
   - 各テンプレートファイルの存在確認
 - MCP設定の詳細
-  - 有効化されているMCPサーバー一覧
-  - 無効化されているMCPサーバー一覧
+  - **グローバルとローカルの設定比較**
+  - 設定が異なるサーバーを警告表示
+  - 有効化/無効化されているMCPサーバー一覧
 - テンプレートファイルの状態
   - `.claude/CLAUDE.md`
   - `.claude/instructions/`
@@ -381,18 +382,26 @@ MCPサーバーの管理コマンド。
 hagi mcp list
 ```
 
-インストール済みMCPサーバーの一覧を表示します。
+インストール済みMCPサーバーの一覧を表示します。グローバル設定とプロジェクトローカル設定の両方を表示します。
 
 **出力例:**
 ```
-MCP Servers:
+═══ Global Configuration (~/.claude/mcp.json) ═══
+
+  sequential-thinking [enabled] - Structured thinking and problem-solving
+  context7 [enabled] - Library documentation and code examples
+  serena [enabled] - Code analysis and semantic search
+  file-search [disabled] - Fast file search and analysis
+  git [disabled] - Git operations and repository management
+  github [disabled] - GitHub integration (issues, PRs, releases)
+
+═══ Project-Local Configuration (.claude/mcp.json) ═══
 
   sequential-thinking [enabled] - Structured thinking and problem-solving
   context7 [enabled] - Library documentation and code examples
   serena [disabled] - Code analysis and semantic search
   file-search [disabled] - Fast file search and analysis
   git [disabled] - Git operations and repository management
-  github [disabled] - GitHub integration (issues, PRs, releases)
 ```
 
 ### info - MCPサーバー情報
@@ -421,25 +430,33 @@ Description: GitHub integration (issues, PRs, releases)
 ### enable - MCPサーバー有効化
 
 ```bash
-hagi mcp enable <SERVER_NAME> [SERVER_NAME...]
+hagi mcp enable <SERVER_NAME> [SERVER_NAME...] [--global]
 ```
 
 指定したMCPサーバーを有効化します。複数のサーバーを同時に指定できます。
 
+**スコープ:**
+- **デフォルト**: プロジェクトローカル(`.claude/mcp.json`)を操作
+- **`--global / -g`**: グローバル設定(`~/.claude/mcp.json`)を操作
+
 **例:**
 ```bash
-# 単一サーバーを有効化
+# プロジェクトローカルで有効化(デフォルト)
 hagi mcp enable serena
+
+# グローバル設定で有効化
+hagi mcp enable serena --global
+hagi mcp enable serena -g
 
 # 複数のサーバーを同時に有効化
 hagi mcp enable serena file-search git
 
-# 全てのサーバーを有効化
-hagi mcp enable serena file-search git github memory
+# グローバルで複数サーバーを有効化
+hagi mcp enable memory one-search --global
 ```
 
 **動作:**
-1. `~/.claude/mcp.json`を読み込み
+1. 対象の設定ファイルを読み込み(グローバルまたはローカル)
 2. 指定サーバーの`"disabled": true`フィールドを削除
 3. バックアップを作成(タイムスタンプ付き、バッチ処理時は1回のみ)
 4. 古いバックアップを自動削除(最新3世代のみ保持)
@@ -481,25 +498,33 @@ Note: Restart Claude Code to apply changes.
 ### disable - MCPサーバー無効化
 
 ```bash
-hagi mcp disable <SERVER_NAME> [SERVER_NAME...]
+hagi mcp disable <SERVER_NAME> [SERVER_NAME...] [--global]
 ```
 
 指定したMCPサーバーを無効化します。複数のサーバーを同時に指定できます。
 
+**スコープ:**
+- **デフォルト**: プロジェクトローカル(`.claude/mcp.json`)を操作
+- **`--global / -g`**: グローバル設定(`~/.claude/mcp.json`)を操作
+
 **例:**
 ```bash
-# 単一サーバーを無効化
+# プロジェクトローカルで無効化(デフォルト)
 hagi mcp disable serena
+
+# グローバル設定で無効化
+hagi mcp disable serena --global
+hagi mcp disable serena -g
 
 # 複数のサーバーを同時に無効化
 hagi mcp disable serena file-search git
 
-# 使わないサーバーをまとめて無効化
-hagi mcp disable git github memory
+# グローバルで複数サーバーを無効化
+hagi mcp disable memory one-search --global
 ```
 
 **動作:**
-1. `~/.claude/mcp.json`を読み込み
+1. 対象の設定ファイルを読み込み(グローバルまたはローカル)
 2. 指定サーバーに`"disabled": true`を追加
 3. バックアップを作成(タイムスタンプ付き、バッチ処理時は1回のみ)
 4. 古いバックアップを自動削除(最新3世代のみ保持)
