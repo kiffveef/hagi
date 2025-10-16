@@ -1,7 +1,15 @@
 # Project Guidelines
 
-このファイルは、プロジェクト固有のルール・ガイドラインを記述するためのテンプレートです。
-必要に応じてカスタマイズしてください。
+**📌 About This File:**
+- **Project-specific rules and guidelines go here**
+- This overrides global `~/.claude/CLAUDE.md` settings
+- Customize sections below for your project
+- Delete unused sections, add project-specific ones
+
+**📁 File Structure:**
+- `CLAUDE.md` - Main project guidelines (this file)
+- `instructions/` - Detailed rules imported via `@instructions/`
+- `TODO.md` - Task tracking (optional, recommended for `/st --todo`)
 
 ---
 

@@ -1,6 +1,6 @@
 # Preferred Tools
 
-**IMPORTANT: 以下のツールは必ず置き換えて使用すること。古いツールは使用禁止。**
+**IMPORTANT: The following tools MUST be replaced. Never use the old tools.**
 
 ## Text Search
 

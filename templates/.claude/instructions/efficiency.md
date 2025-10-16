@@ -1,4 +1,4 @@
 # Efficiency & Performance
 
-- **並列処理の徹底**: 独立した複数のプロセスを実行する必要がある場合は、必ず並列(concurrent)でツールを呼び出してください。順次実行は避けること。
-- **最小限のファイル読み込み**: ファイル全体を読む前に、`get_symbols_overview`や`find_symbol`などのシンボリックツールを使用して、必要な部分のみを読み込むこと。
+- **Parallel tool calls**: Execute independent operations concurrently, never sequentially
+- **Minimal file reads**: Use `get_symbols_overview`/`find_symbol` before reading entire files
