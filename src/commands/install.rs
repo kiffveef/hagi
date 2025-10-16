@@ -93,6 +93,9 @@ pub fn install_project(dry_run: bool, skip_paths: &[String]) -> Result<()> {
     // Update .gitignore
     update_project_gitignore(&project_dir, dry_run)?;
 
+    // Install git hooks
+    install_git_hooks(&project_dir, dry_run)?;
+
     if dry_run {
         println!("{}", "\nDry run completed. No files were modified.".yellow());
     } else {
@@ -268,4 +271,64 @@ fn check_dependencies() -> Vec<String> {
     }
 
     warnings
+}
+
+/// Install git hooks to .git/hooks/
+fn install_git_hooks(project_dir: &PathBuf, dry_run: bool) -> Result<()> {
+    let git_hooks_dir = project_dir.join(".git").join("hooks");
+
+    // Check if .git/hooks directory exists
+    if !git_hooks_dir.exists() {
+        if dry_run {
+            println!("\n{} .git/hooks directory not found, would skip git hooks installation", "⚠".yellow());
+        } else {
+            println!("\n{} .git/hooks directory not found, skipping git hooks installation", "⚠".yellow());
+        }
+        return Ok(());
+    }
+
+    println!("\n{}", "Installing git hooks...".green());
+
+    // pre-commit hook
+    let pre_commit_template = include_str!("../../templates/git-hooks/pre-commit");
+    let pre_commit_path = git_hooks_dir.join("pre-commit");
+
+    // commit-msg hook
+    let commit_msg_template = include_str!("../../templates/git-hooks/commit-msg");
+    let commit_msg_path = git_hooks_dir.join("commit-msg");
+
+    if dry_run {
+        println!("{} {}", "Would install:".yellow(), pre_commit_path.display());
+        println!("{} {}", "Would install:".yellow(), commit_msg_path.display());
+    } else {
+        // Install pre-commit
+        std::fs::write(&pre_commit_path, pre_commit_template)
+            .context("Failed to write pre-commit hook")?;
+
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let mut perms = std::fs::metadata(&pre_commit_path)?.permissions();
+            perms.set_mode(0o755);
+            std::fs::set_permissions(&pre_commit_path, perms)?;
+        }
+
+        // Install commit-msg
+        std::fs::write(&commit_msg_path, commit_msg_template)
+            .context("Failed to write commit-msg hook")?;
+
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let mut perms = std::fs::metadata(&commit_msg_path)?.permissions();
+            perms.set_mode(0o755);
+            std::fs::set_permissions(&commit_msg_path, perms)?;
+        }
+
+        println!("  ✅ {}", "Git hooks installed".green());
+        println!("     {}", "- pre-commit: Prevents direct commits to main/master".dimmed());
+        println!("     {}", "- commit-msg: Blocks Claude Code signatures".dimmed());
+    }
+
+    Ok(())
 }

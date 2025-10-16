@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Check for Claude Code signature in commit message
+COMMIT_MSG_FILE="$1"
+
+if grep -q "Generated with \[Claude Code\]" "$COMMIT_MSG_FILE" || \
+   grep -q "Co-Authored-By: Claude" "$COMMIT_MSG_FILE"; then
+    echo "❌ ERROR: Claude Code signature detected in commit message!"
+    echo ""
+    echo "Please remove the following lines:"
+    echo "  🤖 Generated with [Claude Code](https://claude.com/claude-code)"
+    echo "  Co-Authored-By: Claude <noreply@anthropic.com>"
+    echo ""
+    echo "Commit messages should be clean and professional."
+    echo ""
+    exit 1
+fi
+
+exit 0
