@@ -19,9 +19,16 @@ hagiは、Claude Codeの開発環境を素早くセットアップするため�
 
 ### 前提条件
 
-- Rust/cargo (1.80以降推奨)
-- Node.js (v18以降推奨)
-- uv (Python package manager)
+**必須:**
+- Rust/cargo (1.80以降推奨) - hagiのビルド・インストールに必要
+
+**推奨(MCP機能を使う場合):**
+- Node.js (v18以降) - sequential-thinking、context7、one-search用
+- uv (Python package manager) - mcp-memory-service用
+- Python3 (3.10-3.13) - mcp-memory-service setup用
+- Git - mcp-memory-service clone用
+
+**Note**: `hagi install --global`実行時に、上記ツールの存在が自動チェックされます。不足している場合は警告とインストール手順が表示されますが、インストール処理は継続されます。
 
 ### cargoでインストール
 
