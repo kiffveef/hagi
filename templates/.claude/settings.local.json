@@ -5,7 +5,7 @@
       "Bash(rm -f:*)",
       "Bash(sudo:*)",
       "Bash(chmod 777:*)",
-      "Bash(git push upstream*:*)",
+      "Bash(git push upstream:*)",
       "Bash(git push -f:*)",
       "Bash(git push --force:*)",
       "Bash(git reset:*)",
