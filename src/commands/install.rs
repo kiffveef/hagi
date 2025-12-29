@@ -112,13 +112,30 @@ pub fn install_project(dry_run: bool, skip_paths: &[String]) -> Result<()> {
 /// Install MCP configuration from embedded template
 fn install_mcp_config(claude_dir: &PathBuf, dry_run: bool) -> Result<()> {
     let target = claude_dir.join("mcp.json");
-    let template_str = templates::get_template("mcp.json")?;
+    let template_str = templates::get_template("mcp.json")
+        .context("Failed to get embedded mcp.json template")?;
+
     let mut template_content: serde_json::Value = serde_json::from_str(template_str)
-        .context("Failed to parse mcp.json template")?;
+        .with_context(|| {
+            format!(
+                "Failed to parse mcp.json template. Template may be corrupted.\nFirst 200 chars: {}",
+                if template_str.len() > 200 {
+                    &template_str[..200]
+                } else {
+                    template_str
+                }
+            )
+        })?;
 
     // Expand environment variables (${HOME}, ${XDG_CACHE_HOME:-...}, etc.)
-    utils::expand_json_env_vars(&mut template_content)
-        .context("Failed to expand environment variables in mcp.json")?;
+    utils::expand_json_env_vars(&mut template_content).with_context(|| {
+        format!(
+            "Failed to expand environment variables in mcp.json template.\n\
+             This may be due to missing HOME or other required environment variables.\n\
+             Template content: {}",
+            serde_json::to_string_pretty(&template_content).unwrap_or_else(|_| String::from("<unable to format>"))
+        )
+    })?;
 
     if dry_run {
         if target.exists() {
@@ -128,7 +145,8 @@ fn install_mcp_config(claude_dir: &PathBuf, dry_run: bool) -> Result<()> {
         }
         println!("  Template: embedded mcp.json (with environment variables expanded)");
     } else {
-        utils::merge_json_file(&target, &template_content)?;
+        utils::merge_json_file(&target, &template_content)
+            .with_context(|| format!("Failed to install mcp.json to {}", target.display()))?;
     }
 
     Ok(())
@@ -137,9 +155,20 @@ fn install_mcp_config(claude_dir: &PathBuf, dry_run: bool) -> Result<()> {
 /// Install settings configuration from embedded template (rename settings.local.json → settings.json)
 fn install_settings(claude_dir: &PathBuf, dry_run: bool) -> Result<()> {
     let target = claude_dir.join("settings.json");
-    let template_str = templates::get_template("settings.local.json")?;
+    let template_str = templates::get_template("settings.local.json")
+        .context("Failed to get embedded settings.local.json template")?;
+
     let template_content: serde_json::Value = serde_json::from_str(template_str)
-        .context("Failed to parse settings.local.json template")?;
+        .with_context(|| {
+            format!(
+                "Failed to parse settings.local.json template. Template may be corrupted.\nFirst 200 chars: {}",
+                if template_str.len() > 200 {
+                    &template_str[..200]
+                } else {
+                    template_str
+                }
+            )
+        })?;
 
     if dry_run {
         if target.exists() {
@@ -149,7 +178,8 @@ fn install_settings(claude_dir: &PathBuf, dry_run: bool) -> Result<()> {
         }
         println!("  Template: embedded settings.local.json → settings.json");
     } else {
-        utils::merge_json_file(&target, &template_content)?;
+        utils::merge_json_file(&target, &template_content)
+            .with_context(|| format!("Failed to install settings.json to {}", target.display()))?;
     }
 
     Ok(())
