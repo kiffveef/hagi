@@ -39,19 +39,28 @@ pub fn ensure_dir(path: &Path) -> Result<()> {
 }
 
 /// Create a backup of a file with timestamp
+///
+/// # Naming Convention
+/// - Original: `settings.json`
+/// - Backup: `settings.json.backup.20250101_120000`
+///
+/// This ensures:
+/// - Clear identification of backup files
+/// - Chronological sorting by timestamp
+/// - Easy restoration (remove .backup.TIMESTAMP suffix)
 pub fn backup_file(path: &Path) -> Result<PathBuf> {
     if !path.exists() {
         return Ok(PathBuf::new());
     }
 
     let timestamp = chrono::Local::now().format("%Y%m%d_%H%M%S");
-    let backup_path = path.with_extension(format!(
-        "{}.backup.{}",
-        path.extension()
-            .and_then(|s| s.to_str())
-            .unwrap_or(""),
-        timestamp
-    ));
+    let filename = path
+        .file_name()
+        .and_then(|f| f.to_str())
+        .with_context(|| format!("Invalid filename: {}", path.display()))?;
+
+    let backup_filename = format!("{}.backup.{}", filename, timestamp);
+    let backup_path = path.with_file_name(backup_filename);
 
     fs::copy(path, &backup_path).with_context(|| {
         format!(
@@ -133,7 +142,17 @@ pub fn cleanup_old_backups(original_path: &Path, max_backups: usize) -> Result<(
     Ok(())
 }
 
-/// Merge two JSON values (second value takes precedence for conflicts)
+/// Merge two JSON values recursively (overlay takes precedence for conflicts)
+///
+/// # Behavior
+/// - Objects are merged recursively
+/// - Arrays and primitives in overlay replace base values
+/// - New keys in overlay are added to base
+///
+/// # Examples
+/// - Base: {"a": 1, "b": {"c": 2}}
+/// - Overlay: {"b": {"c": 3, "d": 4}, "e": 5}
+/// - Result: {"a": 1, "b": {"c": 3, "d": 4}, "e": 5}
 pub fn merge_json(
     base: &mut serde_json::Value,
     overlay: &serde_json::Value,
@@ -141,12 +160,15 @@ pub fn merge_json(
     if let (Some(base_obj), Some(overlay_obj)) = (base.as_object_mut(), overlay.as_object()) {
         for (key, value) in overlay_obj {
             if let Some(base_value) = base_obj.get_mut(key) {
+                // If both are objects, merge recursively
                 if base_value.is_object() && value.is_object() {
                     merge_json(base_value, value)?;
                 } else {
+                    // Otherwise, overlay value replaces base value
                     *base_value = value.clone();
                 }
             } else {
+                // New key from overlay - add to base
                 base_obj.insert(key.clone(), value.clone());
             }
         }
@@ -154,13 +176,24 @@ pub fn merge_json(
     Ok(())
 }
 
-/// Read JSON file
+/// Read JSON file with detailed error reporting
 pub fn read_json_file(path: &Path) -> Result<serde_json::Value> {
     let content = fs::read_to_string(path)
         .with_context(|| format!("Failed to read file: {}", path.display()))?;
 
-    serde_json::from_str(&content)
-        .with_context(|| format!("Failed to parse JSON: {}", path.display()))
+    serde_json::from_str(&content).with_context(|| {
+        // Show first 500 chars of content for debugging
+        let preview = if content.len() > 500 {
+            format!("{}...", &content[..500])
+        } else {
+            content.clone()
+        };
+        format!(
+            "Failed to parse JSON in file: {}\nContent preview:\n{}",
+            path.display(),
+            preview
+        )
+    })
 }
 
 /// Write JSON file
@@ -178,16 +211,22 @@ pub fn write_json_file(path: &Path, value: &serde_json::Value) -> Result<()> {
 /// Merge JSON configuration files (preserving existing configuration)
 pub fn merge_json_file(target_path: &Path, new_content: &serde_json::Value) -> Result<()> {
     let mut base = if target_path.exists() {
+        println!("{} {}", "Merging into existing:".blue(), target_path.display());
         backup_file(target_path)?;
         // Clean up old backups after creating new one
         cleanup_old_backups(target_path, DEFAULT_MAX_BACKUPS)?;
-        read_json_file(target_path)?
+        read_json_file(target_path)
+            .with_context(|| format!("Failed to read existing JSON file: {}", target_path.display()))?
     } else {
+        println!("{} {}", "Creating new:".green(), target_path.display());
         serde_json::json!({})
     };
 
-    merge_json(&mut base, new_content)?;
-    write_json_file(target_path, &base)?;
+    merge_json(&mut base, new_content)
+        .with_context(|| format!("Failed to merge JSON configurations for: {}", target_path.display()))?;
+
+    write_json_file(target_path, &base)
+        .with_context(|| format!("Failed to write merged JSON to: {}", target_path.display()))?;
 
     Ok(())
 }
@@ -267,8 +306,12 @@ pub fn update_gitignore(project_dir: &Path, entries: &[&str]) -> Result<()> {
 /// // Returns: "/home/username/.config"
 /// ```
 pub fn expand_env_vars(input: &str) -> Result<String> {
-    let home = std::env::var("HOME")
-        .context("HOME environment variable not set")?;
+    let home = std::env::var("HOME").with_context(|| {
+        format!(
+            "HOME environment variable not set. Cannot expand: {}",
+            input
+        )
+    })?;
 
     let xdg_cache = std::env::var("XDG_CACHE_HOME")
         .unwrap_or_else(|_| format!("{}/.cache", home));
@@ -303,16 +346,19 @@ pub fn expand_env_vars(input: &str) -> Result<String> {
 pub fn expand_json_env_vars(value: &mut serde_json::Value) -> Result<()> {
     match value {
         serde_json::Value::String(s) => {
-            *s = expand_env_vars(s)?;
+            *s = expand_env_vars(s)
+                .with_context(|| format!("Failed to expand environment variables in: {}", s))?;
         }
         serde_json::Value::Array(arr) => {
-            for item in arr {
-                expand_json_env_vars(item)?;
+            for (index, item) in arr.iter_mut().enumerate() {
+                expand_json_env_vars(item)
+                    .with_context(|| format!("Failed to expand variables in array index {}", index))?;
             }
         }
         serde_json::Value::Object(map) => {
-            for (_, v) in map {
-                expand_json_env_vars(v)?;
+            for (key, v) in map {
+                expand_json_env_vars(v)
+                    .with_context(|| format!("Failed to expand variables in object key: {}", key))?;
             }
         }
         _ => {}

@@ -145,7 +145,7 @@ fn check_mcp_servers() -> Result<()> {
     println!("{}", "Global vs Local Configuration:".yellow().bold());
     println!();
 
-    use std::collections::{HashMap, HashSet};
+    use std::collections::HashSet;
 
     // Extract server status from both configs
     let global_servers = extract_server_status(&global_config);
