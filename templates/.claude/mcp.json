@@ -56,38 +56,15 @@
       ],
       "disabled": true
     },
-    "github": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-github"
-      ],
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "<your-github-token>"
-      },
-      "disabled": true
-    },
-    "github-graphql": {
-      "command": "uvx",
-      "args": [
-        "mcp-server-github-graphql"
-      ],
-      "env": {
-        "GITHUB_TOKEN": "<your-github-token>"
-      },
-      "disabled": true
-    },
-    "file-search": {
-      "command": "${HOME}/.local/opt/mcp-servers/file-search-mcp/target/release/file-search-mcp",
-      "disabled": true
-    },
     "serena": {
       "command": "uvx",
       "args": [
         "--from",
         "git+https://github.com/oraios/serena",
         "serena",
-        "start-mcp-server"
+        "start-mcp-server",
+        "--context",
+        "claude-code"
       ],
       "disabled": true,
       "env": {
