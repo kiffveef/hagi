@@ -9,6 +9,9 @@ use crate::utils;
 /// Embedded template directory
 pub static TEMPLATES: Dir = include_dir!("$CARGO_MANIFEST_DIR/templates/.claude");
 
+/// Embedded chat template directory
+pub static CHAT_TEMPLATES: Dir = include_dir!("$CARGO_MANIFEST_DIR/templates/.chat");
+
 /// Get a specific template file content
 pub fn get_template(filename: &str) -> Result<&'static str> {
     TEMPLATES
@@ -112,4 +115,55 @@ fn should_skip(path: &Path, skip_paths: &[String]) -> bool {
         }
     }
     false
+}
+
+
+/// Copy chat templates to target directory
+pub fn copy_chat_templates(target_dir: &Path, dry_run: bool) -> Result<()> {
+    copy_dir_recursive_simple(&CHAT_TEMPLATES, target_dir, dry_run)
+}
+
+/// Recursively copy directory structure from embedded templates (simple version without skip)
+fn copy_dir_recursive_simple(dir: &Dir, target_base: &Path, dry_run: bool) -> Result<()> {
+    for entry in dir.entries() {
+        match entry {
+            include_dir::DirEntry::Dir(sub_dir) => {
+                let relative_path = sub_dir.path();
+                let target_subdir = target_base.join(relative_path);
+                if dry_run {
+                    println!("{} {}", "Would create:".yellow(), target_subdir.display());
+                } else {
+                    utils::ensure_dir(&target_subdir)?;
+                }
+                copy_dir_recursive_simple(sub_dir, target_base, dry_run)?;
+            }
+            include_dir::DirEntry::File(file) => {
+                let relative_path = file.path();
+                let target_file = target_base.join(relative_path);
+                let content = file
+                    .contents_utf8()
+                    .context("Template file is not valid UTF-8")?;
+
+                if dry_run {
+                    if target_file.exists() {
+                        println!("{} {}", "Would overwrite:".yellow(), target_file.display());
+                    } else {
+                        println!("{} {}", "Would create:".yellow(), target_file.display());
+                    }
+                } else {
+                    if target_file.exists() {
+                        utils::backup_file(&target_file)?;
+                    }
+                    if let Some(parent) = target_file.parent() {
+                        utils::ensure_dir(parent)?;
+                    }
+                    fs::write(&target_file, content).with_context(|| {
+                        format!("Failed to write template file: {}", target_file.display())
+                    })?;
+                    println!("{} {}", "Wrote:".green(), target_file.display());
+                }
+            }
+        }
+    }
+    Ok(())
 }

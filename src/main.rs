@@ -22,6 +22,10 @@ enum Commands {
         #[arg(short, long)]
         global: bool,
 
+        /// Install chat mode configuration to ~/.chat/
+        #[arg(long)]
+        chat: bool,
+
         /// Dry run mode (show what would be done without making changes)
         #[arg(long)]
         dry_run: bool,
@@ -111,9 +115,11 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Install { global, dry_run, skip } => {
+        Commands::Install { global, chat, dry_run, skip } => {
             if global {
                 commands::install::install_global(dry_run)?;
+            } else if chat {
+                commands::install::install_chat(dry_run)?;
             } else {
                 commands::install::install_project(dry_run, &skip)?;
             }

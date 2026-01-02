@@ -109,6 +109,42 @@ pub fn install_project(dry_run: bool, skip_paths: &[String]) -> Result<()> {
     Ok(())
 }
 
+
+/// Install chat mode configuration to ~/.chat/
+pub fn install_chat(dry_run: bool) -> Result<()> {
+    if dry_run {
+        println!("{}", "[DRY RUN MODE]".yellow().bold());
+    }
+
+    println!("{}", "Installing chat mode configuration...".green());
+
+    // Get paths
+    let home_dir = utils::home_dir()?;
+    let chat_dir = home_dir.join(".chat");
+
+    // Create ~/.chat/ directory
+    if dry_run {
+        println!("{} {}", "Would create:".yellow(), chat_dir.display());
+    } else {
+        utils::ensure_dir(&chat_dir)?;
+    }
+
+    // Copy chat templates
+    templates::copy_chat_templates(&chat_dir, dry_run)?;
+
+    if dry_run {
+        println!("{}", "\nDry run completed. No files were modified.".yellow());
+    } else {
+        println!("{}", "\n✅ Chat mode configuration installed successfully!".green().bold());
+        println!("\nUsage:");
+        println!("  cd ~/.chat && claude");
+        println!("\nCustomize:");
+        println!("  Edit ~/.chat/CLAUDE.md to personalize your chat experience");
+    }
+
+    Ok(())
+}
+
 /// Install MCP configuration from embedded template
 fn install_mcp_config(claude_dir: &PathBuf, dry_run: bool) -> Result<()> {
     let target = claude_dir.join("mcp.json");
