@@ -217,6 +217,40 @@ hagi install --dry-run --skip CLAUDE.md --skip instructions
 hagi install --skip CLAUDE.md --skip instructions
 ```
 
+### チャットモードセットアップ
+
+`~/.chat/`配下に雑談用の軽量設定を配置します。
+
+```bash
+hagi install --chat
+```
+
+**セットアップ内容:**
+- `~/.chat/` ディレクトリ作成
+- `~/.chat/CLAUDE.md` - 雑談用のカスタマイズ可能な設定
+
+**特徴:**
+- MCPサーバーなし(純粋な会話のみ)
+- プロジェクト文脈なし(開発ルールに縛られない)
+- 軽量起動
+
+**使い方:**
+```bash
+# セットアップ
+hagi install --chat
+
+# 雑談モードで起動
+cd ~/.chat && claude
+```
+
+**オプション:**
+
+**`--dry-run`**: ドライラン(変更内容の確認のみ)
+
+```bash
+hagi install --chat --dry-run
+```
+
 ---
 
 ## uninstall - アンインストール
