@@ -1,50 +1,39 @@
-直近の会話を簡潔にまとめてマークダウンファイルに保存します。
+Summarize recent 2-3 conversations and save as markdown.
 
-# 動作
+# Output
 
-1. 直近2〜3の会話(ユーザーの依頼とその結果)を振り返る
-2. 一貫性のある文章で簡潔に要約
-3. カレントディレクトリにファイルを保存
+- Filename: argument or `note-YYYYMMDD-HHMMSS.md`
+- Location: current directory
 
-# 出力形式
-
-## ファイル名
-
-- 引数あり: 指定されたファイル名
-- 引数なし: `note-YYYYMMDD-HHMMSS.md`
-
-## 内容構成
+# Format
 
 ```markdown
-# [トピック]
+# [Topic]
 
-## 概要
-[1〜2文で何をしたか]
+## Summary
+[1-2 sentences]
 
-## 詳細
-[議論の要点、決定事項]
+## Details
+[Key points, decisions]
 
-## 結果
-[成果物、変更内容]
+## Result
+[Changes, deliverables]
 
-## 次のアクション(あれば)
-[残タスク、フォローアップ]
+## Next (if any)
+[Remaining tasks]
 ```
 
-# ガイドライン
+# Rules
 
-- 冗長な説明は避け、要点のみ
-- 技術的な詳細は必要に応じて含める
-- 会話の文脈を理解していない人が読んでもわかるように
-- ファイルパス、コマンド、コード断片は適宜含める
+- Concise, no fluff
+- Include file paths, commands as needed
+- Readable without conversation context
 
-# 使用例
+# Usage
 
 ```
-/note                    # note-20250103-120000.md として保存
-/note chat-mode.md       # chat-mode.md として保存
+/note                 # auto-named
+/note feature.md      # custom name
 ```
 
----
-
-**今すぐ実行**: 直近の会話を要約してファイルに保存してください。
+**Execute now**: Summarize and save.
