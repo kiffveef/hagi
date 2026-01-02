@@ -8,6 +8,15 @@ hagiインストール後の詳しい使い方、MCPサーバーの活用方法�
 
 hagiでセットアップすると、`.claude/commands/`ディレクトリにスラッシュコマンドが配置されます。
 
+### コマンドの更新(既存インストール済みの場合)
+
+新しいスラッシュコマンドが追加された場合、以下で更新できます:
+
+```bash
+# カスタマイズ済みのCLAUDE.mdとinstructionsを保持しつつ更新
+hagi install --skip CLAUDE.md --skip instructions
+```
+
 ### /st - Sequential Thinking
 
 sequential-thinking MCPを使った構造化思考支援コマンド。複雑な問題を段階的に分析・解決します。
