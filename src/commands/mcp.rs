@@ -5,16 +5,6 @@ use std::path::PathBuf;
 
 use crate::utils;
 
-/// Load environment variable from .env file or shell environment
-fn load_env_token(key: &str) -> Option<String> {
-    // Try loading .env file (only if it exists in current directory)
-    if std::path::Path::new(".env").exists() {
-        let _ = dotenvy::dotenv();
-    }
-
-    std::env::var(key).ok()
-}
-
 /// Get MCP config path based on scope (global or project-local)
 fn get_mcp_config_path(global: bool) -> Result<PathBuf> {
     if global {
@@ -254,25 +244,6 @@ fn enable_single(name: &str, global: bool) -> Result<bool> {
     if let Some(server_config) = servers.get_mut(name) {
         if let Some(obj) = server_config.as_object_mut() {
             obj.remove("disabled");
-
-            // Check token availability for github/github-graphql
-            if name == "github" || name == "github-graphql" {
-                let token_key = if name == "github" {
-                    "GITHUB_PERSONAL_ACCESS_TOKEN"
-                } else {
-                    "GITHUB_TOKEN"
-                };
-
-                if load_env_token(token_key).is_some() {
-                    println!("   {} {} found in environment", "✓".green(), token_key);
-                } else {
-                    println!("   {} {} not found in .env or environment", "⚠".yellow(), token_key);
-                    println!("   Set up with one of:");
-                    println!("     1. Create .env file: echo '{}=your_token' > .env", token_key);
-                    println!("     2. Export in shell: export {}=your_token", token_key);
-                    println!("     3. Edit ~/.claude/mcp.json manually");
-                }
-            }
         }
     }
 
@@ -386,11 +357,8 @@ fn get_server_description(name: &str) -> &'static str {
     match name {
         "sequential-thinking" => "Structured thinking and problem-solving",
         "git" => "Git operations and repository management",
-        "github" => "GitHub REST API integration (issues, PRs, repos)",
-        "github-graphql" => "GitHub GraphQL API (advanced queries, batch ops)",
         "context7" => "Library documentation and code examples",
-        "file-search" => "Fast file search and analysis",
-        "serena" => "Code analysis and semantic search",
+        "serena" => "Code analysis and semantic search (token-optimized)",
         "one-search" => "Web search (DuckDuckGo, SearXNG)",
         "memory" => "Long-term memory (SQLite-vec, local)",
         _ => "Custom MCP server",
@@ -398,8 +366,8 @@ fn get_server_description(name: &str) -> &'static str {
 }
 
 /// Check if server requires environment variables
-fn needs_env_setup(name: &str) -> bool {
-    matches!(name, "github" | "github-graphql")
+fn needs_env_setup(_name: &str) -> bool {
+    false
 }
 
 /// Check if server is critical for recommended workflow
