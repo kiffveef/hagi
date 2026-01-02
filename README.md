@@ -10,7 +10,7 @@ hagiは、Claude Codeの開発環境を素早くセットアップするため�
 
 - **グローバルセットアップ**: `~/.claude/`配下にMCP設定とパーミッション設定を配置
 - **プロジェクトセットアップ**: プロジェクトごとの`.claude/`ディレクトリとテンプレートを配置
-- **MCP管理**: sequential-thinking、context7(Phase 2d)、serena(Phase 2e)、one-search、memory、file-search、git、githubの統合設定
+- **MCP管理**: sequential-thinking、context7、serena、one-search、memory、gitの統合設定
 - **安全な操作**: バックアップ自動作成・世代管理(最新3世代保持)、ドライラン、確認プロンプト機能
 
 ---
@@ -71,15 +71,12 @@ hagi install
 
 | MCP | 用途 | デフォルト状態 | 備考 |
 |-----|------|----------------|------|
-| sequential-thinking | 構造化思考支援 | ✅ 有効 | Phase 2a |
-| context7 | 公式ドキュメント検索 | ✅ 有効 | Phase 2d |
-| one-search | Web検索(DuckDuckGo他) | ❌ 無効 | Phase 2d、軽量 |
-| memory | 長期記憶管理(完全ローカル) | ❌ 無効 | Phase 2d、SQLite-vec |
-| serena | コード解析・セマンティック検索 | ❌ 無効 | Phase 2e、XDG準拠 |
-| file-search | 高速ファイル検索 | ❌ 無効 | Rust+Tantivy |
+| sequential-thinking | 構造化思考支援 | ✅ 有効 | 軽量、起動即座 |
+| context7 | 公式ドキュメント検索 | ✅ 有効 | API keyなしで基本機能利用可 |
+| one-search | Web検索(DuckDuckGo他) | ❌ 無効 | 軽量、Puppeteerなし |
+| memory | 長期記憶管理(完全ローカル) | ❌ 無効 | SQLite-vec + ONNX |
+| serena | コード解析・セマンティック検索 | ❌ 無効 | トークン節約設定済み |
 | git | Git操作 | ❌ 無効 | uvx経由 |
-| github | GitHub REST API連携 | ❌ 無効 | .env PAT対応 |
-| github-graphql | GitHub GraphQL API連携 | ❌ 無効 | .env PAT対応、トークン効率高 |
 
 詳細なインストール方法とトラブルシューティングは [MCP導入ガイド](./docs/mcp-setup.md) を参照してください。
 
