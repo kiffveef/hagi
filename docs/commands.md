@@ -961,26 +961,20 @@ hagi sync status
 git clone git@github.com:yourname/myproject.git
 cd myproject
 
-# hagiをインストール
-hagi install
+# 方法1: URL指定で直接clone（推奨・hagi install不要）
+hagi sync init git@github.com:yourname/myproject-claude.git
 
-# sync初期化(自動で既存リポジトリを検出してclone)
-hagi sync init
+# 方法2: gh CLI自動検出（hagi install必要）
+hagi install
+hagi sync init  # <project>-claudeリポジトリを自動検出
 
 # 確認
 ls -la .claude
 ```
 
 **動作:**
-- `hagi sync init`は`<project>-claude`リポジトリの存在を自動チェック(gh CLI必要)
-- 存在する場合 → cloneして`.claude/`を置換
-- 存在しない場合 → 新規リポジトリを作成
-
-**gh CLIがない場合:**
-```bash
-# URL指定で直接clone
-hagi sync init git@github.com:yourname/myproject-claude.git
-```
+- URL指定時 → `.claude`がなくても直接clone（`hagi install`不要）
+- URL省略時 → `<project>-claude`リポジトリを自動チェック(gh CLI必要、`hagi install`必要)
 
 **日常のワークフロー:**
 
