@@ -87,16 +87,33 @@ pub fn sync_push(message: Option<&str>) -> Result<()> {
     }
 
     let commit_msg = message.unwrap_or("Update .claude config");
-    let status = Command::new("git")
+    let commit_status = Command::new("git")
         .args(["commit", "-m", commit_msg])
         .current_dir(claude_dir)
         .status()
         .context("Failed to run git commit")?;
 
-    if !status.success() {
+    if !commit_status.success() {
         println!("{}", "⚠ Nothing to commit".yellow());
+    }
+
+    let output = Command::new("git")
+        .args(["rev-list", "--count", "origin/main..HEAD"])
+        .current_dir(claude_dir)
+        .output()
+        .context("Failed to check commits ahead")?;
+
+    let ahead_count = String::from_utf8_lossy(&output.stdout)
+        .trim()
+        .parse::<u32>()
+        .unwrap_or(0);
+
+    if ahead_count == 0 {
+        println!("{}", "✅ Already up to date with remote".green());
         return Ok(());
     }
+
+    println!("{}", format!("Pushing {} commit(s)...", ahead_count).green());
 
     let status = Command::new("git")
         .args(["push"])
