@@ -1,4 +1,4 @@
-Comprehensive research using one-search + context7 + mem0-mcp integration.
+Comprehensive research using one-search + context7 + memento integration.
 
 # /research Command
 
@@ -6,7 +6,7 @@ Perform comprehensive research on a topic by combining:
 1. **one-search**: Web search for practical examples and community insights
 2. **context7**: Official documentation for accurate specifications
 3. **Integration**: Synthesize information from both sources
-4. **mem0-mcp**: Save key learnings to long-term memory (optional)
+4. **memento**: Save key learnings to long-term memory (optional)
 
 ## Usage
 
@@ -35,9 +35,9 @@ Perform comprehensive research on a topic by combining:
 
 **Instructions for Claude:**
 
-1. **IF mem0-mcp is available:**
-   - Use `search_memories` tool with the topic
-   - Search tags and content for relevant matches
+1. **IF memento is available:**
+   - Use `search_nodes` tool with the topic as query
+   - Search for entities with type "research_topic"
 
 2. **IF memories found:**
    - Display: "✅ Found previous research from {date}"
@@ -52,7 +52,7 @@ Perform comprehensive research on a topic by combining:
    - Display: "ℹ️ No previous research found. Starting new research..."
    - Continue to Step 1
 
-4. **IF mem0-mcp not available:**
+4. **IF memento not available:**
    - Display: "ℹ️ Memory not available. Proceeding with fresh research."
    - Continue to Step 1
 
@@ -157,7 +157,7 @@ If serena MCP is available and the topic is relevant to the current project, int
 3. Test thoroughly
 ```
 
-### Step 4: Memory Storage (mcp-memory-service)
+### Step 4: Memory Storage (memento)
 
 Save or update key learnings in long-term memory.
 
@@ -169,40 +169,44 @@ Save or update key learnings in long-term memory.
 - IF `--no-save` flag provided → **SKIP saving entirely**
 
 **UPDATE mode:**
-1. Use `update_memory` tool (if available)
-2. OR delete old memory + save new one
+1. Use `add_observations` to update existing entity
+2. OR `delete_entities` + `create_entities` for full replacement
 3. Display: "✅ Memory updated with latest information"
 
 **NEW SAVE mode:**
-1. Use `save_memory` or `add_memory` tool
+1. Use `create_entities` tool
 2. Display: "✅ Research saved to long-term memory"
 
 **SKIP mode:**
 - Display: "ℹ️ Skipped memory storage (--no-save)"
 
 **Requirements for saving:**
-- ONLY save if mem0-mcp is available
+- ONLY save if memento is available
 - MUST include verification information
 
-**Memory Format:**
+**Entity Format (Memento):**
 ```json
 {
-  "content": "Key learnings about {topic}",
-  "sources": [
-    "https://official-docs-url",
-    "https://helpful-article-url"
-  ],
-  "type": "research_topic",
-  "verified": "YYYY-MM-DD",
-  "tags": ["tag1", "tag2", "tag3"]
+  "entities": [{
+    "name": "{topic}",
+    "entityType": "research_topic",
+    "observations": [
+      "Key learning 1 about {topic}",
+      "Key learning 2 about {topic}",
+      "Source: https://official-docs-url",
+      "Source: https://helpful-article-url",
+      "Verified: YYYY-MM-DD",
+      "Tags: tag1, tag2, tag3"
+    ]
+  }]
 }
 ```
 
 **Important:**
-- Include official documentation URLs
+- Include official documentation URLs in observations
 - Add verification date
 - Use relevant tags for future retrieval
-- Keep content concise but comprehensive
+- Keep observations concise but comprehensive
 
 ## Output Format
 
@@ -269,7 +273,7 @@ Present the research results in the following structure:
 - Updated: {today's date}
 
 **If SKIPPED:**
-ℹ️ Memory storage skipped (--no-save or mem0-mcp unavailable)
+ℹ️ Memory storage skipped (--no-save or memento unavailable)
 ```
 
 ## Error Handling
@@ -282,9 +286,9 @@ Present the research results in the following structure:
 - Continue with one-search only
 - Notify user: "⚠️ context7 not available, using web search only"
 
-**If mem0-mcp is not available:**
+**If memento is not available:**
 - Skip memory storage
-- Notify user: "ℹ️ mem0-mcp not available, skipping memory storage"
+- Notify user: "ℹ️ memento not available, skipping memory storage"
 
 **If no MCP servers are available:**
 - Provide research based on built-in knowledge
@@ -295,5 +299,5 @@ Present the research results in the following structure:
 - This command leverages multiple MCP servers for comprehensive research
 - Official documentation (context7) takes precedence for accuracy
 - Web search (one-search) provides practical context and real-world usage
-- Memory storage (mem0-mcp) enables knowledge reuse across projects
+- Memory storage (memento) enables knowledge reuse across projects
 - Use `--no-save` when researching temporary or experimental topics

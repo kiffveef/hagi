@@ -34,10 +34,10 @@ No need to run `/code-pattern` separately - this command does both.
 
 **Check for related past patterns in memory:**
 
-1. **If memory MCP is available:**
-   - Use `search_memories` to find related patterns
+1. **If memento MCP is available:**
+   - Use `search_nodes` to find related patterns
    - Query: the user's query
-   - Types: `code_pattern`, `implementation`, `best_practice`
+   - Filter by entityType: `code_pattern`, `implementation`, `best_practice`
    - Limit: top 3 most relevant results
 
 2. **If patterns found, display:**
@@ -60,7 +60,7 @@ No need to run `/code-pattern` separately - this command does both.
    ℹ️ No past patterns found in memory. This will be the first record!
    ```
 
-4. **If memory MCP not available:**
+4. **If memento MCP not available:**
    ```
    ⚠️ Memory not available - searching current codebase only
    ```
@@ -175,19 +175,23 @@ No need to run `/code-pattern` separately - this command does both.
    - Recommended best practices
    - Date: [today's date]
 
-   Use `store_memory` to save? (y/n)
+   Use `create_entities` to save? (y/n)
    ```
 
-2. **If user confirms, save with structure:**
+2. **If user confirms, save with Memento entity structure:**
    ```json
    {
-     "type": "code_pattern",
-     "topic": "[user's query]",
-     "implementations": "[summary of current approaches]",
-     "best_practice": "[recommended approach]",
-     "project": "[current project name if detectable]",
-     "date": "[YYYY-MM-DD]",
-     "tags": ["[relevant]", "[tags]", "[from]", "[query]"]
+     "entities": [{
+       "name": "[user's query]",
+       "entityType": "code_pattern",
+       "observations": [
+         "Implementation: [summary of current approaches]",
+         "Best practice: [recommended approach]",
+         "Project: [current project name if detectable]",
+         "Date: [YYYY-MM-DD]",
+         "Tags: [relevant], [tags], [from], [query]"
+       ]
+     }]
    }
    ```
 
