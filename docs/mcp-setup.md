@@ -44,7 +44,7 @@
 | sequential-thinking | 構造化思考支援 | npx (自動) | ✅ 有効 | 軽量、起動即座 |
 | context7 | 公式ドキュメント検索 | npx (自動) | ✅ 有効 | 軽量、API keyなしで基本機能利用可 |
 | one-search | Web検索 | npx (自動) | ❌ 無効 | DuckDuckGo推奨(Puppeteerなし) |
-| memory | 長期記憶管理 | uv + Git (手動) | ❌ 無効 | 完全ローカル(SQLite-vec + ONNX) |
+| memory | 長期記憶管理 | npx (自動) | ❌ 無効 | Memento(BGE-M3埋め込み、SQLite) |
 | serena | セマンティックコード解析 | npx (自動) | ❌ 無効 | XDG準拠、キャッシュ管理 |
 
 ### その他のMCP
@@ -109,7 +109,7 @@ hagi mcp enable serena
 ```
 
 **連携:**
-- `/code-pattern`コマンド: serena + mcp-memory-serviceで過去パターン検索
+- `/serena`コマンド: serena + Mementoで過去パターン検索
 - `/research`コマンド: Step 3bで現在のコードベースとの統合提案
 
 **トラブルシューティング:**
@@ -210,115 +210,50 @@ hagi mcp enable one-search
 
 ---
 
-### 6. memory (mcp-memory-service) (手動インストール、デフォルト無効)
+### 6. memory (Memento) (自動インストール、デフォルト無効)
 
-完全ローカルで動作する長期記憶管理システムです。
+シンプルで軽量な長期記憶管理システムです。
 
 **特徴:**
-- 完全ローカル動作(SQLite-vec + ONNX埋め込み)
-- 外部LLM不要
-- プライバシー保護(クラウドにデータ送信なし)
+- npx経由の自動インストール(手動セットアップ不要)
+- BGE-M3多言語埋め込み(日本語・英語対応)
+- SQLiteベース(軽量、高速)
+- 完全ローカル動作(クラウド不要)
 - XDG Base Directory準拠
-- 軽量(~50MB)
 
 **前提条件:**
-- **Python 3.10-3.13** (3.14は未対応)
-  - 推奨: Python 3.13
-  - 理由: PyTorch 2.8.0がPython 3.14をサポートしていない
-- uv (Python package manager)
-- Git
+- Node.js v18以降
 
-**インストール手順:**
+**インストール:**
 
+手動インストール不要。`hagi mcp enable memory`または設定変更時にnpxが自動でインストールします。
+
+**手動確認:**
 ```bash
-# 1. リポジトリをクローン
-mkdir -p ~/.local/opt/mcp-servers
-cd ~/.local/opt/mcp-servers
-git clone https://github.com/doobidoo/mcp-memory-service.git
-
-# 2. Python 3.13で仮想環境を作成し、依存関係をインストール
-cd mcp-memory-service
-uv venv --python 3.13
-uv pip install -e .
-
-# 3. パッチ適用(HF_HOME環境変数問題の修正)
-# v8.4.3およびv8.5.0でHF_HOMEが上書きされる問題を修正
-curl -fsSL https://raw.githubusercontent.com/kiffveef/hagi/main/patches/mcp-memory-service-hf-home-fix.patch | git apply
-
-# 4. .env ファイルを作成
-curl -fsSL https://raw.githubusercontent.com/kiffveef/hagi/main/templates/mcp-memory-service/.env.template -o .env
-
-# または手動で .env を作成:
-cat > .env << 'EOF'
-# MCP Memory Service Configuration
-MCP_MEMORY_STORAGE_BACKEND=sqlite_vec
-HF_HOME=${HOME}/.cache/huggingface
-TRANSFORMERS_CACHE=${HOME}/.cache/huggingface
-SENTENCE_TRANSFORMERS_HOME=${HOME}/.cache/huggingface
-MCP_MEMORY_SQLITE_PATH=${HOME}/.local/share/mcp-memory-service/primary_sqlite_vec.db
-MCP_MEMORY_CHROMA_PATH=${HOME}/.local/share/mcp-memory-service/chroma_db
-MCP_MEMORY_BACKUPS_PATH=${HOME}/.local/share/mcp-memory-service/backups
-EOF
-
-# 5. データディレクトリを作成
-mkdir -p ~/.local/share/mcp-memory-service/{chroma_db,backups}
-
-# 6. 埋め込みモデルをダウンロード(初回のみ、~50MB)
-# sentence-transformers/all-MiniLM-L6-v2モデルを事前にダウンロード
-uv run python -c "from sentence_transformers import SentenceTransformer; print('Downloading model...'); model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2'); print('Model downloaded successfully')"
-
-# 7. 動作確認
-uv run memory server --help
+npx -y @iachilles/memento@latest
 ```
 
-**パッチ詳細:**
-
-mcp-memory-serviceのv8.4.3およびv8.5.0には、低メモリシステム(8GB未満)で環境変数を無条件に上書きする問題があります。このパッチは、ユーザーが設定したHF_HOME等の環境変数を尊重するように修正します。
-
-- **影響を受けるバージョン**: v8.4.3, v8.5.0
-- **修正内容**: `server.py`の環境変数設定を既存の値を確認してから設定するように変更
-- **パッチファイル**: [patches/mcp-memory-service-hf-home-fix.patch](https://github.com/kiffveef/hagi/blob/main/patches/mcp-memory-service-hf-home-fix.patch)
-
 **データ保存場所:**
-- データベース: `~/.local/share/mcp-memory-service/chroma_db/`
-- バックアップ: `~/.local/share/mcp-memory-service/backups/`
-- Hugging Faceキャッシュ: `~/.cache/huggingface/`
-
-**環境変数の説明:**
-
-mcp-memory-serviceは以下の環境変数で動作を制御します(すべてXDG Base Directory準拠):
-
-- `MCP_MEMORY_STORAGE_BACKEND`: ストレージバックエンド
-  - 設定値: `sqlite_vec`(推奨)
-  - 用途: ベクトル検索エンジンの選択
-
-- `MCP_MEMORY_CHROMA_PATH`: データベース保存先
-  - デフォルト: `~/.local/share/mcp-memory-service/chroma_db/`
-  - XDG準拠: `${XDG_DATA_HOME:-$HOME/.local/share}/mcp-memory-service/chroma_db`
-  - 用途: 記憶データの永続化
-
-- `MCP_MEMORY_BACKUPS_PATH`: バックアップ保存先
-  - デフォルト: `~/.local/share/mcp-memory-service/backups/`
-  - XDG準拠: `${XDG_DATA_HOME:-$HOME/.local/share}/mcp-memory-service/backups`
-  - 用途: データのバックアップ
-
-- `HF_HOME`: Hugging Faceモデルキャッシュ
-  - デフォルト: `~/.cache/huggingface/`
-  - XDG準拠: `${XDG_CACHE_HOME:-$HOME/.cache}/huggingface`
-  - 用途: ONNX埋め込みモデルのキャッシュ
-  - **重要**: 未設定の場合、非推奨の`TRANSFORMERS_CACHE`が使用され警告が表示されます
-
-すべての環境変数は`~/.claude/mcp.json`に設定済みです。
+- データベース: `~/.local/share/claude-memory/memory.db`
+- XDG準拠: `${XDG_DATA_HOME:-$HOME/.local/share}/claude-memory/memory.db`
 
 **有効化方法:**
 
 ```bash
-# 将来のhagiコマンド(実装予定)
 hagi mcp enable memory
 
 # または手動で~/.claude/mcp.jsonを編集
 # "disabled": true → false に変更
 ```
+
+**主要API:**
+
+| ツール | 用途 |
+|--------|------|
+| `search_nodes` | エンティティ検索 |
+| `create_entities` | エンティティ作成 |
+| `add_observations` | 既存エンティティに情報追加 |
+| `delete_entities` | エンティティ削除 |
 
 **スラッシュコマンド連携:**
 
@@ -328,6 +263,11 @@ hagi mcp enable memory
 - メモリ更新機能
 
 詳細は`templates/.claude/commands/research.md`を参照してください。
+
+**旧バージョン(mcp-memory-service)からの移行:**
+
+mcp-memory-serviceを使用していた場合、データの自動移行はサポートされていません。
+旧設定は`icebox/mcp-memory-service`ブランチに保存されています。
 
 ---
 
@@ -508,7 +448,7 @@ Failed to connect to one-search MCP
 
 ---
 
-### mcp-memory-service起動エラー
+### Memento (memory) 起動エラー
 
 **症状:**
 ```
@@ -516,68 +456,23 @@ Failed to start memory server
 ```
 
 **解決方法:**
-1. インストール確認:
+1. Node.jsバージョン確認:
    ```bash
-   ls ~/.local/opt/mcp-servers/mcp-memory-service/
+   node --version  # v18以降推奨
    ```
 
-2. uv環境確認:
+2. 手動起動テスト:
    ```bash
-   cd ~/.local/opt/mcp-servers/mcp-memory-service
-   uv sync
+   npx -y @iachilles/memento@latest
    ```
 
-3. Python3確認:
+3. データディレクトリの権限確認:
    ```bash
-   python3 --version
+   ls -la ~/.local/share/claude-memory/
+   # 存在しない場合は自動作成されます
    ```
 
-4. データディレクトリ作成:
-   ```bash
-   mkdir -p ~/.local/share/mcp-memory-service/{chroma_db,backups}
-   ```
-
-5. 手動起動テスト:
-   ```bash
-   cd ~/.local/opt/mcp-servers/mcp-memory-service
-   uv run memory server
-   ```
-
----
-
-### mcp-memory-service で TRANSFORMERS_CACHE 警告
-
-**症状:**
-```
-FutureWarning: Using `TRANSFORMERS_CACHE` is deprecated and will be removed in v5 of Transformers. Use `HF_HOME` instead.
-```
-
-**原因:**
-- `HF_HOME`環境変数が未設定
-- Transformers v5で`TRANSFORMERS_CACHE`が削除される予定
-
-**解決方法:**
-
-最新のhagiテンプレートでは`HF_HOME`が設定済みです。以下で確認:
-
-```bash
-cat ~/.claude/mcp.json | grep -A 5 '"memory"'
-```
-
-`HF_HOME`が含まれていない場合、手動で追加:
-
-```json
-"memory": {
-  "env": {
-    "MCP_MEMORY_STORAGE_BACKEND": "sqlite_vec",
-    "MCP_MEMORY_CHROMA_PATH": "${XDG_DATA_HOME:-$HOME/.local/share}/mcp-memory-service/chroma_db",
-    "MCP_MEMORY_BACKUPS_PATH": "${XDG_DATA_HOME:-$HOME/.local/share}/mcp-memory-service/backups",
-    "HF_HOME": "${XDG_CACHE_HOME:-$HOME/.cache}/huggingface"
-  }
-}
-```
-
-変更後、Claude Codeを再起動すると警告が消えます。
+4. Claude Code再起動
 
 ---
 
@@ -628,7 +523,7 @@ Rate limit exceeded
 
 - [context7 MCP](https://github.com/upstash/context7-mcp) - 公式ドキュメント検索
 - [one-search MCP](https://github.com/supercorp-ai/one-search-mcp) - マルチエンジンWeb検索
-- [mcp-memory-service](https://github.com/doobidoo/mcp-memory-service) - 完全ローカル長期記憶管理
+- [Memento (@iachilles/memento)](https://www.npmjs.com/package/@iachilles/memento) - BGE-M3多言語メモリ管理
 - [serena MCP](https://github.com/oraios/serena) - セマンティックコード解析
 - [sequential-thinking MCP](https://github.com/modelcontextprotocol/servers)
 - [git MCP](https://github.com/modelcontextprotocol/servers)

@@ -24,10 +24,8 @@ hagiは、Claude Codeの開発環境を素早くセットアップするため�
 - Rust/cargo (1.80以降推奨) - hagiのビルド・インストールに必要
 
 **推奨(MCP機能を使う場合):**
-- Node.js (v18以降) - sequential-thinking、context7、one-search用
-- uv (Python package manager) - mcp-memory-service用
-- Python3 (3.10-3.13) - mcp-memory-service setup用
-- Git - mcp-memory-service clone用
+- Node.js (v18以降) - sequential-thinking、context7、one-search、memory用
+- uv (Python package manager) - serena用
 
 **Note**: `hagi install --global`実行時に、上記ツールの存在が自動チェックされます。不足している場合は警告とインストール手順が表示されますが、インストール処理は継続されます。
 
@@ -75,7 +73,7 @@ hagi install
 | sequential-thinking | 構造化思考支援 | ✅ 有効 | 軽量、起動即座 |
 | context7 | 公式ドキュメント検索 | ✅ 有効 | API keyなしで基本機能利用可 |
 | one-search | Web検索(DuckDuckGo他) | ❌ 無効 | 軽量、Puppeteerなし |
-| memory | 長期記憶管理(完全ローカル) | ❌ 無効 | SQLite-vec + ONNX |
+| memory | 長期記憶管理(完全ローカル) | ❌ 無効 | Memento(BGE-M3多言語) |
 | serena | コード解析・セマンティック検索 | ❌ 無効 | トークン節約設定済み |
 | git | Git操作 | ❌ 無効 | uvx経由 |
 
