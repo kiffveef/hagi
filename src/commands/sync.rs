@@ -9,13 +9,7 @@ use std::process::Command;
 pub fn sync_init(remote_url: Option<&str>) -> Result<()> {
     let claude_dir = Path::new(".claude");
 
-    if !claude_dir.exists() {
-        bail!(
-            ".claude directory not found.\n\
-             Please run 'hagi install' first to create .claude/ directory."
-        );
-    }
-
+    // If .claude/.git exists, already initialized
     if claude_dir.join(".git").exists() {
         bail!(
             ".claude is already a Git repository.\n\
@@ -23,9 +17,18 @@ pub fn sync_init(remote_url: Option<&str>) -> Result<()> {
         );
     }
 
-    // If URL is provided, use it directly
+    // If URL is provided, clone directly (no need for hagi install first)
     if let Some(url) = remote_url {
-        return clone_and_replace_claude(url);
+        return clone_claude_repo(url);
+    }
+
+    // For auto-detection, need .claude to exist
+    if !claude_dir.exists() {
+        bail!(
+            ".claude directory not found.\n\
+             Please run 'hagi install' first, or specify URL:\n\
+             hagi sync init git@github.com:user/project-claude.git"
+        );
     }
 
     // Check if gh CLI is available
@@ -478,4 +481,35 @@ fn command_exists(cmd: &str) -> bool {
         .output()
         .map(|output| output.status.success())
         .unwrap_or(false)
+}
+
+/// Clone .claude repository from URL (handles both fresh clone and replace)
+fn clone_claude_repo(remote_url: &str) -> Result<()> {
+    let claude_dir = Path::new(".claude");
+
+    // If .claude exists, use backup/replace logic
+    if claude_dir.exists() {
+        return clone_and_replace_claude(remote_url);
+    }
+
+    // Fresh clone - .claude doesn't exist
+    println!("{}", "Cloning .claude repository...".green());
+
+    let status = Command::new("git")
+        .args(["clone", remote_url, ".claude"])
+        .status()
+        .context("Failed to run git clone")?;
+
+    if !status.success() {
+        bail!("git clone failed");
+    }
+
+    println!("{}", "✅ Cloned .claude repository".green().bold());
+    println!();
+    println!("Daily workflow:");
+    println!("  {} - Pull latest changes", "hagi sync pull".yellow());
+    println!("  {} - Push your changes", "hagi sync push".yellow());
+    println!();
+
+    Ok(())
 }
