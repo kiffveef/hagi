@@ -45,7 +45,7 @@ pub fn sync_pull() -> Result<()> {
     println!("{}", "Pulling latest .claude changes...".green());
 
     let status = Command::new("git")
-        .args(["pull", "--rebase"])
+        .args(["pull", "origin", "main", "--rebase"])
         .current_dir(claude_dir)
         .status()
         .context("Failed to run git pull")?;
