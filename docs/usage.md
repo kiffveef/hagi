@@ -411,6 +411,220 @@ GitHub連携(Issue/PR管理)を提供。
 
 ---
 
+## 複数マシン間での.claude同期
+
+複数のマシン(デスクトップ、ノートPC、リモートサーバーなど)でプロジェクトを開発する場合、`.claude`ディレクトリの同期が重要です。設計ドキュメント、タスク管理、プロジェクト固有の設定を共有できます。
+
+### なぜ.claudeを同期するのか？
+
+`.claude`ディレクトリには以下のような重要な情報が含まれます:
+
+- **CLAUDE.md**: プロジェクトの設計指針、ガイドライン
+- **TODO.md**: タスク管理、進捗状況
+- **instructions/**: プロジェクト固有のルール
+- **commands/**: カスタムスラッシュコマンド
+- **mcp.json**: プロジェクトローカルのMCP設定
+
+これらをマシン間で同期することで、一貫した開発環境を維持できます。
+
+### セットアップ手順
+
+#### 初回セットアップ（Machine A）
+
+```bash
+cd myproject
+
+# 1. プロジェクト設定をインストール
+hagi install
+
+# 2. 同期を初期化
+hagi sync init
+
+# 対話的に確認プロンプトが表示されます:
+# 📦 Creating private repository
+#   Repository name: myproject-claude
+#   Visibility: Private
+# Proceed? [Y/n]: y
+
+# → GitHubにmyproject-claudeリポジトリが自動作成されます
+# → .claude内でgit init + push完了
+```
+
+**gh CLIがない場合:**
+
+手動でGitHubリポジトリを作成してから:
+```bash
+hagi sync init git@github.com:yourname/myproject-claude.git
+```
+
+#### 別マシン（Machine B）
+
+```bash
+# 1. プロジェクトをクローン
+git clone git@github.com:yourname/myproject.git
+cd myproject
+
+# 2. .claudeを取得
+hagi sync pull
+
+# 確認
+ls -la .claude
+```
+
+### 日常のワークフロー
+
+#### 作業開始前
+
+```bash
+# 最新の.claudeを取得
+hagi sync pull
+```
+
+これにより、他のマシンで更新されたTODO.md、CLAUDE.mdなどが同期されます。
+
+#### 作業中
+
+通常通り開発を進めます:
+- TODO.mdを更新
+- CLAUDE.mdに設計メモを追加
+- instructions/を編集
+
+#### 作業終了時
+
+```bash
+# 状態確認
+hagi sync status
+
+# 変更をpush
+hagi sync push -m "Update TODO: Complete authentication feature"
+
+# または、デフォルトメッセージで
+hagi sync push
+```
+
+### 実践例
+
+#### ケース1: デスクトップ → ノートPC
+
+**デスクトップ（朝）:**
+```bash
+cd ~/projects/myproject
+hagi sync pull  # 前日のノートPCでの変更を取得
+
+# 作業...
+# TODO.mdを更新
+
+hagi sync push -m "Add database migration tasks"
+```
+
+**ノートPC（夜）:**
+```bash
+cd ~/projects/myproject
+hagi sync pull  # デスクトップでの変更を取得
+
+# 作業...
+# TODO.mdをさらに更新
+
+hagi sync push -m "Complete migration implementation"
+```
+
+#### ケース2: チーム開発（複数人）
+
+`.claude`リポジトリへのアクセス権を付与することで、チーム全体で設計ドキュメントを共有できます:
+
+```bash
+# チームメンバーがリポジトリをクローン
+git clone git@github.com:yourname/myproject-claude.git .claude
+
+# または
+hagi sync pull
+```
+
+**注意:**
+- チーム開発では、コンフリクトが発生する可能性があります
+- 定期的に`hagi sync pull`で同期することを推奨
+
+#### ケース3: リモートサーバーでの開発
+
+```bash
+# ローカルマシン
+hagi sync push -m "Add deployment instructions"
+
+# SSH接続してリモートサーバーへ
+ssh user@remote-server
+cd /path/to/project
+
+# リモートで変更を取得
+hagi sync pull
+
+# リモートで作業...
+# 環境固有の設定をCLAUDE.mdに追加
+
+hagi sync push -m "Add remote server setup notes"
+```
+
+### トラブルシューティング
+
+#### コンフリクトが発生した場合
+
+```bash
+$ hagi sync pull
+# エラー: conflict in TODO.md
+
+# .claudeディレクトリ内で手動解決
+cd .claude
+git status
+# コンフリクトファイルを編集
+
+git add TODO.md
+git rebase --continue
+
+# または、自分の変更を優先
+git rebase --skip
+
+# 完了したらpush
+hagi sync push
+```
+
+#### 同期状態の確認
+
+```bash
+hagi sync status
+
+# 出力例:
+# 📊 .claude sync status:
+#
+# On branch main
+# Your branch is ahead of 'origin/main' by 2 commits.
+#
+# Changes not staged for commit:
+#   modified:   TODO.md
+```
+
+#### .claudeをGitリポジトリ化し忘れた場合
+
+```bash
+# 後から初期化も可能
+hagi sync init
+```
+
+既存の`.claude`内容は保持されます。
+
+### ベストプラクティス
+
+1. **定期的な同期**: 作業開始前と終了時に必ず`pull`と`push`
+2. **意味のあるコミットメッセージ**: 変更内容がわかるメッセージを記述
+3. **コンフリクト回避**: 同じファイルを同時に編集しない
+4. **プライベートリポジトリ必須**: `.claude`には設計情報が含まれるため
+
+### セキュリティ考慮事項
+
+- ✅ プライベートリポジトリを使用（公開しない）
+- ✅ 機密情報（APIキー等）は`.claude`に含めない
+- ✅ チーム開発では適切なアクセス制御を設定
+
+---
+
 ## パーミッション管理
 
 `settings.local.json`で危険なコマンドを制限しています。
