@@ -104,6 +104,8 @@ pub fn install_project(dry_run: bool, skip_paths: &[String]) -> Result<()> {
         println!("  1. Review .claude/CLAUDE.md for project guidelines");
         println!("  2. Customize .claude/instructions/ as needed");
         println!("  3. Enable additional MCP servers with 'hagi mcp enable <name>'");
+
+        print_claude_sync_notice()?;
     }
 
     Ok(())
@@ -397,4 +399,70 @@ fn install_git_hooks(project_dir: &PathBuf, dry_run: bool) -> Result<()> {
     }
 
     Ok(())
+}
+
+/// Print .claude sync notice for multi-machine workflow
+fn print_claude_sync_notice() -> Result<()> {
+    println!();
+    println!("{}", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".cyan());
+    println!("{}", "  📦 Multiple Machine Setup".cyan().bold());
+    println!("{}", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".cyan());
+    println!();
+    println!("If you work on multiple machines, you can sync your .claude/ directory");
+    println!("across machines using a private Git repository.");
+    println!();
+
+    let repo_name = get_repository_name();
+    let claude_repo_name = format!("{}-claude", repo_name);
+
+    if command_exists("gh") {
+        println!("{}", "✨ GitHub CLI detected - Auto setup available:".green().bold());
+        println!();
+        println!("  {}", "hagi sync init".yellow());
+        println!("  → Creates private repository: {}", claude_repo_name.cyan());
+        println!("  → Initializes .claude/ as Git repository");
+        println!("  → Pushes to GitHub automatically");
+        println!();
+    } else {
+        println!("{}", "📋 Manual setup required:".yellow().bold());
+        println!();
+        println!("  1. Create private repository on GitHub:");
+        println!("     {}", format!("https://github.com/new?name={}&visibility=private", claude_repo_name).cyan());
+        println!();
+        println!("  2. Initialize sync:");
+        println!("     {}", format!("hagi sync init git@github.com:<username>/{}.git", claude_repo_name).yellow());
+        println!();
+        println!("{}", "💡 Tip: Install GitHub CLI for automatic setup:".dimmed());
+        println!("     {}", "https://cli.github.com/".cyan().dimmed());
+        println!();
+    }
+
+    println!("{}", "Daily workflow:".bold());
+    println!("  {} - Pull latest changes from other machines", "hagi sync pull".yellow());
+    println!("  {} - Push your changes to sync", "hagi sync push".yellow());
+    println!();
+    println!("{}", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".cyan());
+
+    Ok(())
+}
+
+/// Get repository name from git remote or current directory
+fn get_repository_name() -> String {
+    let output = Command::new("git")
+        .args(["remote", "get-url", "origin"])
+        .output();
+
+    if let Ok(output) = output {
+        if output.status.success() {
+            let url = String::from_utf8_lossy(&output.stdout);
+            if let Some(name) = url.split('/').last() {
+                return name.trim_end_matches(".git\n").trim().to_string();
+            }
+        }
+    }
+
+    env::current_dir()
+        .ok()
+        .and_then(|path| path.file_name().map(|n| n.to_string_lossy().to_string()))
+        .unwrap_or_else(|| "myproject".to_string())
 }

@@ -63,6 +63,12 @@ enum Commands {
         #[command(subcommand)]
         command: ConfigCommands,
     },
+
+    /// Sync .claude directory across machines
+    Sync {
+        #[command(subcommand)]
+        command: SyncCommands,
+    },
 }
 
 #[derive(Subcommand)]
@@ -109,6 +115,26 @@ enum ConfigCommands {
         #[arg(value_name = "TYPE")]
         config_type: String,
     },
+}
+
+#[derive(Subcommand)]
+enum SyncCommands {
+    /// Initialize .claude sync with a private Git repository
+    Init {
+        /// Remote repository URL (e.g., git@github.com:user/repo-claude.git)
+        /// If not provided, will attempt to create repository using gh CLI
+        remote_url: Option<String>,
+    },
+    /// Pull latest .claude changes from remote
+    Pull,
+    /// Push .claude changes to remote
+    Push {
+        /// Commit message
+        #[arg(short, long)]
+        message: Option<String>,
+    },
+    /// Show .claude sync status
+    Status,
 }
 
 fn main() -> Result<()> {
@@ -160,6 +186,20 @@ fn main() -> Result<()> {
             }
             ConfigCommands::Validate { config_type } => {
                 commands::config::validate(&config_type)?;
+            }
+        },
+        Commands::Sync { command } => match command {
+            SyncCommands::Init { remote_url } => {
+                commands::sync::sync_init(remote_url.as_deref())?;
+            }
+            SyncCommands::Pull => {
+                commands::sync::sync_pull()?;
+            }
+            SyncCommands::Push { message } => {
+                commands::sync::sync_push(message.as_deref())?;
+            }
+            SyncCommands::Status => {
+                commands::sync::sync_status()?;
             }
         },
     }
