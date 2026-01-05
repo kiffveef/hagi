@@ -220,6 +220,13 @@ fn init_claude_git_repo(remote_url: &str) -> Result<()> {
 
     println!("{}", "✅ Initialized Git repository".green());
 
+    let gitignore_path = claude_dir.join(".gitignore");
+    let gitignore_content = "# Backup files (hagi auto-generated)\n*.backup.*\n";
+    std::fs::write(&gitignore_path, gitignore_content)
+        .context("Failed to create .gitignore")?;
+
+    println!("{}", "✅ Created .gitignore (excludes backup files)".green());
+
     let status = Command::new("git")
         .args(["remote", "add", "origin", remote_url])
         .current_dir(claude_dir)
