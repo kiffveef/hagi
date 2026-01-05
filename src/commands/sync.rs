@@ -76,6 +76,7 @@ pub fn sync_push(message: Option<&str>) -> Result<()> {
 
     println!("{}", "Pushing .claude changes...".green());
 
+    // First, add all files respecting local .gitignore
     let status = Command::new("git")
         .args(["add", "."])
         .current_dir(claude_dir)
@@ -85,6 +86,12 @@ pub fn sync_push(message: Option<&str>) -> Result<()> {
     if !status.success() {
         bail!("git add failed");
     }
+
+    // Force-add files that might be excluded by parent's .gitignore
+    let _ = Command::new("git")
+        .args(["add", "--force", "CLAUDE.md", "TODO.md"])
+        .current_dir(claude_dir)
+        .status();
 
     let commit_msg = message.unwrap_or("Update .claude config");
     let commit_status = Command::new("git")
@@ -256,6 +263,7 @@ fn init_claude_git_repo(remote_url: &str) -> Result<()> {
 
     println!("{}", format!("✅ Added remote: {}", remote_url).green());
 
+    // First, add all files respecting local .gitignore
     let status = Command::new("git")
         .args(["add", "."])
         .current_dir(claude_dir)
@@ -265,6 +273,13 @@ fn init_claude_git_repo(remote_url: &str) -> Result<()> {
     if !status.success() {
         bail!("git add failed");
     }
+
+    // Force-add files that might be excluded by parent's .gitignore
+    // This ensures CLAUDE.md, TODO.md etc are tracked even if parent ignores .claude/
+    let _ = Command::new("git")
+        .args(["add", "--force", "CLAUDE.md", "TODO.md"])
+        .current_dir(claude_dir)
+        .status();
 
     let status = Command::new("git")
         .args(["commit", "-m", "🌱 first: Initial .claude config"])
