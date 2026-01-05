@@ -11,6 +11,7 @@ hagiは、Claude Codeの開発環境を素早くセットアップするため�
 - **グローバルセットアップ**: `~/.claude/`配下にMCP設定とパーミッション設定を配置
 - **プロジェクトセットアップ**: プロジェクトごとの`.claude/`ディレクトリとテンプレートを配置
 - **MCP管理**: sequential-thinking、context7、serena、one-search、memory、gitの統合設定
+- **複数マシン同期**: `.claude`ディレクトリをプライベートGitリポジトリで同期（設計ドキュメント、タスク管理を共有）
 - **安全な操作**: バックアップ自動作成・世代管理(最新3世代保持)、ドライラン、確認プロンプト機能
 
 ---
@@ -100,6 +101,10 @@ hagi install
 | `install` | グローバル/プロジェクト設定のインストール | ✅ 実装済 |
 | `uninstall` | 設定の削除 | ✅ 実装済 |
 | `status` | インストール状態確認 | ✅ 実装済 |
+| `sync init` | .claude同期の初期化 | ✅ 実装済 |
+| `sync pull` | 最新の.claude設定を取得 | ✅ 実装済 |
+| `sync push` | .claude変更をpush | ✅ 実装済 |
+| `sync status` | 同期状態確認 | ✅ 実装済 |
 | `mcp list` | MCPサーバー一覧表示 | ✅ 実装済 |
 | `mcp info` | MCPサーバー詳細表示 | ✅ 実装済 |
 | `mcp enable` | MCPサーバー有効化 | ✅ 実装済 |

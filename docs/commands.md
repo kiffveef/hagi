@@ -754,6 +754,256 @@ hagi config edit global     # グローバル設定編集
 
 ---
 
+## sync - .claude同期
+
+複数マシン間で`.claude`ディレクトリを同期するためのコマンド。プライベートGitリポジトリを使って、設計ドキュメント、タスク管理、プロジェクト固有の設定を安全に共有できます。
+
+### init - 同期の初期化
+
+```bash
+hagi sync init [REMOTE_URL]
+```
+
+`.claude`ディレクトリをGitリポジトリとして初期化し、プライベートリポジトリにpushします。
+
+**動作:**
+
+**1. `gh`コマンドがある場合(自動セットアップ):**
+```bash
+hagi sync init
+# → プロジェクト名から自動的に<project>-claudeリポジトリを作成
+# → .claude内でgit init
+# → リモート追加、コミット、push
+```
+
+対話的に確認プロンプトが表示されます:
+```
+📦 Creating private repository
+
+  Repository name: myproject-claude
+  Visibility: Private
+
+Proceed? [Y/n]:
+```
+
+**2. `gh`コマンドがない場合(手動セットアップ):**
+```bash
+# 手動でGitHubにリポジトリ作成後
+hagi sync init git@github.com:yourname/myproject-claude.git
+```
+
+手動セットアップ手順が表示されます:
+```
+📋 Manual Setup Instructions
+
+1. Create private repository on GitHub:
+   https://github.com/new
+
+   Repository name: myproject-claude
+   Visibility: Private
+
+2. Initialize sync:
+   hagi sync init git@github.com:yourname/myproject-claude.git
+```
+
+**実行後の出力:**
+```
+✅ Initialized Git repository
+✅ Added remote: git@github.com:yourname/myproject-claude.git
+✅ Created initial commit
+✅ Pushed to remote
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ✅ .claude sync initialized successfully!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+On other machines:
+  1. Clone your project repository
+  2. Run: hagi sync pull
+
+Daily workflow:
+  hagi sync pull - Pull latest changes
+  hagi sync push - Push your changes
+```
+
+**注意:**
+- `.claude`ディレクトリが存在しない場合はエラー（`hagi install`が先に必要）
+- 既にGitリポジトリの場合はエラー（重複初期化を防止）
+- `gh`コマンドが必要なのは自動セットアップの場合のみ
+
+### pull - 最新取得
+
+```bash
+hagi sync pull
+```
+
+リモートから最新の`.claude`設定を取得します。
+
+**動作:**
+1. `.claude/.git`の存在確認
+2. `git pull --rebase`で最新を取得
+3. 成功メッセージを表示
+
+**出力例:**
+```
+Pulling latest .claude changes...
+✅ Pulled latest .claude config
+```
+
+**エラー時:**
+```bash
+# .claudeがGitリポジトリでない場合
+Error: .claude is not a Git repository.
+Run 'hagi sync init' first to initialize sync.
+```
+
+**使用タイミング:**
+- 作業開始前（他のマシンでの変更を取得）
+- 別のマシンで作業した後
+- 定期的な同期（1日1回など）
+
+### push - 変更をpush
+
+```bash
+hagi sync push [-m <MESSAGE>]
+```
+
+`.claude`の変更をリモートにpushします。
+
+**オプション:**
+- `-m, --message <MESSAGE>`: カスタムコミットメッセージ（省略時: "Update .claude config"）
+
+**動作:**
+1. `.claude/.git`の存在確認
+2. `git add .`で変更をステージング
+3. `git commit`でコミット（変更がない場合はスキップ）
+4. `git push`でリモートに送信
+
+**出力例:**
+```bash
+# デフォルトメッセージ
+$ hagi sync push
+Pushing .claude changes...
+✅ Pushed .claude changes
+
+# カスタムメッセージ
+$ hagi sync push -m "✨ add: Complete authentication feature tasks"
+Pushing .claude changes...
+✅ Pushed .claude changes
+```
+
+**変更がない場合:**
+```
+Pushing .claude changes...
+⚠ Nothing to commit
+```
+
+**使用タイミング:**
+- TODO.mdを更新した後
+- CLAUDE.mdやinstructionsを編集した後
+- 作業終了時（変更を他のマシンに反映）
+
+### status - 同期状態確認
+
+```bash
+hagi sync status
+```
+
+`.claude`の同期状態を表示します。
+
+**動作:**
+1. `.claude/.git`の存在確認
+2. `git status`を実行して状態を表示
+
+**出力例:**
+```bash
+$ hagi sync status
+📊 .claude sync status:
+
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  modified:   TODO.md
+
+no changes added to commit
+```
+
+**Gitリポジトリでない場合:**
+```
+❌ .claude is not a Git repository
+
+Run 'hagi sync init' to initialize sync.
+```
+
+### 使用例
+
+**初回セットアップ（Machine A）:**
+
+```bash
+cd myproject
+
+# プロジェクト設定をインストール
+hagi install
+
+# 同期を初期化（gh CLI使用）
+hagi sync init
+# → myproject-claudeリポジトリが自動作成される
+
+# 状態確認
+hagi sync status
+```
+
+**別マシン（Machine B）:**
+
+```bash
+# プロジェクトをクローン
+git clone git@github.com:yourname/myproject.git
+cd myproject
+
+# .claudeを取得
+hagi sync pull
+
+# 確認
+ls -la .claude
+```
+
+**日常のワークフロー:**
+
+```bash
+# 作業開始前
+hagi sync pull
+
+# 作業中
+# TODO.mdを更新、CLAUDE.mdを編集など...
+
+# 状態確認
+hagi sync status
+
+# 変更をpush
+hagi sync push -m "Update TODO: Complete feature X"
+
+# または
+hagi sync push  # デフォルトメッセージ
+```
+
+**トラブルシューティング:**
+
+```bash
+# 同期状態を確認
+hagi sync status
+
+# コンフリクトが発生した場合
+cd .claude
+git status
+# 手動で解決
+git add .
+git rebase --continue
+hagi sync push
+```
+
+---
+
 ## 実践的な使用例
 
 ### ケース1: 新規プロジェクトのセットアップ
