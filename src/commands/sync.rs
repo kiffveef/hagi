@@ -16,13 +16,95 @@ pub fn sync_init(remote_url: Option<&str>) -> Result<()> {
         );
     }
 
-    let remote = if let Some(url) = remote_url {
-        url.to_string()
-    } else {
-        create_private_repo_interactive()?
-    };
+    if claude_dir.join(".git").exists() {
+        bail!(
+            ".claude is already a Git repository.\n\
+             Use 'hagi sync pull/push' to sync changes."
+        );
+    }
 
-    init_claude_git_repo(&remote)?;
+    // If URL is provided, use it directly
+    if let Some(url) = remote_url {
+        return clone_and_replace_claude(url);
+    }
+
+    // Check if gh CLI is available
+    if !command_exists("gh") {
+        println!("{}", "gh CLI not found.".yellow());
+        println!();
+        println!("To clone existing repository:");
+        println!("  {}", "hagi sync init git@github.com:user/project-claude.git".cyan());
+        println!();
+        println!("To install gh CLI:");
+        println!("  {}", "https://cli.github.com/".cyan());
+        println!();
+        bail!("Please specify repository URL or install gh CLI");
+    }
+
+    // Check if <project>-claude repo already exists
+    let repo_name = get_repository_name();
+    let claude_repo_name = format!("{}-claude", repo_name);
+
+    if check_repo_exists(&claude_repo_name) {
+        println!("{}", format!("Found existing repository: {}", claude_repo_name).cyan());
+        let username = get_github_username()?;
+        let remote_url = format!("git@github.com:{}/{}.git", username, claude_repo_name);
+        return clone_and_replace_claude(&remote_url);
+    }
+
+    // Create new repository
+    create_private_repo_interactive().and_then(|remote| init_claude_git_repo(&remote))
+}
+
+/// Check if a repository exists on GitHub
+fn check_repo_exists(repo_name: &str) -> bool {
+    if !command_exists("gh") {
+        return false;
+    }
+
+    Command::new("gh")
+        .args(["repo", "view", repo_name])
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .status()
+        .map(|s| s.success())
+        .unwrap_or(false)
+}
+
+/// Clone existing repo and replace .claude directory
+fn clone_and_replace_claude(remote_url: &str) -> Result<()> {
+    let claude_dir = Path::new(".claude");
+
+    println!("{}", "Cloning existing .claude repository...".green());
+
+    // Backup current .claude to .claude.backup
+    let backup_dir = Path::new(".claude.backup");
+    if backup_dir.exists() {
+        std::fs::remove_dir_all(backup_dir).context("Failed to remove old backup")?;
+    }
+    std::fs::rename(claude_dir, backup_dir).context("Failed to backup .claude")?;
+
+    // Clone the repository
+    let status = Command::new("git")
+        .args(["clone", remote_url, ".claude"])
+        .status()
+        .context("Failed to run git clone")?;
+
+    if !status.success() {
+        // Restore backup on failure
+        std::fs::rename(backup_dir, claude_dir).ok();
+        bail!("git clone failed");
+    }
+
+    // Remove backup on success
+    std::fs::remove_dir_all(backup_dir).ok();
+
+    println!("{}", "✅ Cloned .claude repository".green().bold());
+    println!();
+    println!("Daily workflow:");
+    println!("  {} - Pull latest changes", "hagi sync pull".yellow());
+    println!("  {} - Push your changes", "hagi sync push".yellow());
+    println!();
 
     Ok(())
 }
@@ -321,7 +403,7 @@ fn init_claude_git_repo(remote_url: &str) -> Result<()> {
     println!();
     println!("On other machines:");
     println!("  1. Clone your project repository");
-    println!("  2. Run: {}", "hagi sync pull".yellow());
+    println!("  2. Run: {}", format!("git clone {} .claude", remote_url).yellow());
     println!();
     println!("Daily workflow:");
     println!("  {} - Pull latest changes", "hagi sync pull".yellow());
