@@ -1,47 +1,58 @@
 use anyhow::{Context, Result};
 use colored::*;
 use std::env;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use crate::{templates, utils};
 
-/// Install global configuration to ~/.claude/
-pub fn install_global(dry_run: bool) -> Result<()> {
+// ============================================================================
+// Common Helpers
+// ============================================================================
+
+/// Print dry run mode header if enabled
+fn print_dry_run_header(dry_run: bool) {
     if dry_run {
         println!("{}", "[DRY RUN MODE]".yellow().bold());
     }
+}
 
+/// Print dry run mode footer if enabled
+fn print_dry_run_footer(dry_run: bool) {
+    if dry_run {
+        println!("{}", "\nDry run completed. No files were modified.".yellow());
+    }
+}
+
+/// Create directory with dry_run support
+fn ensure_directory(path: &Path, dry_run: bool) -> Result<()> {
+    if dry_run {
+        println!("{} {}", "Would create:".yellow(), path.display());
+    } else {
+        utils::ensure_dir(path)?;
+    }
+    Ok(())
+}
+
+// ============================================================================
+// Global Install
+// ============================================================================
+
+/// Install global configuration to ~/.claude/
+pub fn install_global(dry_run: bool) -> Result<()> {
+    print_dry_run_header(dry_run);
     println!("{}", "Installing global configuration...".green());
 
-    // Check dependencies
-    let warnings = check_dependencies();
-    if !warnings.is_empty() {
-        println!("\n{}", "⚠ Warning: Missing dependencies".yellow().bold());
-        for warning in &warnings {
-            println!("\n{}", warning);
-        }
-        println!();
-    }
+    print_dependency_warnings();
 
-    // Get paths
     let claude_dir = utils::claude_dir()?;
+    ensure_directory(&claude_dir, dry_run)?;
 
-    // Create ~/.claude/ directory
-    if dry_run {
-        println!("{} {}", "Would create:".yellow(), claude_dir.display());
-    } else {
-        utils::ensure_dir(&claude_dir)?;
-    }
-
-    // Install mcp.json
     install_mcp_config(&claude_dir, dry_run)?;
-
-    // Install settings.json (from settings.local.json template, renamed)
     install_settings(&claude_dir, dry_run)?;
 
     if dry_run {
-        println!("{}", "\nDry run completed. No files were modified.".yellow());
+        print_dry_run_footer(dry_run);
     } else {
         println!("{}", "\n✅ Global configuration installed successfully!".green().bold());
         println!("\nNext steps:");
@@ -52,22 +63,63 @@ pub fn install_global(dry_run: bool) -> Result<()> {
     Ok(())
 }
 
+/// Check and print dependency warnings
+fn print_dependency_warnings() {
+    let warnings = check_dependencies();
+    if !warnings.is_empty() {
+        println!("\n{}", "⚠ Warning: Missing dependencies".yellow().bold());
+        for warning in &warnings {
+            println!("\n{}", warning);
+        }
+        println!();
+    }
+}
+
+// ============================================================================
+// Project Install
+// ============================================================================
+
 /// Install project-specific configuration to .claude/
 pub fn install_project(dry_run: bool, skip_paths: &[String]) -> Result<()> {
-    if dry_run {
-        println!("{}", "[DRY RUN MODE]".yellow().bold());
-    }
-
+    print_dry_run_header(dry_run);
     println!("{}", "Installing project configuration...".green());
 
-    // Check if current directory is a git repository
+    // Step 1: Ensure git repository exists
+    ensure_git_repository(dry_run)?;
+
+    // Step 2: Print skip list info
+    print_skip_list(skip_paths);
+
+    // Step 3: Setup directories
+    let project_dir = env::current_dir().context("Failed to get current directory")?;
+    let claude_dir = project_dir.join(".claude");
+    ensure_directory(&claude_dir, dry_run)?;
+
+    // Step 4: Copy templates
+    templates::copy_all_templates_with_skip(&claude_dir, dry_run, skip_paths)?;
+
+    // Step 5: Update project configuration
+    update_project_gitignore(&project_dir, dry_run)?;
+    install_git_hooks(&project_dir, dry_run)?;
+
+    // Step 6: Print completion message
+    print_project_completion(dry_run)?;
+
+    Ok(())
+}
+
+/// Ensure current directory is a git repository, initialize if not
+fn ensure_git_repository(dry_run: bool) -> Result<()> {
     if !is_git_repository() {
         println!("\n{}", "⚠ Not a git repository. Initializing git...".yellow());
         initialize_git_repository(dry_run)?;
         println!();
     }
+    Ok(())
+}
 
-    // Show skip list if provided
+/// Print skip list if not empty
+fn print_skip_list(skip_paths: &[String]) {
     if !skip_paths.is_empty() {
         println!("\n{}", "Skipping the following paths:".yellow());
         for path in skip_paths {
@@ -75,67 +127,41 @@ pub fn install_project(dry_run: bool, skip_paths: &[String]) -> Result<()> {
         }
         println!();
     }
+}
 
-    // Get paths
-    let project_dir = env::current_dir().context("Failed to get current directory")?;
-    let claude_dir = project_dir.join(".claude");
-
-    // Create .claude/ directory
+/// Print project installation completion message
+fn print_project_completion(dry_run: bool) -> Result<()> {
     if dry_run {
-        println!("{} {}", "Would create:".yellow(), claude_dir.display());
-    } else {
-        utils::ensure_dir(&claude_dir)?;
-    }
-
-    // Copy template files with skip list
-    templates::copy_all_templates_with_skip(&claude_dir, dry_run, skip_paths)?;
-
-    // Update .gitignore
-    update_project_gitignore(&project_dir, dry_run)?;
-
-    // Install git hooks
-    install_git_hooks(&project_dir, dry_run)?;
-
-    if dry_run {
-        println!("{}", "\nDry run completed. No files were modified.".yellow());
+        print_dry_run_footer(dry_run);
     } else {
         println!("{}", "\n✅ Project configuration installed successfully!".green().bold());
         println!("\nNext steps:");
         println!("  1. Review .claude/CLAUDE.md for project guidelines");
         println!("  2. Customize .claude/instructions/ as needed");
         println!("  3. Enable additional MCP servers with 'hagi mcp enable <name>'");
-
         print_claude_sync_notice()?;
     }
-
     Ok(())
 }
 
 
+// ============================================================================
+// Chat Install
+// ============================================================================
+
 /// Install chat mode configuration to ~/.chat/
 pub fn install_chat(dry_run: bool) -> Result<()> {
-    if dry_run {
-        println!("{}", "[DRY RUN MODE]".yellow().bold());
-    }
-
+    print_dry_run_header(dry_run);
     println!("{}", "Installing chat mode configuration...".green());
 
-    // Get paths
     let home_dir = utils::home_dir()?;
     let chat_dir = home_dir.join(".chat");
+    ensure_directory(&chat_dir, dry_run)?;
 
-    // Create ~/.chat/ directory
-    if dry_run {
-        println!("{} {}", "Would create:".yellow(), chat_dir.display());
-    } else {
-        utils::ensure_dir(&chat_dir)?;
-    }
-
-    // Copy chat templates
     templates::copy_chat_templates(&chat_dir, dry_run)?;
 
     if dry_run {
-        println!("{}", "\nDry run completed. No files were modified.".yellow());
+        print_dry_run_footer(dry_run);
     } else {
         println!("{}", "\n✅ Chat mode configuration installed successfully!".green().bold());
         println!("\nUsage:");
@@ -146,6 +172,10 @@ pub fn install_chat(dry_run: bool) -> Result<()> {
 
     Ok(())
 }
+
+// ============================================================================
+// Template Installation Helpers
+// ============================================================================
 
 /// Maximum characters to show in error messages for template preview
 const TEMPLATE_PREVIEW_LENGTH: usize = 200;
@@ -220,6 +250,10 @@ fn install_settings(claude_dir: &PathBuf, dry_run: bool) -> Result<()> {
     install_json_template(claude_dir, "settings.local.json", "settings.json", false, dry_run)
 }
 
+// ============================================================================
+// Git & Project Configuration Helpers
+// ============================================================================
+
 /// Update .gitignore in project root
 fn update_project_gitignore(project_dir: &PathBuf, dry_run: bool) -> Result<()> {
     let entries = vec![
@@ -281,6 +315,10 @@ fn initialize_git_repository(dry_run: bool) -> Result<()> {
     println!("{}", "  ✅ Initial commit created".green());
     Ok(())
 }
+
+// ============================================================================
+// Dependency Checking
+// ============================================================================
 
 /// Check if a command exists in PATH
 fn command_exists(cmd: &str) -> bool {
