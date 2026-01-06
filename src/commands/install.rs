@@ -338,56 +338,53 @@ fn check_dependencies() -> Vec<String> {
     warnings
 }
 
+/// Make a file executable (Unix only)
+#[cfg(unix)]
+fn make_executable(path: &std::path::Path) -> Result<()> {
+    use std::os::unix::fs::PermissionsExt;
+    let mut perms = std::fs::metadata(path)?.permissions();
+    perms.set_mode(0o755);
+    std::fs::set_permissions(path, perms)?;
+    Ok(())
+}
+
+/// Write a git hook file and make it executable
+fn install_hook(hooks_dir: &std::path::Path, name: &str, content: &str) -> Result<()> {
+    let hook_path = hooks_dir.join(name);
+    std::fs::write(&hook_path, content)
+        .with_context(|| format!("Failed to write {} hook", name))?;
+
+    #[cfg(unix)]
+    make_executable(&hook_path)
+        .with_context(|| format!("Failed to make {} executable", name))?;
+
+    Ok(())
+}
+
 /// Install git hooks to .git/hooks/
 fn install_git_hooks(project_dir: &PathBuf, dry_run: bool) -> Result<()> {
     let git_hooks_dir = project_dir.join(".git").join("hooks");
 
-    // Check if .git/hooks directory exists
     if !git_hooks_dir.exists() {
-        if dry_run {
-            println!("\n{} .git/hooks directory not found, would skip git hooks installation", "⚠".yellow());
-        } else {
-            println!("\n{} .git/hooks directory not found, skipping git hooks installation", "⚠".yellow());
-        }
+        let msg = if dry_run { "would skip" } else { "skipping" };
+        println!("\n{} .git/hooks directory not found, {} git hooks installation", "⚠".yellow(), msg);
         return Ok(());
     }
 
     println!("\n{}", "Installing git hooks...".green());
 
-    // pre-commit hook
-    let pre_commit_template = include_str!("../../templates/git-hooks/pre-commit");
-    let pre_commit_path = git_hooks_dir.join("pre-commit");
-
-    // commit-msg hook
-    let commit_msg_template = include_str!("../../templates/git-hooks/commit-msg");
-    let commit_msg_path = git_hooks_dir.join("commit-msg");
+    let hooks = [
+        ("pre-commit", include_str!("../../templates/git-hooks/pre-commit")),
+        ("commit-msg", include_str!("../../templates/git-hooks/commit-msg")),
+    ];
 
     if dry_run {
-        println!("{} {}", "Would install:".yellow(), pre_commit_path.display());
-        println!("{} {}", "Would install:".yellow(), commit_msg_path.display());
-    } else {
-        // Install pre-commit
-        std::fs::write(&pre_commit_path, pre_commit_template)
-            .context("Failed to write pre-commit hook")?;
-
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            let mut perms = std::fs::metadata(&pre_commit_path)?.permissions();
-            perms.set_mode(0o755);
-            std::fs::set_permissions(&pre_commit_path, perms)?;
+        for (name, _) in &hooks {
+            println!("{} {}", "Would install:".yellow(), git_hooks_dir.join(name).display());
         }
-
-        // Install commit-msg
-        std::fs::write(&commit_msg_path, commit_msg_template)
-            .context("Failed to write commit-msg hook")?;
-
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            let mut perms = std::fs::metadata(&commit_msg_path)?.permissions();
-            perms.set_mode(0o755);
-            std::fs::set_permissions(&commit_msg_path, perms)?;
+    } else {
+        for (name, content) in &hooks {
+            install_hook(&git_hooks_dir, name, content)?;
         }
 
         println!("  ✅ {}", "Git hooks installed".green());
