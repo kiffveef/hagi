@@ -4,14 +4,15 @@
 
 # jq dependency check
 if ! command -v jq &> /dev/null; then
+  echo "Warning: jq not found, .claude/ git protection disabled" >&2
   exit 0
 fi
 
 input=$(cat)
 command=$(echo "$input" | jq -r '.tool_input.command // ""')
 
-# Block git add .claude/
-if [[ "$command" =~ git[[:space:]]+add && "$command" =~ \.claude ]]; then
+# Block git add .claude/ (but allow templates/.claude/)
+if [[ "$command" =~ git[[:space:]]+add && "$command" =~ (^|[[:space:]])\.claude ]]; then
   cat << 'EOF'
 {
   "decision": "block",

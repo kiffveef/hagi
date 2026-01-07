@@ -1,5 +1,24 @@
 #!/bin/bash
 
+# Layer 2: Block .claude/ files from being committed
+# This is a backup defense - primary defense is Claude Code PreToolUse hook
+CLAUDE_FILES=$(git diff --cached --name-only | grep "^\.claude/")
+if [ -n "$CLAUDE_FILES" ]; then
+    echo ""
+    echo "❌ ERROR: .claude/ files should not be committed!"
+    echo ""
+    echo "📖 See: .claude/instructions/git-workflow.md"
+    echo "   Section: '.claude/ Directory is OUTSIDE Git Workflow'"
+    echo ""
+    echo ".claude/ is managed separately via 'hagi sync', not git."
+    echo "Your edits are already saved locally. No commit needed."
+    echo ""
+    echo "To unstage these files:"
+    echo "  git restore --staged .claude/"
+    echo ""
+    exit 1
+fi
+
 # Check if committing to protected branches
 # To add more protected branches, add them to the condition below:
 # if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ] || [ "$BRANCH" = "custom" ]; then
