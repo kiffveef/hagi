@@ -1,39 +1,59 @@
-You are working on a complex problem that requires structured, step-by-step thinking. Use the sequential-thinking MCP tool to break down the problem systematically.
+# /st - Structured Thinking
 
-# Instructions
+Combines Memory MCP and Sequential-Thinking MCP for deep analysis with context accumulation.
 
-1. **Analyze the problem**: Clearly identify what needs to be solved
-2. **Break it down**: Divide the problem into logical steps
-3. **Plan your approach**: Determine the best sequence of actions
-4. **Execute systematically**: Work through each step methodically
-5. **Verify results**: Check that each step produces the expected outcome
+## Step 1: Context Retrieval (Memory)
 
-# Guidelines
+**Project name:** Use current directory name (e.g., `hagi`, `my-app`)
 
-- Use clear, logical reasoning at each step
-- Document assumptions and decisions
-- Identify dependencies between steps
-- Consider edge cases and potential issues
-- Revise the plan if new information emerges
+**If Memory MCP enabled:**
+1. Use `mcp__memory__retrieve_memory` to search project context
+2. Query: `<project-name> <user's topic>` (e.g., "hagi authentication decision")
+3. Pass retrieved context to Step 2
 
-# User Options
+**If Memory MCP disabled:**
+- Warn: "Memory MCP disabled. Run `hagi mcp enable memory` to accumulate context."
+- Proceed to Step 2 without context
 
-If the user includes `--search` in their request:
-- MUST use WebSearch tool to gather external information when needed
-- MUST use Context7 MCP(mcp__context7__resolve-library-id and mcp__context7__get-library-docs) to fetch library documentation when libraries/frameworks are mentioned
-- Include search results and documentation in your analysis
-- Cite sources when referencing external information
+## Step 2: Deep Analysis (Sequential-Thinking)
 
-If the user includes `--todo` in their request:
-- MUST use TodoWrite tool to track progress through each step
-- If `.claude/TODO.md` exists in the project:
-  1. Read `.claude/TODO.md` first
-  2. Use TodoWrite tool to update task status
-  3. **IMMEDIATELY write back changes to `.claude/TODO.md` using Edit tool**
-  4. This is BIDIRECTIONAL synchronization - both tools must stay in sync
-- Create todos at the beginning with all identified steps
-- Update todo status as you progress through the analysis
-- Mark each step as completed immediately after finishing it
-- **CRITICAL**: Every TodoWrite call MUST be followed by updating `.claude/TODO.md`
+1. Use `mcp__sequential-thinking__sequentialthinking`
+2. Include Memory context in analysis
+3. Structure problem, generate/verify hypotheses
+4. Derive conclusions
 
-Apply sequential thinking to analyze and solve the problem presented by the user.
+**Always execute** - never skip even if past analysis exists.
+
+## Step 3: Save Results (Memory)
+
+**If Memory MCP enabled:**
+1. Use `mcp__memory__store_memory` to save analysis
+2. Content (max ~500 words): summary, decisions with reasons, rejected alternatives
+3. Tags: `<dir-name>,st-analysis,<topic>,<YYYY-MM-DD>`
+4. Type: `structured-analysis`
+
+**If Memory MCP disabled:**
+- Skip (warning already shown in Step 1)
+
+## Options
+
+### --search
+Fetch external info for analysis:
+- WebSearch for latest information
+- Context7 for library documentation
+
+### --todo
+Integrate with task management:
+- Read `.claude/TODO.md`
+- Use TodoWrite to manage task status
+- Update TODO.md after analysis
+- **CRITICAL**: Always sync TODO.md after TodoWrite
+
+## Error Handling
+
+| Situation | Action |
+|-----------|--------|
+| Memory MCP disabled | Warn, run Sequential-Thinking only |
+| No Memory results | Execute as new analysis |
+| Memory save failed | Warn, output results to screen |
+| Sequential-Thinking failed | Error, abort |
