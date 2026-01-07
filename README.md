@@ -13,6 +13,7 @@ hagiは、Claude Codeの開発環境を素早くセットアップするため�
 - **MCP管理**: sequential-thinking、context7、serena、one-search、memory、gitの統合設定
 - **複数マシン同期**: `.claude`ディレクトリをプライベートGitリポジトリで同期（設計ドキュメント、タスク管理を共有）
 - **安全な操作**: バックアップ自動作成・世代管理(最新3世代保持)、ドライラン、確認プロンプト機能
+- **git操作防止**: `.claude/`ディレクトリの誤コミットを2層防御で自動ブロック
 
 ---
 
@@ -22,12 +23,25 @@ hagiは、Claude Codeの開発環境を素早くセットアップするため�
 
 **必須:**
 - Rust/cargo (1.80以降推奨) - hagiのビルド・インストールに必要
+- jq - Claude Code hookによる`.claude/` git操作防止に必要
 
 **推奨(MCP機能を使う場合):**
 - Node.js (v18以降) - sequential-thinking、context7、one-search、memory用
 - uv (Python package manager) - serena用
 
-**Note**: `hagi install --global`実行時に、上記ツールの存在が自動チェックされます。不足している場合は警告とインストール手順が表示されますが、インストール処理は継続されます。
+**jqのインストール:**
+```bash
+# macOS
+brew install jq
+
+# Ubuntu/Debian
+sudo apt install jq
+
+# Windows (scoop)
+scoop install jq
+```
+
+**Note**: `hagi install --global`実行時に、上記ツールの存在が自動チェックされます。不足している場合は警告とインストール手順が表示されますが、インストール処理は継続されます。jqがない場合、`.claude/` git操作防止機能は無効になります(警告が表示されます)。
 
 ### cargoでインストール
 
@@ -62,7 +76,7 @@ hagi install
 
 プロジェクトに`.claude/`ディレクトリとテンプレートを配置します。
 
-詳細な使い方は[コマンドリファレンス](./docs/commands.md)を参照してください。
+詳細な使い方は`hagi --help`で確認できます。
 
 ---
 
@@ -77,18 +91,50 @@ hagi install
 | serena | コード解析・セマンティック検索 | ❌ 無効 | トークン節約設定済み |
 | git | Git操作 | ❌ 無効 | uvx経由 |
 
-詳細なインストール方法とトラブルシューティングは [MCP導入ガイド](./docs/mcp-setup.md) を参照してください。
+---
+
+## .claude/ git操作防止
+
+hagiは`.claude/`ディレクトリの誤コミットを防ぐため、2層の防御機構を提供します。
+
+### Layer 1: Claude Code PreToolUse Hook
+
+Claude Codeが`git add .claude/`を実行しようとした時点でブロック:
+
+```
+❌ .claude/ is outside git workflow. Edit = done. No git operation needed.
+📖 See: .claude/instructions/git-workflow.md
+```
+
+### Layer 2: Git pre-commit Hook
+
+手動操作や他ツールからの誤コミットをバックアップ防御:
+
+```
+❌ ERROR: .claude/ files should not be committed!
+To unstage: git restore --staged .claude/
+```
+
+### なぜ.claude/はgit管理しないのか
+
+- ローカル設定は開発者ごとに異なる
+- MCP設定にはマシン固有のパスが含まれる
+- 同期が必要な場合は`hagi sync`を使用
+
+**Note**: この機能にはjqが必要です。jqがインストールされていない場合、Layer 1は無効になりますが警告が表示されます。
 
 ---
 
-## ドキュメント
+## ヘルプ
 
-- **[インストールガイド](./docs/installation.md)**: hagiのインストール方法、前提条件、更新、アンインストール
-- **[コマンドリファレンス](./docs/commands.md)**: 全コマンドの詳細説明、オプション、使用例
-- **[使い方ガイド](./docs/usage.md)**: スラッシュコマンド(/st)の使い方、MCPサーバーの活用方法
-- **[MCP導入ガイド](./docs/mcp-setup.md)**: MCPサーバーのインストール方法、設定、トラブルシューティング
-- **[トラブルシューティング](./docs/troubleshooting.md)**: よくある問題と解決策、デバッグ方法
-- **[開発ガイド](./docs/development.md)**: hagiへの貢献方法、開発環境のセットアップ
+各コマンドの詳細は`--help`オプションで確認できます:
+
+```bash
+hagi --help
+hagi install --help
+hagi mcp --help
+hagi sync --help
+```
 
 ---
 
@@ -112,7 +158,7 @@ hagi install
 | `config edit` | 設定編集 | ✅ 実装済 |
 | `update` | hagiツール自体の更新 | ✅ 実装済 |
 
-詳細は[コマンドリファレンス](./docs/commands.md)または`hagi <COMMAND> --help`で確認できます。
+詳細は`hagi <COMMAND> --help`で確認できます。
 
 ---
 
