@@ -3,7 +3,7 @@
     "PreToolUse": [
       {
         "matcher": "Bash",
-        "command": "bash .claude/hooks/check-claude-git.sh"
+        "hooks": [{"type": "command", "command": "bash .claude/hooks/check-claude-git.sh"}]
       }
     ]
   },
