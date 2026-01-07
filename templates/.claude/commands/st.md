@@ -1,18 +1,18 @@
 # /st - Structured Thinking
 
-Combines Memory MCP and Sequential-Thinking MCP for deep analysis with context accumulation.
+Combines Memento and Sequential-Thinking MCP for deep analysis with context accumulation.
 
-## Step 1: Context Retrieval (Memory)
+## Step 1: Context Retrieval (Memento)
 
 **Project name:** Use current directory name (e.g., `hagi`, `my-app`)
 
-**If Memory MCP enabled:**
-1. Use `mcp__memory__retrieve_memory` to search project context
+**If Memento enabled:**
+1. Use `search_nodes` to search project context
 2. Query: `<project-name> <user's topic>` (e.g., "hagi authentication decision")
 3. Pass retrieved context to Step 2
 
-**If Memory MCP disabled:**
-- Warn: "Memory MCP disabled. Run `hagi mcp enable memory` to accumulate context."
+**If Memento disabled:**
+- Warn: "Memento disabled. Run `hagi mcp enable memory` to accumulate context."
 - Proceed to Step 2 without context
 
 ## Step 2: Deep Analysis (Sequential-Thinking)
@@ -24,15 +24,28 @@ Combines Memory MCP and Sequential-Thinking MCP for deep analysis with context a
 
 **Always execute** - never skip even if past analysis exists.
 
-## Step 3: Save Results (Memory)
+## Step 3: Save Results (Memento)
 
-**If Memory MCP enabled:**
-1. Use `mcp__memory__store_memory` to save analysis
-2. Content (max ~500 words): summary, decisions with reasons, rejected alternatives
-3. Tags: `<dir-name>,st-analysis,<topic>,<YYYY-MM-DD>`
-4. Type: `structured-analysis`
+**If Memento enabled:**
+1. Use `create_entities` to save analysis
+2. Entity format:
+   ```json
+   {
+     "entities": [{
+       "name": "<topic>",
+       "entityType": "st_analysis",
+       "observations": [
+         "Summary: <summary>",
+         "Decision: <key decision with reason>",
+         "Rejected: <rejected alternatives>",
+         "Project: <dir-name>",
+         "Date: <YYYY-MM-DD>"
+       ]
+     }]
+   }
+   ```
 
-**If Memory MCP disabled:**
+**If Memento disabled:**
 - Skip (warning already shown in Step 1)
 
 ## Options
@@ -53,7 +66,7 @@ Integrate with task management:
 
 | Situation | Action |
 |-----------|--------|
-| Memory MCP disabled | Warn, run Sequential-Thinking only |
-| No Memory results | Execute as new analysis |
-| Memory save failed | Warn, output results to screen |
+| Memento disabled | Warn, run Sequential-Thinking only |
+| No Memento results | Execute as new analysis |
+| Memento save failed | Warn, output results to screen |
 | Sequential-Thinking failed | Error, abort |

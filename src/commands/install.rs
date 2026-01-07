@@ -348,7 +348,7 @@ fn check_dependencies() -> Vec<String> {
         warnings.push(format!(
             "{}\n  {}\n\n  {}:\n    curl -LsSf https://astral.sh/uv/install.sh | sh",
             "uv not found".red(),
-            "Required for: mcp-memory-service",
+            "Required for: memento MCP",
             "Install"
         ));
     }
@@ -358,7 +358,7 @@ fn check_dependencies() -> Vec<String> {
         warnings.push(format!(
             "{}\n  {}\n\n  {}:\n    sudo apt-get update\n    sudo apt-get install -y python3 python3-pip",
             "Python3 not found".red(),
-            "Required for: mcp-memory-service setup",
+            "Required for: memento MCP setup",
             "Install"
         ));
     }
@@ -368,7 +368,7 @@ fn check_dependencies() -> Vec<String> {
         warnings.push(format!(
             "{}\n  {}\n\n  {}:\n    sudo apt-get install -y git",
             "Git not found".red(),
-            "Required for: mcp-memory-service clone",
+            "Required for: memento MCP",
             "Install"
         ));
     }

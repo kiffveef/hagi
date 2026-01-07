@@ -140,11 +140,11 @@ After completing design:
 
 ---
 
-## 🚨 CRITICAL: Memory MCP Auto-Save Rule
+## 🚨 CRITICAL: Memento Auto-Save Rule
 
 **THE RULE THAT PREVENTS DATA LOSS:**
 
-When user says any of these keywords, **ALWAYS save to memory MCP**:
+When user says any of these keywords, **ALWAYS save to Memento**:
 - "保存して" / "save"
 - "記録して" / "record"
 - "todoを保存" / "save todo"
@@ -155,30 +155,24 @@ When user says any of these keywords, **ALWAYS save to memory MCP**:
 ```bash
 # When user says "todoを保存して":
 1. Edit .claude/TODO.md (update file)
-2. IMMEDIATELY call mcp__memory__store_memory (save to memory)
+2. IMMEDIATELY call create_entities (save to Memento)
 3. BOTH are required, NOT optional
 ```
 
 **WHY THIS MATTERS:**
-- User expects memory MCP storage when saying "保存"
+- User expects Memento storage when saying "保存"
 - File edits alone are NOT sufficient
-- Memory enables cross-session context retrieval
-- `/research` and `/serena` rely on memory data
+- Memento enables cross-session context retrieval
+- `/research` and `/serena` rely on Memento data
 
 **WHAT TO SAVE:**
 
-When saving TODO updates to memory:
+When saving TODO updates to Memento:
 - Task completion status (completed/partial/pending)
 - Implementation details (what was done)
 - File changes (which files were modified)
 - Commit hashes (for traceability)
 - Next steps (remaining work)
-
-**TAGS TO USE:**
-```
-tags: "project-name,task-name,phase,status"
-type: "task-completion" | "task-status" | "project-status"
-```
 
 **Example:**
 ```
@@ -187,24 +181,34 @@ User: "todoを保存して"
 # STEP 1: Edit TODO.md
 [Edit .claude/TODO.md: mark Task 24 as completed]
 
-# STEP 2: IMMEDIATELY save to memory
-[mcp__memory__store_memory:
-  content: "Task 24: dependency check - completed (2025-10-17)..."
-  tags: "hagi,task24,dependency-check,phase4,completed"
-  type: "task-completion"
+# STEP 2: IMMEDIATELY save to Memento
+[create_entities:
+  {
+    "entities": [{
+      "name": "Task 24: dependency check",
+      "entityType": "task_completion",
+      "observations": [
+        "Status: completed",
+        "Date: 2025-10-17",
+        "Project: hagi",
+        "Phase: phase4",
+        "Details: dependency check implementation completed"
+      ]
+    }]
+  }
 ]
 
-# BOTH steps are required. Never skip memory save.
+# BOTH steps are required. Never skip Memento save.
 ```
 
 **NEVER do:**
-- ❌ NEVER edit TODO.md without memory save
+- ❌ NEVER edit TODO.md without Memento save
 - ❌ NEVER assume "保存" means file-only
-- ❌ NEVER delay memory save for later
+- ❌ NEVER delay Memento save for later
 - ❌ NEVER forget to save when user says "保存して"
 
 **ALWAYS do:**
-- ✅ ALWAYS save to memory MCP when user says "保存"
-- ✅ ALWAYS use both Edit tool AND memory tool
-- ✅ ALWAYS tag appropriately (project, task, phase, status)
+- ✅ ALWAYS save to Memento when user says "保存"
+- ✅ ALWAYS use both Edit tool AND Memento tool
+- ✅ ALWAYS use observations for context (project, phase, status)
 - ✅ ALWAYS confirm both actions completed
