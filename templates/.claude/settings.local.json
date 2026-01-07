@@ -1,4 +1,12 @@
 {
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "command": "bash .claude/hooks/check-claude-git.sh"
+      }
+    ]
+  },
   "permissionMode": "acceptEdits",
   "permissions": {
     "deniedTools": [
