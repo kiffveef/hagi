@@ -12,7 +12,7 @@ hagiを使用するには、以下のツールがインストールされてい�
 
 #### Rust/cargo (1.80以降推奨)
 
-Rustのツールチェーン(rustc、cargo)が必要です。
+hagiのビルド・インストールに必要です。
 
 **インストール確認:**
 ```bash
@@ -26,6 +26,34 @@ source ~/.cargo/env
 ```
 
 公式サイト: https://www.rust-lang.org/tools/install
+
+#### jq
+
+Claude Code hookによる`.claude/` git操作防止に必要です。
+
+**インストール確認:**
+```bash
+jq --version
+```
+
+**インストール方法:**
+
+**macOS:**
+```bash
+brew install jq
+```
+
+**Ubuntu/Debian:**
+```bash
+sudo apt install jq
+```
+
+**Windows (scoop):**
+```bash
+scoop install jq
+```
+
+**Note**: jqがインストールされていない場合、`.claude/` git操作防止機能(Layer 1)は無効になりますが、警告が表示されます。
 
 ### MCP利用時に必要
 

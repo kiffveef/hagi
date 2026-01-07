@@ -73,9 +73,9 @@ Claude Codeが以下のステップで問題を分析します:
 
 ---
 
-### /research - 統合調査 (Phase 2d)
+### /research - 統合調査
 
-one-search + context7 + mcp-memory-serviceを組み合わせた包括的なリサーチコマンド。
+one-search + context7 + memoryを組み合わせた包括的なリサーチコマンド。
 
 #### 基本的な使い方
 
@@ -90,8 +90,8 @@ one-search + context7 + mcp-memory-serviceを組み合わせた包括的なリ�
 2. **Step 1**: Web検索(one-search) - 実践例、チュートリアル
 3. **Step 2**: 公式ドキュメント(context7) - 正確な仕様
 4. **Step 3**: 統合・分析 - 両方の情報を総合
-5. **Step 3b**: 現在のコードベース統合(serena) - プロジェクトへの適用提案 [Phase 2e]
-6. **Step 4**: メモリ保存(mcp-memory-service) - 長期記憶に保存
+5. **Step 3b**: 現在のコードベース統合(serena) - プロジェクトへの適用提案
+6. **Step 4**: メモリ保存(memory) - 長期記憶に保存
 
 #### オプション
 
@@ -136,9 +136,9 @@ one-search + context7 + mcp-memory-serviceを組み合わせた包括的なリ�
 
 ---
 
-### /code-pattern - パターン検索 (Phase 2e)
+### /code-pattern - パターン検索
 
-serena + mcp-memory-serviceで過去のコーディングパターンを検索・分析します。
+serena + memoryで過去のコーディングパターンを検索・分析します。
 
 #### 基本的な使い方
 
@@ -151,7 +151,7 @@ serena + mcp-memory-serviceで過去のコーディングパターンを検索�
 #### ワークフロー
 
 1. **Step 1**: 現在のコードベース検索(serena) - 現在のプロジェクトのパターン
-2. **Step 2**: 過去パターン検索(mcp-memory-service) - 長期記憶からパターン検索
+2. **Step 2**: 過去パターン検索(memory) - 長期記憶からパターン検索
 3. **Step 3**: パターン比較・分析 - 実装アプローチの比較
 4. **Step 4**: 推奨事項 - ベストプラクティスと改善提案
 
@@ -270,7 +270,7 @@ hagiでセットアップされるMCPサーバーの使い方を説明します�
 
 Context7が自動的にTokioの公式ドキュメントから情報を取得します。
 
-### Phase 2d追加MCPサーバー (デフォルト無効)
+### 追加MCPサーバー (デフォルト無効)
 
 #### one-search
 
@@ -291,9 +291,9 @@ hagi mcp enable one-search
 **推奨設定:**
 Windows + WSL2環境では`DuckDuckGo`プロバイダーを推奨(Puppeteerなし、軽量)
 
-#### memory (mcp-memory-service)
+#### memory (Memento)
 
-完全ローカルの長期記憶管理。SQLite-vec + ONNX埋め込み。
+完全ローカルの長期記憶管理。BGE-M3多言語埋め込み + SQLite。
 
 **用途:**
 - 調査結果、コーディングパターンの長期保存
@@ -301,15 +301,8 @@ Windows + WSL2環境では`DuckDuckGo`プロバイダーを推奨(Puppeteerな�
 - `/research`、`/code-pattern`コマンドと連携
 
 **セットアップ:**
-```bash
-# 1. リポジトリクローン
-mkdir -p ~/.local/opt/mcp-servers
-git clone https://github.com/doobidoo/mcp-memory-service.git ~/.local/opt/mcp-servers/mcp-memory-service
 
-# 2. 依存関係インストール
-cd ~/.local/opt/mcp-servers/mcp-memory-service
-uv sync
-```
+手動インストール不要。`hagi mcp enable memory`で自動的にnpxがインストールします。
 
 **有効化方法:**
 ```bash
@@ -317,11 +310,14 @@ hagi mcp enable memory
 ```
 
 **特徴:**
+- npx自動インストール(手動セットアップ不要)
+- BGE-M3多言語埋め込み(日本語・英語対応)
 - 完全ローカル(外部API不要、プライバシー保護)
-- 軽量(~50MB、Docker不要)
+- 軽量SQLiteベース
 - XDG Base Directory準拠
 
-### Phase 2e追加MCPサーバー (デフォルト無効)
+**データ保存場所:**
+- `~/.local/share/claude-memory/memory.db`
 
 #### serena
 
@@ -346,7 +342,7 @@ hagi mcp enable serena
 Python、TypeScript/JavaScript、Rust、Go、PHP、Java、C/C++
 
 **連携:**
-- `memory` (mcp-memory-service)と組み合わせて短期・長期記憶統合
+- `memory` (Memento)と組み合わせて短期・長期記憶統合
 - 現在のコード(serena) + 過去のパターン(memory)で最適解を提案
 
 ### その他のMCPサーバー (デフォルト無効)

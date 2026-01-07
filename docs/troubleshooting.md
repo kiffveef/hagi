@@ -6,6 +6,37 @@ hagiの使用中に発生する可能性のある問題と解決策をまとめ�
 
 ## インストールに関する問題
 
+### jq: command not found
+
+**症状:**
+```
+Warning: jq not found, .claude/ git protection disabled
+```
+
+**原因:** jqがインストールされていない
+
+**解決策:**
+1. jqをインストール
+   ```bash
+   # macOS
+   brew install jq
+
+   # Ubuntu/Debian
+   sudo apt install jq
+
+   # Windows (scoop)
+   scoop install jq
+   ```
+
+2. インストール確認
+   ```bash
+   jq --version
+   ```
+
+**Note**: jqがなくてもhagiは動作しますが、`.claude/` git操作防止機能(Layer 1)が無効になります。
+
+---
+
 ### cargo: command not found
 
 **症状:**
@@ -353,6 +384,58 @@ Error: Expected value at line 5 column 3
    ```bash
    hagi mcp disable serena
    ```
+
+---
+
+## .claude/ git保護に関する問題
+
+### git add .claude/ がブロックされる
+
+**症状:**
+```
+❌ .claude/ is outside git workflow. Edit = done. No git operation needed.
+📖 See: .claude/instructions/git-workflow.md
+```
+
+**原因:** `.claude/`ディレクトリはgit管理対象外のため、Claude Code hookが操作をブロックしています
+
+**これは正常な動作です。** `.claude/`はローカル設定ファイルであり、git追跡すべきではありません。
+
+**もし意図的にコミットしたい場合:**
+
+通常はこの操作は不要ですが、特殊なケースで必要な場合:
+
+1. Layer 1(Claude Code hook)を一時的にバイパス:
+   - `.claude/settings.local.json`のhooks設定を一時的にコメントアウト
+   - Claude Codeを再起動
+
+2. Layer 2(git pre-commit hook)を一時的にバイパス:
+   ```bash
+   git commit --no-verify -m "Special case: commit .claude/"
+   ```
+
+**推奨:** `.claude/`を同期したい場合は`hagi sync`コマンドを使用してください。
+
+---
+
+### git commit が .claude/ ファイルでエラーになる
+
+**症状:**
+```
+❌ ERROR: .claude/ files should not be committed!
+To unstage: git restore --staged .claude/
+```
+
+**原因:** `.claude/`ファイルがステージングされており、git pre-commit hookがブロックしています
+
+**解決策:**
+```bash
+# ステージングを解除
+git restore --staged .claude/
+
+# 確認
+git status
+```
 
 ---
 

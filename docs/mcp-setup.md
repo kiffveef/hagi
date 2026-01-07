@@ -45,7 +45,7 @@
 | context7 | 公式ドキュメント検索 | npx (自動) | ✅ 有効 | 軽量、API keyなしで基本機能利用可 |
 | one-search | Web検索 | npx (自動) | ❌ 無効 | DuckDuckGo推奨(Puppeteerなし) |
 | memory | 長期記憶管理 | npx (自動) | ❌ 無効 | Memento(BGE-M3埋め込み、SQLite) |
-| serena | セマンティックコード解析 | npx (自動) | ❌ 無効 | XDG準拠、キャッシュ管理 |
+| serena | セマンティックコード解析 | uvx (自動) | ❌ 無効 | XDG準拠、キャッシュ管理 |
 
 ### その他のMCP
 
@@ -68,7 +68,7 @@ npx -y @modelcontextprotocol/server-sequential-thinking
 
 ---
 
-### 2. serena (uvx経由インストール、デフォルト無効) - Phase 2e
+### 2. serena (uvx経由インストール、デフォルト無効)
 
 有効化時にuvx経由でGitHubリポジトリから自動的にインストールされます。
 

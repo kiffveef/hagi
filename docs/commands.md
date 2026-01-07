@@ -58,10 +58,9 @@ hagi install -g
 
 | ツール | 必要なMCP | インストールコマンド |
 |--------|-----------|---------------------|
-| Node.js | context7、sequential-thinking、one-search | `curl -fsSL https://deb.nodesource.com/setup_18.x \| sudo -E bash -` <br> `sudo apt-get install -y nodejs` |
-| uv | mcp-memory-service | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
-| Python3 | mcp-memory-service setup | `sudo apt-get update` <br> `sudo apt-get install -y python3 python3-pip` |
-| Git | mcp-memory-service clone | `sudo apt-get install -y git` |
+| Node.js | context7、sequential-thinking、one-search、memory | `curl -fsSL https://deb.nodesource.com/setup_18.x \| sudo -E bash -` <br> `sudo apt-get install -y nodejs` |
+| uv | serena、git | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
+| jq | .claude/ git保護 | `sudo apt install jq` |
 
 **重要**: 依存関係が不足していても、インストール処理は継続されます(警告のみ表示)。不足しているツールは後でインストール可能です。
 
