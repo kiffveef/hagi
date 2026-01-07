@@ -12,7 +12,9 @@ input=$(cat)
 command=$(echo "$input" | jq -r '.tool_input.command // ""')
 
 # Block git add .claude/ (but allow templates/.claude/)
-if [[ "$command" =~ git[[:space:]]+add && "$command" =~ (^|[[:space:]])\.claude ]]; then
+# Extract just the git add portion (before && or ;)
+add_part=$(echo "$command" | sed 's/&&.*//' | sed 's/;.*//')
+if [[ "$add_part" =~ git[[:space:]]+add && "$add_part" =~ [[:space:]]\.claude ]]; then
   cat << 'EOF'
 {
   "decision": "block",
