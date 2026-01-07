@@ -76,7 +76,7 @@ hagi install
 
 プロジェクトに`.claude/`ディレクトリとテンプレートを配置します。
 
-詳細な使い方は`hagi --help`で確認できます。
+詳細な使い方は[コマンドリファレンス](./docs/commands.md)を参照してください。
 
 ---
 
@@ -125,16 +125,14 @@ To unstage: git restore --staged .claude/
 
 ---
 
-## ヘルプ
+## ドキュメント
 
-各コマンドの詳細は`--help`オプションで確認できます:
-
-```bash
-hagi --help
-hagi install --help
-hagi mcp --help
-hagi sync --help
-```
+- **[インストールガイド](./docs/installation.md)**: hagiのインストール方法、前提条件、更新、アンインストール
+- **[コマンドリファレンス](./docs/commands.md)**: 全コマンドの詳細説明、オプション、使用例
+- **[使い方ガイド](./docs/usage.md)**: スラッシュコマンド(/st)の使い方、MCPサーバーの活用方法
+- **[MCP導入ガイド](./docs/mcp-setup.md)**: MCPサーバーのインストール方法、設定、トラブルシューティング
+- **[トラブルシューティング](./docs/troubleshooting.md)**: よくある問題と解決策、デバッグ方法
+- **[開発ガイド](./docs/development.md)**: hagiへの貢献方法、開発環境のセットアップ
 
 ---
 
@@ -158,7 +156,7 @@ hagi sync --help
 | `config edit` | 設定編集 | ✅ 実装済 |
 | `update` | hagiツール自体の更新 | ✅ 実装済 |
 
-詳細は`hagi <COMMAND> --help`で確認できます。
+詳細は[コマンドリファレンス](./docs/commands.md)または`hagi <COMMAND> --help`で確認できます。
 
 ---
 
