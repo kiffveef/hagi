@@ -98,11 +98,14 @@ pub fn install_project(dry_run: bool, skip_paths: &[String]) -> Result<()> {
     // Step 4: Copy templates
     templates::copy_all_templates_with_skip(&claude_dir, dry_run, skip_paths)?;
 
-    // Step 5: Update project configuration
+    // Step 5: Setup Claude Code hooks
+    setup_claude_hooks(&claude_dir, dry_run)?;
+
+    // Step 6: Update project configuration
     update_project_gitignore(&project_dir, dry_run)?;
     install_git_hooks(&project_dir, dry_run)?;
 
-    // Step 6: Print completion message
+    // Step 7: Print completion message
     print_project_completion(dry_run)?;
 
     Ok(())
@@ -395,6 +398,29 @@ fn install_hook(hooks_dir: &std::path::Path, name: &str, content: &str) -> Resul
     #[cfg(unix)]
     make_executable(&hook_path)
         .with_context(|| format!("Failed to make {} executable", name))?;
+
+    Ok(())
+}
+
+
+/// Make Claude Code hook script executable and print summary
+fn setup_claude_hooks(claude_dir: &PathBuf, dry_run: bool) -> Result<()> {
+    println!("\n{}", "Claude Code hooks...".green());
+
+    let hook_script = claude_dir.join("hooks").join("check-claude-git.sh");
+
+    if dry_run {
+        println!("{} PreToolUse hook for .claude/ git protection", "Would configure:".yellow());
+    } else {
+        #[cfg(unix)]
+        if hook_script.exists() {
+            make_executable(&hook_script)
+                .with_context(|| "Failed to make Claude hook script executable")?;
+        }
+
+        println!("  ✅ {}", "Claude Code hooks configured".green());
+        println!("     {}", "- PreToolUse: Blocks .claude/ git operations".dimmed());
+    }
 
     Ok(())
 }
