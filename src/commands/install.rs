@@ -1,6 +1,8 @@
 use anyhow::{Context, Result};
 use colored::*;
 use std::env;
+#[cfg(unix)]
+use std::os::unix::fs::symlink;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -100,6 +102,9 @@ pub fn install_project(dry_run: bool, skip_paths: &[String]) -> Result<()> {
 
     // Step 4: Copy templates
     templates::copy_all_templates_with_skip(&claude_dir, dry_run, skip_paths)?;
+
+    // Step 4.5: Create .mcp.json symlink for Claude Code 2.1+ compatibility
+    create_mcp_symlink(&project_dir, dry_run)?;
 
     // Step 5: Setup Claude Code hooks
     setup_claude_hooks(&claude_dir, dry_run)?;
@@ -577,5 +582,69 @@ fn migrate_commands_to_skills(claude_dir: &Path, dry_run: bool) -> Result<()> {
         );
     }
 
+    Ok(())
+}
+
+// ============================================================================
+// MCP Symlink for Claude Code 2.1+ Compatibility
+// ============================================================================
+
+/// Create .mcp.json symlink pointing to .claude/mcp.json
+///
+/// Claude Code 2.1+ reads project MCP configuration from .mcp.json at project root.
+/// This function creates a symlink to maintain .claude/ as the single source of truth.
+#[cfg(unix)]
+fn create_mcp_symlink(project_dir: &Path, dry_run: bool) -> Result<()> {
+    let mcp_source = project_dir.join(".claude/mcp.json");
+    let mcp_link = project_dir.join(".mcp.json");
+
+    if !mcp_source.exists() {
+        return Ok(());
+    }
+
+    println!("\n{}", "Creating MCP symlink for Claude Code 2.1+...".green());
+
+    if dry_run {
+        if mcp_link.exists() {
+            if mcp_link.is_symlink() {
+                println!("{} {} (already symlink)", "Would skip:".yellow(), mcp_link.display());
+            } else {
+                println!("{} {} → .claude/mcp.json", "Would replace:".yellow(), mcp_link.display());
+            }
+        } else {
+            println!("{} {} → .claude/mcp.json", "Would create:".yellow(), mcp_link.display());
+        }
+        return Ok(());
+    }
+
+    if mcp_link.exists() {
+        if mcp_link.is_symlink() {
+            // Already a symlink, check if it points to the correct target
+            let target = std::fs::read_link(&mcp_link)?;
+            if target == Path::new(".claude/mcp.json") {
+                println!("  {} .mcp.json symlink already exists", "✓".green());
+                return Ok(());
+            }
+        }
+        // Remove existing file/symlink and recreate
+        std::fs::remove_file(&mcp_link)
+            .with_context(|| format!("Failed to remove existing {}", mcp_link.display()))?;
+    }
+
+    // Create relative symlink: .mcp.json -> .claude/mcp.json
+    symlink(".claude/mcp.json", &mcp_link)
+        .with_context(|| format!("Failed to create symlink {}", mcp_link.display()))?;
+
+    println!("  {} .mcp.json → .claude/mcp.json", "✅ Created:".green());
+
+    Ok(())
+}
+
+#[cfg(not(unix))]
+fn create_mcp_symlink(_project_dir: &Path, _dry_run: bool) -> Result<()> {
+    println!(
+        "\n{} MCP symlink creation is only supported on Unix systems",
+        "⚠".yellow()
+    );
     Ok(())
 }
