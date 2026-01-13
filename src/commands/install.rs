@@ -41,6 +41,9 @@ fn ensure_directory(path: &Path, dry_run: bool) -> Result<()> {
 // ============================================================================
 
 /// Install global configuration to ~/.claude/
+///
+/// Only installs settings.json (permissions, hooks, etc.)
+/// MCP configuration is handled per-project via .mcp.json symlink.
 pub fn install_global(dry_run: bool) -> Result<()> {
     print_dry_run_header(dry_run);
     println!("{}", "Installing global configuration...".green());
@@ -50,16 +53,17 @@ pub fn install_global(dry_run: bool) -> Result<()> {
     let claude_dir = utils::claude_dir()?;
     ensure_directory(&claude_dir, dry_run)?;
 
-    install_mcp_config(&claude_dir, dry_run)?;
+    // Only install settings.json (Claude Code reads ~/.claude/settings.json)
     install_settings(&claude_dir, dry_run)?;
 
     if dry_run {
         print_dry_run_footer(dry_run);
     } else {
         println!("{}", "\n✅ Global configuration installed successfully!".green().bold());
+        println!("\nInstalled:");
+        println!("  - ~/.claude/settings.json (permissions, hooks)");
         println!("\nNext steps:");
-        println!("  1. Restart Claude Code to load the new configuration");
-        println!("  2. Run 'hagi install' in your project directory");
+        println!("  Run 'hagi install' in your project directory for MCP configuration");
     }
 
     Ok(())
@@ -249,11 +253,6 @@ fn install_json_template(
     }
 
     Ok(())
-}
-
-/// Install MCP configuration from embedded template
-fn install_mcp_config(claude_dir: &PathBuf, dry_run: bool) -> Result<()> {
-    install_json_template(claude_dir, "mcp.json", "mcp.json", true, dry_run)
 }
 
 /// Install settings configuration from embedded template (rename settings.local.json → settings.json)
@@ -648,3 +647,4 @@ fn create_mcp_symlink(_project_dir: &Path, _dry_run: bool) -> Result<()> {
     );
     Ok(())
 }
+
