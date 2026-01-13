@@ -77,6 +77,7 @@ fn copy_dir_recursive(dir: &Dir, target_base: &Path, dry_run: bool, skip_paths: 
                 } else {
                     if target_file.exists() {
                         utils::backup_file(&target_file)?;
+                        utils::cleanup_old_backups(&target_file, utils::DEFAULT_MAX_BACKUPS)?;
                     }
                     if let Some(parent) = target_file.parent() {
                         utils::ensure_dir(parent)?;
@@ -153,6 +154,7 @@ fn copy_dir_recursive_simple(dir: &Dir, target_base: &Path, dry_run: bool) -> Re
                 } else {
                     if target_file.exists() {
                         utils::backup_file(&target_file)?;
+                        utils::cleanup_old_backups(&target_file, utils::DEFAULT_MAX_BACKUPS)?;
                     }
                     if let Some(parent) = target_file.parent() {
                         utils::ensure_dir(parent)?;
