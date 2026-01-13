@@ -1,6 +1,9 @@
-Comprehensive research using one-search + context7 + memento integration.
+---
+name: research
+description: Comprehensive research using one-search + context7 + memento integration. Use when user needs to research a topic, library, or technology with up-to-date information.
+---
 
-# /research Command
+# Research
 
 Perform comprehensive research on a topic by combining:
 1. **one-search**: Web search for practical examples and community insights
@@ -40,25 +43,25 @@ Perform comprehensive research on a topic by combining:
    - Search for entities with type "research_topic"
 
 2. **IF memories found:**
-   - Display: "✅ Found previous research from {date}"
+   - Display: "Found previous research from {date}"
    - Show the saved information with sources
    - Ask user: "Use this information or update with latest?"
    - **Wait for user response:**
-     - User says "use", "ok", "yes" → **END here, use cached info**
-     - User says "update", "refresh", "latest" → **Continue to Step 1**
-     - User provides no clear response → **Assume update, continue to Step 1**
+     - User says "use", "ok", "yes" -> **END here, use cached info**
+     - User says "update", "refresh", "latest" -> **Continue to Step 1**
+     - User provides no clear response -> **Assume update, continue to Step 1**
 
 3. **IF no memories found:**
-   - Display: "ℹ️ No previous research found. Starting new research..."
+   - Display: "No previous research found. Starting new research..."
    - Continue to Step 1
 
 4. **IF memento not available:**
-   - Display: "ℹ️ Memory not available. Proceeding with fresh research."
+   - Display: "Memory not available. Proceeding with fresh research."
    - Continue to Step 1
 
 5. **IF `--force` flag provided:**
    - Skip memory check entirely
-   - Display: "🔄 Force mode: Skipping memory check"
+   - Display: "Force mode: Skipping memory check"
    - Continue to Step 1
 
 6. **IF `--memory-only` flag provided:**
@@ -100,10 +103,10 @@ Retrieve official documentation for accurate specifications.
 Synthesize information from both sources:
 
 **Combine:**
-- ✅ Official specifications (context7)
-- ✅ Practical examples (one-search)
-- ✅ Community best practices (one-search)
-- ✅ Version-specific details (context7)
+- Official specifications (context7)
+- Practical examples (one-search)
+- Community best practices (one-search)
+- Version-specific details (context7)
 
 **Provide:**
 - Clear explanation of the topic
@@ -134,9 +137,9 @@ If serena MCP is available and the topic is relevant to the current project, int
    - Migration steps if applicable
 
 **Example scenarios:**
-- Researching "Rust async programming" → Find async code in current project and suggest improvements
-- Researching "Next.js 14 App Router" → Locate current routing code and propose migration path
-- Researching "Axum 0.7 CORS" → Find existing CORS configuration and suggest updates
+- Researching "Rust async programming" -> Find async code in current project and suggest improvements
+- Researching "Next.js 14 App Router" -> Locate current routing code and propose migration path
+- Researching "Axum 0.7 CORS" -> Find existing CORS configuration and suggest updates
 
 **Output format:**
 ```markdown
@@ -164,21 +167,21 @@ Save or update key learnings in long-term memory.
 **Instructions for Claude:**
 
 **Determine save/update mode:**
-- IF Step 0 found existing memory AND user chose "update" → **UPDATE mode**
-- IF Step 0 found no memory → **NEW SAVE mode**
-- IF `--no-save` flag provided → **SKIP saving entirely**
+- IF Step 0 found existing memory AND user chose "update" -> **UPDATE mode**
+- IF Step 0 found no memory -> **NEW SAVE mode**
+- IF `--no-save` flag provided -> **SKIP saving entirely**
 
 **UPDATE mode:**
 1. Use `add_observations` to update existing entity
 2. OR `delete_entities` + `create_entities` for full replacement
-3. Display: "✅ Memory updated with latest information"
+3. Display: "Memory updated with latest information"
 
 **NEW SAVE mode:**
 1. Use `create_entities` tool
-2. Display: "✅ Research saved to long-term memory"
+2. Display: "Research saved to long-term memory"
 
 **SKIP mode:**
-- Display: "ℹ️ Skipped memory storage (--no-save)"
+- Display: "Skipped memory storage (--no-save)"
 
 **Requirements for saving:**
 - ONLY save if memento is available
@@ -262,33 +265,33 @@ Present the research results in the following structure:
 ### Memory Status
 
 **If NEW SAVE:**
-✅ Research saved to long-term memory
+Research saved to long-term memory
 - Tags: [tag1, tag2, tag3]
 - Date: {today's date}
 - Next time: `/research {topic}` will find this automatically
 
 **If UPDATE:**
-✅ Memory updated with latest information
+Memory updated with latest information
 - Previous: {old date}
 - Updated: {today's date}
 
 **If SKIPPED:**
-ℹ️ Memory storage skipped (--no-save or memento unavailable)
+Memory storage skipped (--no-save or memento unavailable)
 ```
 
 ## Error Handling
 
 **If one-search is not available:**
 - Continue with context7 only
-- Notify user: "⚠️ one-search not available, using context7 only"
+- Notify user: "one-search not available, using context7 only"
 
 **If context7 is not available:**
 - Continue with one-search only
-- Notify user: "⚠️ context7 not available, using web search only"
+- Notify user: "context7 not available, using web search only"
 
 **If memento is not available:**
 - Skip memory storage
-- Notify user: "ℹ️ memento not available, skipping memory storage"
+- Notify user: "memento not available, skipping memory storage"
 
 **If no MCP servers are available:**
 - Provide research based on built-in knowledge
