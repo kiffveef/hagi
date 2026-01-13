@@ -26,45 +26,21 @@ fn get_mcp_config_path(global: bool) -> Result<PathBuf> {
     }
 }
 
-/// List all MCP servers (both global and project-local)
+/// List all MCP servers (project configuration only)
+///
+/// Note: Global MCP configuration is not managed by hagi.
+/// MCP servers are configured per-project via .claude/mcp.json (symlinked to .mcp.json).
 pub fn list() -> Result<()> {
-    let global_path = utils::claude_dir()?.join("mcp.json");
     let local_path_result = std::env::current_dir()
         .map(|d| d.join(".claude").join("mcp.json"));
 
-    // Display global configuration
-    println!("{}", "═══ Global Configuration (~/.claude/mcp.json) ═══".cyan().bold());
-    println!();
-
-    if !global_path.exists() {
-        println!("{}", "❌ Global mcp.json not found.".red());
-        println!("Run 'hagi install --global' first.");
-        println!();
-    } else {
-        let mcp_config = utils::read_json_file(&global_path)?;
-        if let Some(servers) = mcp_config["mcpServers"].as_object() {
-            for (name, config) in servers {
-                let disabled = config["disabled"].as_bool().unwrap_or(false);
-                let status = if disabled {
-                    "disabled".red()
-                } else {
-                    "enabled".green()
-                };
-
-                let description = get_server_description(name);
-                println!("  {} [{}] - {}", name.cyan().bold(), status, description);
-            }
-        }
-        println!();
-    }
-
-    // Display project-local configuration
-    println!("{}", "═══ Project-Local Configuration (.claude/mcp.json) ═══".cyan().bold());
+    // Display project configuration
+    println!("{}", "═══ Project MCP Configuration (.claude/mcp.json) ═══".cyan().bold());
     println!();
 
     if let Ok(local_path) = local_path_result {
         if !local_path.exists() {
-            println!("{}", "❌ Project-local mcp.json not found.".yellow());
+            println!("{}", "❌ Project mcp.json not found.".yellow());
             println!("Run 'hagi install' to set up project configuration.");
         } else {
             let mcp_config = utils::read_json_file(&local_path)?;
@@ -79,6 +55,24 @@ pub fn list() -> Result<()> {
 
                     let description = get_server_description(name);
                     println!("  {} [{}] - {}", name.cyan().bold(), status, description);
+                }
+            }
+
+            // Check symlink status
+            let symlink_path = std::env::current_dir()
+                .map(|d| d.join(".mcp.json"))
+                .ok();
+
+            println!();
+            if let Some(ref symlink) = symlink_path {
+                if symlink.is_symlink() {
+                    println!("{}", "✓ .mcp.json symlink exists (Claude Code 2.1+ compatible)".green());
+                } else if symlink.exists() {
+                    println!("{}", "⚠ .mcp.json exists but is not a symlink".yellow());
+                    println!("  Run 'hagi install' to create proper symlink.");
+                } else {
+                    println!("{}", "⚠ .mcp.json symlink missing".yellow());
+                    println!("  Run 'hagi install' to create symlink for Claude Code 2.1+.");
                 }
             }
         }
