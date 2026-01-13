@@ -268,6 +268,7 @@ fn install_settings(claude_dir: &PathBuf, dry_run: bool) -> Result<()> {
 fn update_project_gitignore(project_dir: &PathBuf, dry_run: bool) -> Result<()> {
     let entries = vec![
         "/.claude/",
+        "/.mcp.json",
         "/.serena/",
     ];
 
