@@ -616,16 +616,17 @@ fn create_mcp_symlink(project_dir: &Path, dry_run: bool) -> Result<()> {
         return Ok(());
     }
 
-    if mcp_link.exists() {
-        if mcp_link.is_symlink() {
-            // Already a symlink, check if it points to the correct target
-            let target = std::fs::read_link(&mcp_link)?;
-            if target == Path::new(".claude/mcp.json") {
-                println!("  {} .mcp.json symlink already exists", "✓".green());
-                return Ok(());
-            }
+    // Check if symlink already exists and points to correct target
+    if let Ok(target) = std::fs::read_link(&mcp_link) {
+        if target == Path::new(".claude/mcp.json") {
+            println!("  {} .mcp.json symlink already exists", "✓".green());
+            return Ok(());
         }
-        // Remove existing file/symlink and recreate
+        // Symlink exists but points to wrong target
+        std::fs::remove_file(&mcp_link)
+            .with_context(|| format!("Failed to remove existing symlink {}", mcp_link.display()))?;
+    } else if mcp_link.exists() {
+        // Regular file exists, remove it
         std::fs::remove_file(&mcp_link)
             .with_context(|| format!("Failed to remove existing {}", mcp_link.display()))?;
     }
@@ -642,9 +643,9 @@ fn create_mcp_symlink(project_dir: &Path, dry_run: bool) -> Result<()> {
 #[cfg(not(unix))]
 fn create_mcp_symlink(_project_dir: &Path, _dry_run: bool) -> Result<()> {
     println!(
-        "\n{} MCP symlink creation is only supported on Unix systems",
+        "\n{} MCP symlink creation is not supported on this platform.",
         "⚠".yellow()
     );
+    println!("  Manually create .mcp.json or copy .claude/mcp.json to project root.");
     Ok(())
 }
-

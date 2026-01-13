@@ -153,13 +153,20 @@ pub fn info(name: &str) -> Result<()> {
 
 /// Enable multiple MCP servers
 pub fn enable_multiple(names: &[String], global: bool) -> Result<()> {
+    if global {
+        println!("{}", "❌ Global MCP configuration is not managed by hagi.".red());
+        println!("MCP servers are configured per-project via .claude/mcp.json.");
+        println!("Run 'hagi mcp enable <NAME>' without -g flag.");
+        return Ok(());
+    }
+
     if names.is_empty() {
         println!("{}", "❌ No MCP server names provided.".red());
         println!("Usage: hagi mcp enable <NAME> [NAME...]");
         return Ok(());
     }
 
-    let scope_label = if global { "global" } else { "project-local" };
+    let scope_label = "project";
     println!("{} Enabling MCP servers in {} configuration...", "⚙️".cyan(), scope_label);
     println!();
 
@@ -251,13 +258,20 @@ fn enable_single(name: &str, global: bool) -> Result<bool> {
 
 /// Disable multiple MCP servers
 pub fn disable_multiple(names: &[String], global: bool) -> Result<()> {
+    if global {
+        println!("{}", "❌ Global MCP configuration is not managed by hagi.".red());
+        println!("MCP servers are configured per-project via .claude/mcp.json.");
+        println!("Run 'hagi mcp disable <NAME>' without -g flag.");
+        return Ok(());
+    }
+
     if names.is_empty() {
         println!("{}", "❌ No MCP server names provided.".red());
         println!("Usage: hagi mcp disable <NAME> [NAME...]");
         return Ok(());
     }
 
-    let scope_label = if global { "global" } else { "project-local" };
+    let scope_label = "project";
     println!("{} Disabling MCP servers in {} configuration...", "⚙️".cyan(), scope_label);
     println!();
 
