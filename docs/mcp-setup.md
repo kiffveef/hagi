@@ -104,7 +104,7 @@ find .serena/ -type f -mtime +30 -delete
 ```bash
 hagi mcp enable serena
 
-# または手動で~/.claude/mcp.jsonを編集
+# または手動で.claude/mcp.jsonを編集
 # "disabled": true → false に変更
 ```
 
@@ -155,7 +155,7 @@ npx -y @upstash/context7-mcp
 
 **API key設定(オプション):**
 
-より高度な機能を使用したい場合、`~/.claude/mcp.json`を編集:
+より高度な機能を使用したい場合、`.claude/mcp.json`を編集:
 ```json
 "context7": {
   "env": {
@@ -181,7 +181,7 @@ npx -y one-search-mcp
 
 **プロバイダー選択:**
 
-`~/.claude/mcp.json`で設定変更可能:
+`.claude/mcp.json`で設定変更可能:
 ```json
 "one-search": {
   "disabled": false,
@@ -203,7 +203,7 @@ npx -y one-search-mcp
 # 将来のhagiコマンド(実装予定)
 hagi mcp enable one-search
 
-# または手動で~/.claude/mcp.jsonを編集
+# または手動で.claude/mcp.jsonを編集
 # "disabled": true → false に変更
 ```
 
@@ -241,7 +241,7 @@ npx -y @iachilles/memento@latest
 ```bash
 hagi mcp enable memory
 
-# または手動で~/.claude/mcp.jsonを編集
+# または手動で.claude/mcp.jsonを編集
 # "disabled": true → false に変更
 ```
 
@@ -281,17 +281,11 @@ hagi install --global --dry-run
 ```
 
 **セットアップ内容:**
-- `~/.claude/mcp.json`の作成・マージ
-- `~/.claude/settings.json`の作成・マージ
-- デフォルト有効MCP:
-  - sequential-thinking(構造化思考支援)
-  - context7(公式ドキュメント検索)
-- デフォルト無効MCP(手動で有効化可能):
-  - one-search(Web検索)
-  - memory(長期記憶管理)
-  - serena、git
+- `~/.claude/settings.json`の作成・マージ (パーミッション、hooks設定)
 - 既存ファイルの自動バックアップ(タイムスタンプ付き、最新3世代のみ保持)
 - 依存関係チェック(Node.js、uv、Python3、Git)と警告表示
+
+**Note**: グローバルMCP設定は管理しません。MCPサーバーはプロジェクトごとに`.claude/mcp.json`で設定します。
 
 ---
 
@@ -306,19 +300,30 @@ hagi install
 **セットアップ内容:**
 - `.claude/`ディレクトリ作成
 - `.claude/CLAUDE.md`、`.claude/instructions/`のコピー
+- `.claude/mcp.json` - プロジェクト用MCP設定
+- `.mcp.json` → `.claude/mcp.json` (シンボリックリンク) - Claude Code 2.1+互換
 - `.claude/settings.local.json`のコピー
 - `.gitignore`の更新
+
+**デフォルト有効MCP:**
+- sequential-thinking(構造化思考支援)
+- context7(公式ドキュメント検索)
+- memory(長期記憶管理)
+
+**デフォルト無効MCP(手動で有効化可能):**
+- one-search(Web検索)
+- serena、git
 
 ---
 
 ## 個別の有効化・無効化
 
-### 方法1: hagiコマンド(将来実装予定)
+### 方法1: hagiコマンド
 
 ```bash
 # MCPサーバーを有効化
 hagi mcp enable serena
-hagi mcp enable file-search
+hagi mcp enable memory
 
 # MCPサーバーを無効化
 hagi mcp disable serena
@@ -329,19 +334,21 @@ hagi mcp list
 
 ### 方法2: 手動編集
 
-`~/.claude/mcp.json`を編集:
+`.claude/mcp.json`を編集:
 
 ```json
 {
   "mcpServers": {
     "serena": {
-      "command": "npx",
-      "args": ["-y", "serena-mcp-server"],
+      "command": "uvx",
+      "args": ["--from", "git+https://github.com/oraios/serena", "serena", "start-mcp-server", "--context", "claude-code"],
       "disabled": false  // true → false に変更
     }
   }
 }
 ```
+
+**Note**: `.mcp.json`は`.claude/mcp.json`へのシンボリックリンクです。どちらを編集しても同じです。
 
 **変更後の反映:**
 - Claude Codeを再起動
@@ -400,7 +407,7 @@ Failed to connect to MCP server
 
 2. MCP設定確認:
    ```bash
-   cat ~/.claude/mcp.json | jq
+   cat .claude/mcp.json | jq
    ```
 
 3. Claude Code再起動
@@ -429,7 +436,7 @@ Failed to connect to one-search MCP
 
 2. プロバイダー設定確認:
    ```bash
-   cat ~/.claude/mcp.json | jq '.mcpServers["one-search"].env'
+   cat .claude/mcp.json | jq '.mcpServers["one-search"].env'
    ```
 
 3. DuckDuckGoプロバイダーに変更(WSL2推奨):
@@ -485,7 +492,7 @@ Rate limit exceeded
 
 2. API keyを取得して設定:
    ```bash
-   # ~/.claude/mcp.jsonを編集
+   # .claude/mcp.jsonを編集
    {
      "context7": {
        "env": {

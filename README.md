@@ -8,8 +8,8 @@ hagiは、Claude Codeの開発環境を素早くセットアップするため�
 
 ### 主な機能
 
-- **グローバルセットアップ**: `~/.claude/`配下にMCP設定とパーミッション設定を配置
-- **プロジェクトセットアップ**: プロジェクトごとの`.claude/`ディレクトリとテンプレートを配置
+- **グローバルセットアップ**: `~/.claude/settings.json`にパーミッション設定とhooks設定を配置
+- **プロジェクトセットアップ**: プロジェクトごとの`.claude/`ディレクトリとMCP設定、テンプレートを配置
 - **MCP管理**: sequential-thinking、context7、serena、one-search、memory、gitの統合設定
 - **複数マシン同期**: `.claude`ディレクトリをプライベートGitリポジトリで同期（設計ドキュメント、タスク管理を共有）
 - **安全な操作**: バックアップ自動作成・世代管理(最新3世代保持)、ドライラン、確認プロンプト機能
@@ -65,7 +65,7 @@ cargo install --git https://github.com/kiffveef/hagi hagi --force
 hagi install --global
 ```
 
-`~/.claude/`配下にMCP設定とパーミッション設定を配置します。
+`~/.claude/settings.json`にパーミッション設定とhooks設定を配置します。
 
 ### 2. プロジェクトセットアップ
 
@@ -74,7 +74,8 @@ cd /path/to/your/project
 hagi install
 ```
 
-プロジェクトに`.claude/`ディレクトリとテンプレートを配置します。
+プロジェクトに`.claude/`ディレクトリ、MCP設定、テンプレートを配置します。
+Claude Code 2.1+互換のため`.mcp.json`シンボリックリンクも作成されます。
 
 詳細な使い方は[コマンドリファレンス](./docs/commands.md)を参照してください。
 
