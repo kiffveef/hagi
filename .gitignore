@@ -15,6 +15,7 @@ Thumbs.db
 
 # Claude Code setup files (project root)
 /.claude/
+/.mcp.json
 /mcp.json
 /settings.json
 /settings.local.json
