@@ -34,7 +34,7 @@ Claude Code向けの設定ファイルとテンプレートをインストール
 
 ### グローバルセットアップ
 
-`~/.claude/`配下にMCP設定とパーミッション設定を配置します。
+`~/.claude/`配下にパーミッション設定を配置します。
 
 ```bash
 hagi install --global
@@ -42,8 +42,9 @@ hagi install -g
 ```
 
 **セットアップ内容:**
-- `~/.claude/mcp.json` - MCP設定(sequential-thinking、context7を有効化)
-- `~/.claude/settings.json` - パーミッション設定
+- `~/.claude/settings.json` - パーミッション設定、hooks設定
+
+**Note**: グローバルMCP設定は管理しません。MCPサーバーはプロジェクトごとに`.claude/mcp.json`で設定します。
 
 **動作:**
 1. 依存関係チェック(Node.js、uv、Python3、Git)
@@ -95,6 +96,7 @@ hagi install
   - `tools.md` - 推奨ツール(rg/bat/fd等)
 - `.claude/skills/` - スラッシュコマンド (スキル)
 - `.claude/mcp.json` - プロジェクト用MCP設定
+- `.mcp.json` → `.claude/mcp.json` (シンボリックリンク) - Claude Code 2.1+互換
 - `.claude/settings.local.json` - パーミッション設定
 - `.gitignore` 更新(以下を追加)
   - `/.claude/`
@@ -344,14 +346,12 @@ hagi status
 
 **表示内容:**
 - グローバル設定のインストール状態
-  - `~/.claude/mcp.json`の存在確認
   - `~/.claude/settings.json`の存在確認
 - プロジェクト設定のインストール状態
   - `.claude/`ディレクトリの存在確認
   - 各テンプレートファイルの存在確認
+  - `.mcp.json`シンボリックリンクの状態
 - MCP設定の詳細
-  - **グローバルとローカルの設定比較**
-  - 設定が異なるサーバーを警告表示
   - 有効化/無効化されているMCPサーバー一覧
 - テンプレートファイルの状態
   - `.claude/CLAUDE.md`
@@ -370,7 +370,6 @@ hagi status
 出力例:
 ```
 [Global Configuration]
-✅ ~/.claude/mcp.json - installed
 ✅ ~/.claude/settings.json - installed
 
 [Project Configuration]
@@ -378,14 +377,15 @@ hagi status
 ✅ .claude/CLAUDE.md - installed
 ✅ .claude/instructions/ - installed
 ✅ .claude/skills/ - installed
+✅ .mcp.json symlink - exists
 
 [MCP Servers]
 ✅ sequential-thinking - enabled
 ✅ context7 - enabled
+✅ memory - enabled
+❌ one-search - disabled
 ❌ serena - disabled
-❌ file-search - disabled
 ❌ git - disabled
-❌ github - disabled
 ```
 
 ---
@@ -444,26 +444,22 @@ MCPサーバーの管理コマンド。
 hagi mcp list
 ```
 
-インストール済みMCPサーバーの一覧を表示します。グローバル設定とプロジェクトローカル設定の両方を表示します。
+プロジェクトのMCPサーバー設定を表示します。
+
+**Note**: グローバルMCP設定は管理しません。MCPサーバーはプロジェクトごとに`.claude/mcp.json`で設定します。
 
 **出力例:**
 ```
-═══ Global Configuration (~/.claude/mcp.json) ═══
+═══ Project MCP Configuration (.claude/mcp.json) ═══
 
   sequential-thinking [enabled] - Structured thinking and problem-solving
   context7 [enabled] - Library documentation and code examples
-  serena [enabled] - Code analysis and semantic search
-  file-search [disabled] - Fast file search and analysis
+  memory [enabled] - Long-term memory (SQLite-vec, local)
+  one-search [disabled] - Web search (DuckDuckGo, SearXNG)
+  serena [disabled] - Code analysis and semantic search (token-optimized)
   git [disabled] - Git operations and repository management
-  github [disabled] - GitHub integration (issues, PRs, releases)
 
-═══ Project-Local Configuration (.claude/mcp.json) ═══
-
-  sequential-thinking [enabled] - Structured thinking and problem-solving
-  context7 [enabled] - Library documentation and code examples
-  serena [disabled] - Code analysis and semantic search
-  file-search [disabled] - Fast file search and analysis
-  git [disabled] - Git operations and repository management
+✓ .mcp.json symlink exists (Claude Code 2.1+ compatible)
 ```
 
 ### info - MCPサーバー情報
@@ -492,81 +488,39 @@ Description: GitHub integration (issues, PRs, releases)
 ### enable - MCPサーバー有効化
 
 ```bash
-hagi mcp enable <SERVER_NAME> [SERVER_NAME...] [--global]
+hagi mcp enable <SERVER_NAME> [SERVER_NAME...]
 ```
 
 指定したMCPサーバーを有効化します。複数のサーバーを同時に指定できます。
 
-**スコープ:**
-- **デフォルト**: プロジェクトローカル(`.claude/mcp.json`)を操作
-- **`--global / -g`**: グローバル設定(`~/.claude/mcp.json`)を操作
+**Note**: グローバルMCP設定は管理しません。MCPサーバーはプロジェクトごとに`.claude/mcp.json`で設定します。
 
 **例:**
 ```bash
-# プロジェクトローカルで有効化(デフォルト)
+# MCPサーバーを有効化
 hagi mcp enable serena
 
-# グローバル設定で有効化
-hagi mcp enable serena --global
-hagi mcp enable serena -g
-
 # 複数のサーバーを同時に有効化
-hagi mcp enable serena file-search git
-
-# グローバルで複数サーバーを有効化
-hagi mcp enable memory one-search --global
+hagi mcp enable serena memory git
 ```
 
 **動作:**
-1. 対象の設定ファイルを読み込み(グローバルまたはローカル)
+1. `.claude/mcp.json`を読み込み
 2. 指定サーバーの`"disabled": true`フィールドを削除
-3. **github/github-graphql MCPの場合、.envファイルまたはシェル環境変数からPATの存在を確認(検証のみ、書き込みなし)**
-4. バックアップを作成(タイムスタンプ付き、バッチ処理時は1回のみ)
-5. 古いバックアップを自動削除(最新3世代のみ保持)
-6. ファイルを保存
-7. 成功/失敗の集計を表示
-8. 再起動を促すメッセージを表示
+3. バックアップを作成(タイムスタンプ付き、バッチ処理時は1回のみ)
+4. 古いバックアップを自動削除(最新3世代のみ保持)
+5. ファイルを保存
+6. 成功/失敗の集計を表示
+7. 再起動を促すメッセージを表示
 
 **出力例:**
 ```bash
-$ hagi mcp enable serena file-search git
+$ hagi mcp enable serena memory git
 ✅ MCP server 'serena' enabled
-✅ MCP server 'file-search' enabled
+✅ MCP server 'memory' enabled
 ✅ MCP server 'git' enabled
 
 ✅ 3 server(s) enabled.
-
-Note: Restart Claude Code to apply changes.
-```
-
-**GitHub MCPのトークン検証例:**
-```bash
-$ hagi mcp enable github github-graphql
-✅ MCP server 'github' enabled
-   ✓ GITHUB_PERSONAL_ACCESS_TOKEN found in environment
-✅ MCP server 'github-graphql' enabled
-   ✓ GITHUB_TOKEN found in environment
-
-✅ 2 server(s) enabled.
-
-Note: Restart Claude Code to apply changes.
-```
-
-**トークンが見つからない場合:**
-```bash
-$ hagi mcp enable github
-✅ MCP server 'github' enabled
-   ⚠ GITHUB_PERSONAL_ACCESS_TOKEN not found in .env or environment
-   Set up with one of:
-     1. Create .env file: echo 'GITHUB_PERSONAL_ACCESS_TOKEN=your_token' > .env
-     2. Export in shell: export GITHUB_PERSONAL_ACCESS_TOKEN=your_token
-     3. Edit ~/.claude/mcp.json manually
-
-✅ 1 server(s) enabled.
-
-⚠️ Warning: The following servers require environment variables:
-  - github
-Edit ~/.claude/mcp.json and configure required variables.
 
 Note: Restart Claude Code to apply changes.
 ```
@@ -575,51 +529,41 @@ Note: Restart Claude Code to apply changes.
 存在しないサーバー名を指定した場合、そのサーバーのみエラーとなり、他のサーバーは正常に処理されます。
 
 ```bash
-$ hagi mcp enable serena invalid-name file-search
+$ hagi mcp enable serena invalid-name
 ✅ MCP server 'serena' enabled
 ❌ invalid-name - MCP server not found
-✅ MCP server 'file-search' enabled
 
-✅ 2 server(s) enabled.
+✅ 1 server(s) enabled.
 ❌ 1 server(s) failed.
 
 Note: Restart Claude Code to apply changes.
 ```
 
 **注意:**
-- 環境変数が必要なサーバー(github等)を有効化する際は集約された警告が表示されます
+- 環境変数が必要なサーバーを有効化する際は警告が表示されます
 - 設定変更後はClaude Codeの再起動が必要です
 
 ### disable - MCPサーバー無効化
 
 ```bash
-hagi mcp disable <SERVER_NAME> [SERVER_NAME...] [--global]
+hagi mcp disable <SERVER_NAME> [SERVER_NAME...]
 ```
 
 指定したMCPサーバーを無効化します。複数のサーバーを同時に指定できます。
 
-**スコープ:**
-- **デフォルト**: プロジェクトローカル(`.claude/mcp.json`)を操作
-- **`--global / -g`**: グローバル設定(`~/.claude/mcp.json`)を操作
+**Note**: グローバルMCP設定は管理しません。MCPサーバーはプロジェクトごとに`.claude/mcp.json`で設定します。
 
 **例:**
 ```bash
-# プロジェクトローカルで無効化(デフォルト)
+# MCPサーバーを無効化
 hagi mcp disable serena
 
-# グローバル設定で無効化
-hagi mcp disable serena --global
-hagi mcp disable serena -g
-
 # 複数のサーバーを同時に無効化
-hagi mcp disable serena file-search git
-
-# グローバルで複数サーバーを無効化
-hagi mcp disable memory one-search --global
+hagi mcp disable serena git one-search
 ```
 
 **動作:**
-1. 対象の設定ファイルを読み込み(グローバルまたはローカル)
+1. `.claude/mcp.json`を読み込み
 2. 指定サーバーに`"disabled": true`を追加
 3. バックアップを作成(タイムスタンプ付き、バッチ処理時は1回のみ)
 4. 古いバックアップを自動削除(最新3世代のみ保持)
@@ -629,12 +573,11 @@ hagi mcp disable memory one-search --global
 
 **出力例:**
 ```bash
-$ hagi mcp disable file-search git github
-✅ MCP server 'file-search' disabled
+$ hagi mcp disable serena git
+✅ MCP server 'serena' disabled
 ✅ MCP server 'git' disabled
-✅ MCP server 'github' disabled
 
-✅ 3 server(s) disabled.
+✅ 2 server(s) disabled.
 
 Note: Restart Claude Code to apply changes.
 ```
@@ -654,7 +597,7 @@ Note: Restart Claude Code to apply changes.
 ```
 
 **注意:**
-- 重要なサーバー(sequential-thinking、context7)を無効化する際は集約された警告が表示されます
+- 重要なサーバー(sequential-thinking、context7)を無効化する際は警告が表示されます
 - 設定変更後はClaude Codeの再起動が必要です
 
 ---
@@ -1083,13 +1026,13 @@ hagi mcp list
 hagi mcp enable serena
 
 # 複数のサーバーを同時に有効化
-hagi mcp enable serena file-search git
+hagi mcp enable serena memory git
 
 # 詳細情報確認
 hagi mcp info serena
 
 # 使わないサーバーをまとめて無効化
-hagi mcp disable git github memory
+hagi mcp disable git one-search
 
 # 状態確認
 hagi status
