@@ -43,8 +43,8 @@
 |-----|------|------------------|----------------|------|
 | sequential-thinking | 構造化思考支援 | npx (自動) | ✅ 有効 | 軽量、起動即座 |
 | context7 | 公式ドキュメント検索 | npx (自動) | ✅ 有効 | 軽量、API keyなしで基本機能利用可 |
+| memory | 長期記憶管理 | npx (自動) | ✅ 有効 | Memento(BGE-M3埋め込み、SQLite) |
 | one-search | Web検索 | npx (自動) | ❌ 無効 | DuckDuckGo推奨(Puppeteerなし) |
-| memory | 長期記憶管理 | npx (自動) | ❌ 無効 | Memento(BGE-M3埋め込み、SQLite) |
 | serena | セマンティックコード解析 | uvx (自動) | ❌ 無効 | XDG準拠、キャッシュ管理 |
 
 ### その他のMCP
@@ -110,7 +110,6 @@ hagi mcp enable serena
 
 **連携:**
 - `/serena`コマンド: serena + Mementoで過去パターン検索
-- `/research`コマンド: Step 3bで現在のコードベースとの統合提案
 
 **トラブルシューティング:**
 
@@ -210,7 +209,7 @@ hagi mcp enable one-search
 
 ---
 
-### 6. memory (Memento) (自動インストール、デフォルト無効)
+### 6. memory (Memento) (自動インストール、デフォルト有効)
 
 シンプルで軽量な長期記憶管理システムです。
 
@@ -257,12 +256,10 @@ hagi mcp enable memory
 
 **スラッシュコマンド連携:**
 
-`/research`コマンドがmemoryと自動連携します:
-- 調査結果を自動保存
-- 同一トピック検索時に過去の調査を表示
-- メモリ更新機能
-
-詳細は`templates/.claude/commands/research.md`を参照してください。
+`/st`と`/design`がmemoryと連携します:
+- `/st --save`: 思考パターンを保存
+- `/st`: 類似パターンを自動検索
+- `/design --memory`: 設計決定をプロジェクト横断で保存
 
 **旧バージョン(mcp-memory-service)からの移行:**
 

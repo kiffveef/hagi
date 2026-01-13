@@ -163,7 +163,7 @@ When user says any of these keywords, **ALWAYS save to Memento**:
 - User expects Memento storage when saying "保存"
 - File edits alone are NOT sufficient
 - Memento enables cross-session context retrieval
-- `/research` and `/serena` rely on Memento data
+- `/st` and `/serena` rely on Memento data
 
 **WHAT TO SAVE:**
 
