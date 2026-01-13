@@ -19,15 +19,23 @@ hagi install --skip CLAUDE.md --skip instructions
 
 ### /st - Structured Thinking
 
-sequential-thinking MCPを使った構造化思考支援。複雑な問題を段階的に分析・解決します。
+sequential-thinking MCPを使った構造化思考支援。複雑な問題を段階的に分析・解決します。memory連携で過去のパターンを再利用できます。
 
 #### 使い方
 
 ```
 /st データベース設計を最適化する方法を考えてください
 /st Axum0.7でWebSocketを実装する方法
-/st 新機能の実装計画を立ててください
+/st "認証フローの設計" --save    # パターンをmemoryに保存
+/st "似た問題" --fresh           # memory検索をスキップ
 ```
+
+#### オプション
+
+| オプション | 説明 |
+|-----------|------|
+| `--save` | 思考パターンをmemoryに保存 |
+| `--fresh` | memory検索をスキップして新規分析 |
 
 #### 自動ツール選択
 
@@ -38,34 +46,32 @@ sequential-thinking MCPを使った構造化思考支援。複雑な問題を段
 | 外部情報・ドキュメントが必要 | WebSearch, Context7 MCP |
 | 複数ステップのタスク | TodoWrite |
 | `.claude/TODO.md`が存在 | 自動同期 |
+| 類似パターンがmemoryに存在 | 自動検索・再利用提案 |
 
 ---
 
-### /research - 統合調査
+### /design - 設計文書
 
-one-search + context7 + memento を組み合わせた包括的なリサーチコマンド。
+設計決定や仕様を`.claude/designs/`に文書化します。
 
 #### 使い方
 
 ```
-/research Rust async programming
-/research "Axum0.7 CORS configuration"
-/research <topic> --no-save          # メモリに保存しない
+/design "authentication flow"
+/design "error handling strategy" --memory   # memoryにも保存
 ```
 
-#### ワークフロー
+#### オプション
 
-1. メモリチェック(過去の調査を確認)
-2. Web検索(one-search) - 実践例、チュートリアル
-3. 公式ドキュメント(context7) - 正確な仕様
-4. 統合・分析
-5. メモリ保存(memento) - 長期記憶に保存
+| オプション | 説明 |
+|-----------|------|
+| `--memory` | 設計をmemoryにも保存(プロジェクト横断参照用) |
 
 #### 特徴
 
-- 過去の調査結果を自動検出して再利用
-- context7とone-searchの両方を活用
-- 調査結果を長期記憶に自動保存
+- 設計意図を永続化(git追跡可能)
+- 既存設計があれば自動検出して更新
+- ADR(Architecture Decision Records)として活用可能
 
 ---
 
@@ -215,25 +221,25 @@ Context7が自動的にTokioの公式ドキュメントから情報を取得し�
 
 マルチエンジンWeb検索。DuckDuckGo、Bing、SearXNG、Tavily対応。
 
-**用途:** Web検索、`/research`と連携
+**用途:** Web検索
 
 **有効化:**
 ```bash
 hagi mcp enable one-search
 ```
 
-### memory (デフォルト無効)
+### memory (デフォルト有効)
 
 Memento - 完全ローカルの長期記憶管理。BGE-M3多言語埋め込み。
 
-**用途:** 調査結果・パターンの長期保存、`/research`・`/serena`と連携
-
-**有効化:**
-```bash
-hagi mcp enable memory
-```
+**用途:** 思考パターン・設計決定の長期保存、`/st`・`/design`・`/serena`と連携
 
 **特徴:** 完全ローカル、npx一発起動、多言語対応
+
+**無効化(必要な場合のみ):**
+```bash
+hagi mcp disable memory
+```
 
 ### serena (デフォルト無効)
 

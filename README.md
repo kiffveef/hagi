@@ -86,8 +86,8 @@ hagi install
 |-----|------|----------------|------|
 | sequential-thinking | 構造化思考支援 | ✅ 有効 | 軽量、起動即座 |
 | context7 | 公式ドキュメント検索 | ✅ 有効 | API keyなしで基本機能利用可 |
+| memory | 長期記憶管理(完全ローカル) | ✅ 有効 | Memento(BGE-M3多言語) |
 | one-search | Web検索(DuckDuckGo他) | ❌ 無効 | 軽量、Puppeteerなし |
-| memory | 長期記憶管理(完全ローカル) | ❌ 無効 | Memento(BGE-M3多言語) |
 | serena | コード解析・セマンティック検索 | ❌ 無効 | トークン節約設定済み |
 | git | Git操作 | ❌ 無効 | uvx経由 |
 
