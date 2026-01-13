@@ -93,7 +93,7 @@ hagi install
   - `git-workflow.md` - Git操作ルール(MUST/NEVER形式)
   - `task-management.md` - TodoWriteツール使い方
   - `tools.md` - 推奨ツール(rg/bat/fd等)
-- `.claude/commands/st.md` - sequential-thinkingスラッシュコマンド
+- `.claude/skills/` - スラッシュコマンド (スキル)
 - `.claude/mcp.json` - プロジェクト用MCP設定
 - `.claude/settings.local.json` - パーミッション設定
 - `.gitignore` 更新(以下を追加)
@@ -167,7 +167,7 @@ hagi install --skip instructions/git-workflow.md
 **ユースケース:**
 - 既存のCLAUDE.mdを保持したい場合: `--skip CLAUDE.md`
 - カスタマイズ済みのinstructionsを保持したい場合: `--skip instructions`
-- mcp.jsonのみを更新したい場合: `--skip CLAUDE.md --skip instructions --skip commands`
+- mcp.jsonのみを更新したい場合: `--skip CLAUDE.md --skip instructions --skip skills`
 
 ### 使用例
 
@@ -356,7 +356,7 @@ hagi status
 - テンプレートファイルの状態
   - `.claude/CLAUDE.md`
   - `.claude/instructions/`
-  - `.claude/commands/`
+  - `.claude/skills/`
 
 ### 使用例
 
@@ -377,7 +377,7 @@ hagi status
 ✅ .claude/ - installed
 ✅ .claude/CLAUDE.md - installed
 ✅ .claude/instructions/ - installed
-✅ .claude/commands/ - installed
+✅ .claude/skills/ - installed
 
 [MCP Servers]
 ✅ sequential-thinking - enabled

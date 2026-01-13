@@ -4,109 +4,68 @@ hagiインストール後の詳しい使い方、MCPサーバーの活用方法�
 
 ---
 
-## スラッシュコマンド
+## スラッシュコマンド (Skills)
 
-hagiでセットアップすると、`.claude/commands/`ディレクトリにスラッシュコマンドが配置されます。
+hagiでセットアップすると、`.claude/skills/`ディレクトリにスキルが配置されます。
 
-### コマンドの更新(既存インストール済みの場合)
+> **Note**: Claude Code 2.1.3以降、commandsはskillsに統合されました。hagiは自動的に古い`commands/`を`commands.bak/`にバックアップし、新しい`skills/`形式をインストールします。
 
-新しいスラッシュコマンドが追加された場合、以下で更新できます:
+### スキルの更新(既存インストール済みの場合)
 
 ```bash
 # カスタマイズ済みのCLAUDE.mdとinstructionsを保持しつつ更新
 hagi install --skip CLAUDE.md --skip instructions
 ```
 
-### /st - Sequential Thinking
+### /st - Structured Thinking
 
-sequential-thinking MCPを使った構造化思考支援コマンド。複雑な問題を段階的に分析・解決します。
+sequential-thinking MCPを使った構造化思考支援。複雑な問題を段階的に分析・解決します。
 
-#### 基本的な使い方
+#### 使い方
 
 ```
 /st データベース設計を最適化する方法を考えてください
+/st Axum0.7でWebSocketを実装する方法
+/st 新機能の実装計画を立ててください
 ```
 
-Claude Codeが以下のステップで問題を分析します:
-1. 問題の分析
-2. 論理的なステップへの分解
-3. アプローチの計画
-4. 体系的な実行
-5. 結果の検証
+#### 自動ツール選択
 
-#### オプション
+フラグ指定は不要です。文脈に応じて自動的に適切なツールを選択します:
 
-**`--search`: Web検索とライブラリドキュメント検索**
-
-問題解決に外部情報が必要な場合に使用します。
-
-```
-/st --search Axum0.7でWebSocketを実装する方法
-```
-
-以下のツールを使用します:
-- **WebSearch**: Web検索で最新情報を収集
-- **Context7 MCP**: ライブラリの公式ドキュメントを取得
-
-例:
-- `Axum0.7`と指定すると、Context7がAxumの公式ドキュメントから情報を取得
-- Web検索で実装例やベストプラクティスを検索
-
-**`--todo`: TodoWriteツールで進捗管理**
-
-各ステップの進捗をTodoWriteツールで追跡します。
-
-```
-/st --todo 新機能の実装計画を立ててください
-```
-
-動作:
-- 分析開始時に全ステップのTodoリストを作成
-- 各ステップ完了時にステータスを更新
-- `.claude/TODO.md`が存在する場合、自動的に同期
-
-**複数オプションの併用**
-
-```
-/st --search --todo Rust1.80の新機能を調査して実装計画を立ててください
-```
+| 状況 | 自動選択されるツール |
+|------|---------------------|
+| 外部情報・ドキュメントが必要 | WebSearch, Context7 MCP |
+| 複数ステップのタスク | TodoWrite |
+| `.claude/TODO.md`が存在 | 自動同期 |
 
 ---
 
 ### /research - 統合調査
 
-one-search + context7 + memoryを組み合わせた包括的なリサーチコマンド。
+one-search + context7 + memento を組み合わせた包括的なリサーチコマンド。
 
-#### 基本的な使い方
+#### 使い方
 
 ```
 /research Rust async programming
 /research "Axum0.7 CORS configuration"
+/research <topic> --no-save          # メモリに保存しない
 ```
 
 #### ワークフロー
 
-1. **Step 0**: 自動メモリチェック(過去の調査を確認)
-2. **Step 1**: Web検索(one-search) - 実践例、チュートリアル
-3. **Step 2**: 公式ドキュメント(context7) - 正確な仕様
-4. **Step 3**: 統合・分析 - 両方の情報を総合
-5. **Step 3b**: 現在のコードベース統合(serena) - プロジェクトへの適用提案
-6. **Step 4**: メモリ保存(memory) - 長期記憶に保存
-
-#### オプション
-
-```
-/research <topic> --no-save          # メモリに保存しない
-/research <topic> --force            # メモリチェックをスキップ
-/research <topic> --memory-only      # メモリ検索のみ
-```
+1. メモリチェック(過去の調査を確認)
+2. Web検索(one-search) - 実践例、チュートリアル
+3. 公式ドキュメント(context7) - 正確な仕様
+4. 統合・分析
+5. メモリ保存(memento) - 長期記憶に保存
 
 #### 特徴
 
 - 過去の調査結果を自動検出して再利用
-- 公式ドキュメント(context7)とWeb検索(one-search)の両方を活用
+- context7とone-searchの両方を活用
 - 調査結果を長期記憶に自動保存
-- 現在のプロジェクトへの適用提案(serena統合、Phase 2e)
 
 ---
 
@@ -114,7 +73,7 @@ one-search + context7 + memoryを組み合わせた包括的なリサーチコ�
 
 直近の会話を簡潔なマークダウンファイルにまとめます。
 
-#### 基本的な使い方
+#### 使い方
 
 ```
 /note                    # note-YYYYMMDD-HHMMSS.md として保存
@@ -128,69 +87,51 @@ one-search + context7 + memoryを組み合わせた包括的なリサーチコ�
 - 成果物、変更内容
 - 次のアクション(あれば)
 
+---
+
+### /serena - コード分析
+
+serena + memento でコードパターンを検索・分析します。
+
+#### 使い方
+
+```
+/serena "error handling in async functions"
+/serena "REST API pagination"
+/serena "authentication middleware" --skip-memory
+/serena "database pooling" --save-pattern
+```
+
 #### 特徴
 
-- 2〜3会話分を一貫性のある文章で要約
-- 技術的な詳細(ファイルパス、コマンド等)を適宜含む
-- 文脈を知らない人が読んでも理解できる形式
+- 現在のコードベースをserenaで検索
+- 過去パターンをmementoから自動検索
+- 実装アプローチの比較・改善提案
+- `--save-pattern`で分析結果を長期記憶に保存
 
 ---
 
-### /code-pattern - パターン検索
+### /review - コードレビュー
 
-serena + memoryで過去のコーディングパターンを検索・分析します。
+サードパーティ視点でのコードレビューと改善提案。
 
-#### 基本的な使い方
+#### 使い方
 
 ```
-/code-pattern error handling in async functions
-/code-pattern "REST API pagination implementation"
-/code-pattern authentication middleware
+/review src/commands/install.rs
+/review src/commands/ --focus architecture
+/review --diff                              # 直近の変更をレビュー
+/review src/utils.rs --refactor             # 具体的なリファクタリング提案
 ```
-
-#### ワークフロー
-
-1. **Step 1**: 現在のコードベース検索(serena) - 現在のプロジェクトのパターン
-2. **Step 2**: 過去パターン検索(memory) - 長期記憶からパターン検索
-3. **Step 3**: パターン比較・分析 - 実装アプローチの比較
-4. **Step 4**: 推奨事項 - ベストプラクティスと改善提案
 
 #### オプション
 
-```
-/code-pattern <description> --current-only   # 現在のコードベースのみ
-/code-pattern <description> --memory-only    # 過去パターンのみ
-```
-
-#### 特徴
-
-- 現在のコードと過去のパターンを横断的に検索
-- 実装アプローチの比較・分析
-- ベストプラクティスの提案
-- リファクタリング・改善の具体的な提案
-- パターン分析結果を長期記憶に保存
-
-#### 使用例
-
-```
-# エラーハンドリングパターンを検索
-/code-pattern error handling in async functions
-
-# 出力例:
-## Error Handling Pattern Analysis
-### Current Project (serena)
-- src/handlers.rs:45 - Result<T, E>パターン
-- src/api.rs:123 - anyhowパターン
-
-### Past Projects (memory)
-- web-api-v2: thiserrorカスタムエラー型
-- data-processor: バックトレース付きエラー
-
-### Recommendations
-1. thiserror + anyhowの組み合わせを推奨
-2. 具体的なリファクタリング提案
-3. 再利用可能なコンポーネント
-```
+| オプション | 説明 |
+|-----------|------|
+| `--strict` | 軽微な問題も含める |
+| `--focus <area>` | `security`, `performance`, `readability`, `architecture` |
+| `--refactor` | 具体的なコード改善案を提示 |
+| `--diff` | git diffをレビュー |
 
 ---
 
@@ -265,85 +206,49 @@ hagiでセットアップされるMCPサーバーの使い方を説明します�
 
 **使い方:**
 ```
-/st --search Tokio1.40のasync/await使い方
+/st Tokio1.40のasync/await使い方を調べて
 ```
 
 Context7が自動的にTokioの公式ドキュメントから情報を取得します。
 
-### 追加MCPサーバー (デフォルト無効)
+### one-search (デフォルト無効)
 
-#### one-search
+マルチエンジンWeb検索。DuckDuckGo、Bing、SearXNG、Tavily対応。
 
-マルチエンジンWeb検索を提供。DuckDuckGo、Bing、SearXNG、Tavilyに対応。
+**用途:** Web検索、`/research`と連携
 
-**用途:**
-- Web検索で実践例、チュートリアルを探す
-- `/research`コマンドと連携
-
-**有効化方法:**
+**有効化:**
 ```bash
-# 将来のhagiコマンド
 hagi mcp enable one-search
-
-# または手動で~/.claude/mcp.jsonを編集
 ```
 
-**推奨設定:**
-Windows + WSL2環境では`DuckDuckGo`プロバイダーを推奨(Puppeteerなし、軽量)
+### memory (デフォルト無効)
 
-#### memory (Memento)
+Memento - 完全ローカルの長期記憶管理。BGE-M3多言語埋め込み。
 
-完全ローカルの長期記憶管理。BGE-M3多言語埋め込み + SQLite。
+**用途:** 調査結果・パターンの長期保存、`/research`・`/serena`と連携
 
-**用途:**
-- 調査結果、コーディングパターンの長期保存
-- プロジェクト横断的な知識管理
-- `/research`、`/code-pattern`コマンドと連携
-
-**セットアップ:**
-
-手動インストール不要。`hagi mcp enable memory`で自動的にnpxがインストールします。
-
-**有効化方法:**
+**有効化:**
 ```bash
 hagi mcp enable memory
 ```
 
-**特徴:**
-- npx自動インストール(手動セットアップ不要)
-- BGE-M3多言語埋め込み(日本語・英語対応)
-- 完全ローカル(外部API不要、プライバシー保護)
-- 軽量SQLiteベース
-- XDG Base Directory準拠
+**特徴:** 完全ローカル、npx一発起動、多言語対応
 
-**データ保存場所:**
-- `~/.local/share/claude-memory/memory.db`
+### serena (デフォルト無効)
 
-#### serena
+セマンティックコード解析・検索。
 
-セマンティックコード解析・検索を提供。
+**用途:** コード検索・解析、`/serena`・`/review`と連携
 
-**用途:**
-- 現在のプロジェクトのコード検索・解析
-- `/code-pattern`コマンドで現在のパターン検索
-- `/research`コマンドStep 3bで適用提案
-
-**有効化方法:**
+**有効化:**
 ```bash
 hagi mcp enable serena
 ```
 
-**キャッシュ管理:**
-- グローバルキャッシュ: `~/.cache/serena` (XDG準拠)
-- プロジェクトキャッシュ: `.serena/` (自動的に`.gitignore`追加)
-- 定期クリーンアップ推奨: `find .serena/ -type f -mtime +30 -delete`
+**キャッシュ:** `.serena/` (自動的に`.gitignore`追加)
 
-**LSP対応言語:**
-Python、TypeScript/JavaScript、Rust、Go、PHP、Java、C/C++
-
-**連携:**
-- `memory` (Memento)と組み合わせて短期・長期記憶統合
-- 現在のコード(serena) + 過去のパターン(memory)で最適解を提案
+**LSP対応:** Python、TypeScript/JavaScript、Rust、Go、PHP、Java、C/C++
 
 ### その他のMCPサーバー (デフォルト無効)
 
@@ -418,7 +323,7 @@ GitHub連携(Issue/PR管理)を提供。
 - **CLAUDE.md**: プロジェクトの設計指針、ガイドライン
 - **TODO.md**: タスク管理、進捗状況
 - **instructions/**: プロジェクト固有のルール
-- **commands/**: カスタムスラッシュコマンド
+- **skills/**: スラッシュコマンド (スキル)
 - **mcp.json**: プロジェクトローカルのMCP設定
 
 これらをマシン間で同期することで、一貫した開発環境を維持できます。
