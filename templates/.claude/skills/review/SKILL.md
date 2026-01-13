@@ -1,6 +1,9 @@
-Third-party perspective code review and refactoring suggestions.
+---
+name: review
+description: Third-party perspective code review and refactoring suggestions. Use when user wants objective code review, refactoring advice, or quality assessment.
+---
 
-# /review Command
+# Review
 
 Perform objective code review from a **third-party perspective** - as if you're seeing this code for the first time with no assumptions about the author's intent.
 
@@ -60,7 +63,7 @@ Perform objective code review from a **third-party perspective** - as if you're 
 
 **Output:**
 ```
-📂 Review Target:
+Review Target:
 - Files: N files identified
 - Lines: ~N lines to review
 - Scope: [file/directory/feature/diff]
@@ -85,7 +88,7 @@ Perform objective code review from a **third-party perspective** - as if you're 
 
 **Output:**
 ```
-🏗️ Structure Overview:
+Structure Overview:
 - Functions: N (public: N, private: N)
 - Modules: N
 - External dependencies: N
@@ -108,8 +111,8 @@ Perform objective code review from a **third-party perspective** - as if you're 
 
 **Output:**
 ```
-📚 Best Practices Check:
-- Library: [name] - ✅ Following / ⚠️ Deviating
+Best Practices Check:
+- Library: [name] - Following / Deviating
   - [Specific deviation if any]
 ```
 
@@ -174,14 +177,14 @@ Perform objective code review from a **third-party perspective** - as if you're 
 ```markdown
 ## Code Review: {target}
 
-### 📊 Overview
+### Overview
 - **Files reviewed**: N files
 - **Lines analyzed**: ~N lines
-- **Overall assessment**: 🔴 Needs Work / 🟡 Acceptable / 🟢 Good
+- **Overall assessment**: Needs Work / Acceptable / Good
 
 ---
 
-### 🔴 Critical Issues
+### Critical Issues
 
 Issues that **must be fixed** - bugs, security risks, or major design flaws.
 
@@ -198,7 +201,7 @@ Issues that **must be fixed** - bugs, security risks, or major design flaws.
 
 ---
 
-### 🟡 Warnings
+### Warnings
 
 Issues that **should be addressed** - code smells, potential problems, or deviations from best practices.
 
@@ -212,7 +215,7 @@ Issues that **should be addressed** - code smells, potential problems, or deviat
 
 ---
 
-### 🔵 Suggestions
+### Suggestions
 
 **Nice to have** improvements - not critical but would improve code quality.
 
@@ -221,7 +224,7 @@ Issues that **should be addressed** - code smells, potential problems, or deviat
 
 ---
 
-### 🟢 Good Practices Found
+### Good Practices Found
 
 Acknowledge what's done well:
 - {Good practice 1}
@@ -229,14 +232,14 @@ Acknowledge what's done well:
 
 ---
 
-### 📋 Summary
+### Summary
 
 | Category | Count |
 |----------|-------|
-| 🔴 Critical | N |
-| 🟡 Warnings | N |
-| 🔵 Suggestions | N |
-| 🟢 Good practices | N |
+| Critical | N |
+| Warnings | N |
+| Suggestions | N |
+| Good practices | N |
 ```
 
 ---
@@ -246,7 +249,7 @@ Acknowledge what's done well:
 **If `--refactor` flag is provided, include concrete code changes:**
 
 ```markdown
-### 💡 Refactoring Suggestions
+### Refactoring Suggestions
 
 #### 1. {Refactoring title}
 
@@ -329,7 +332,7 @@ Common patterns to identify and flag:
 
 ### Pattern 1: God Function
 ```rust
-// ❌ Does too many things
+// Does too many things
 fn handle_request(req: Request) -> Response {
     validate(req);
     authenticate(req);
@@ -345,7 +348,7 @@ fn handle_request(req: Request) -> Response {
 
 ### Pattern 2: Hidden Side Effects
 ```rust
-// ❌ Name suggests read-only, but writes
+// Name suggests read-only, but writes
 fn get_user_config() -> Config {
     let config = read_file();
     write_file(config.with_defaults()); // Hidden side effect!
@@ -357,7 +360,7 @@ fn get_user_config() -> Config {
 
 ### Pattern 3: Misleading Names
 ```rust
-// ❌ Name doesn't match behavior
+// Name doesn't match behavior
 fn validate_email(email: &str) -> String {
     email.to_lowercase().trim() // This is normalization, not validation!
 }
@@ -367,7 +370,7 @@ fn validate_email(email: &str) -> String {
 
 ### Pattern 4: Circular Dependencies
 ```
-// ❌ A depends on B, B depends on A
+// A depends on B, B depends on A
 module_a.rs -> imports module_b
 module_b.rs -> imports module_a
 ```
@@ -382,13 +385,13 @@ Patterns commonly produced by AI that need review:
 
 ### Pattern 1: Unnecessary Recursion
 ```rust
-// ❌ AI-style: Recursive when loop is simpler
+// AI-style: Recursive when loop is simpler
 fn sum_recursive(arr: &[i32], idx: usize) -> i32 {
     if idx >= arr.len() { 0 }
     else { arr[idx] + sum_recursive(arr, idx + 1) }
 }
 
-// ✅ Better: Simple iteration
+// Better: Simple iteration
 fn sum(arr: &[i32]) -> i32 {
     arr.iter().sum()
 }
@@ -396,25 +399,25 @@ fn sum(arr: &[i32]) -> i32 {
 
 ### Pattern 2: Manual Implementation of Built-ins
 ```rust
-// ❌ AI-style: Manual dictionary counting
+// AI-style: Manual dictionary counting
 let mut counts = HashMap::new();
 for item in items {
     *counts.entry(item).or_insert(0) += 1;
 }
 
-// ✅ Better: Use itertools or built-in
+// Better: Use itertools or built-in
 use itertools::Itertools;
 let counts = items.into_iter().counts();
 ```
 
 ### Pattern 3: Over-Generic Code
 ```rust
-// ❌ AI-style: Generic when not needed
+// AI-style: Generic when not needed
 fn process<T: AsRef<str> + Clone + Debug + Send + Sync>(input: T) -> T {
     // Only ever called with &str
 }
 
-// ✅ Better: Simple and specific
+// Better: Simple and specific
 fn process(input: &str) -> String {
     // Clear, simple, sufficient
 }
@@ -422,7 +425,7 @@ fn process(input: &str) -> String {
 
 ### Pattern 4: Deep Nesting
 ```rust
-// ❌ AI-style: Nested conditionals
+// AI-style: Nested conditionals
 if condition1 {
     if condition2 {
         if condition3 {
@@ -431,7 +434,7 @@ if condition1 {
     }
 }
 
-// ✅ Better: Early returns
+// Better: Early returns
 if !condition1 { return; }
 if !condition2 { return; }
 if !condition3 { return; }
@@ -444,7 +447,7 @@ if !condition3 { return; }
 
 **If target not found:**
 ```
-❌ Could not find review target: {target}
+Could not find review target: {target}
    - Check the path exists
    - Try a more specific pattern
    - Use --diff to review recent changes
@@ -452,24 +455,24 @@ if !condition3 { return; }
 
 **If serena not available:**
 - Continue without structural analysis
-- Note: "⚠️ Structural analysis limited (serena not available)"
+- Note: "Structural analysis limited (serena not available)"
 
 **If context7 not available:**
 - Skip best practices check
-- Note: "ℹ️ Skipping library best practices check (context7 not available)"
+- Note: "Skipping library best practices check (context7 not available)"
 
 ---
 
 ## Output Guidelines
 
 **Keep the review actionable:**
-- ✅ Specific file and line references
-- ✅ Clear problem descriptions
-- ✅ Concrete suggestions
-- ✅ Code examples where helpful
-- ❌ Vague criticisms without solutions
-- ❌ Excessive nitpicking (unless --strict)
-- ❌ Personal style preferences as "issues"
+- Specific file and line references
+- Clear problem descriptions
+- Concrete suggestions
+- Code examples where helpful
+- No vague criticisms without solutions
+- No excessive nitpicking (unless --strict)
+- No personal style preferences as "issues"
 
 **Tone:**
 - Professional and objective

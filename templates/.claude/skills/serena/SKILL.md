@@ -1,6 +1,9 @@
-Intelligent code analysis combining serena + memory - automatic pattern integration.
+---
+name: serena
+description: Intelligent code analysis combining serena + memory - automatic pattern integration. Use when analyzing code patterns, reviewing implementations, or finding similar code across projects.
+---
 
-# /serena Command
+# Serena
 
 Analyze code with serena while **automatically** checking past patterns from memory.
 No need to run `/code-pattern` separately - this command does both.
@@ -42,7 +45,7 @@ No need to run `/code-pattern` separately - this command does both.
 
 2. **If patterns found, display:**
    ```
-   📚 Past Patterns Found:
+   Past Patterns Found:
 
    1. **[Project Name]** ([Date])
       - Pattern: [Brief description]
@@ -57,12 +60,12 @@ No need to run `/code-pattern` separately - this command does both.
 
 3. **If no patterns found:**
    ```
-   ℹ️ No past patterns found in memory. This will be the first record!
+   No past patterns found in memory. This will be the first record!
    ```
 
 4. **If memento MCP not available:**
    ```
-   ⚠️ Memory not available - searching current codebase only
+   Memory not available - searching current codebase only
    ```
 
 **Important:** Skip this step if `--skip-memory` flag is provided.
@@ -83,7 +86,7 @@ No need to run `/code-pattern` separately - this command does both.
 
 2. **Display findings:**
    ```
-   🔍 Current Codebase Analysis:
+   Current Codebase Analysis:
 
    **Found [N] instances:**
 
@@ -104,7 +107,7 @@ No need to run `/code-pattern` separately - this command does both.
 
 3. **If serena MCP not available:**
    ```
-   ❌ Serena not available. Please enable with:
+   Serena not available. Please enable with:
       hagi mcp enable serena
    ```
 
@@ -120,18 +123,18 @@ No need to run `/code-pattern` separately - this command does both.
 
    **Comparison:**
    ```
-   💡 Integrated Analysis:
+   Integrated Analysis:
 
-   ✅ **Good Patterns in Use:**
+   **Good Patterns in Use:**
    - [Pattern from current code that matches past best practices]
    - [Another good pattern]
 
-   ⚠️ **Differences from Past Best Practices:**
+   **Differences from Past Best Practices:**
    - Current: [Approach in current code]
    - Past: [Approach in past project]
    - Suggestion: [Why past approach might be better]
 
-   💡 **Suggested Improvements:**
+   **Suggested Improvements:**
    1. [Specific actionable improvement]
    2. [Another improvement]
    3. [Reference to past implementation that worked well]
@@ -141,7 +144,7 @@ No need to run `/code-pattern` separately - this command does both.
 
    **Analysis:**
    ```
-   📊 Current Code Analysis:
+   Current Code Analysis:
 
    **Patterns Identified:**
    - [Pattern 1 in current code]
@@ -151,7 +154,7 @@ No need to run `/code-pattern` separately - this command does both.
    - [Improvement based on general best practices]
    - [Another improvement]
 
-   💾 Tip: Use `--save-pattern` to save this analysis for future projects!
+   Tip: Use `--save-pattern` to save this analysis for future projects!
    ```
 
 3. **Provide actionable recommendations:**
@@ -167,7 +170,7 @@ No need to run `/code-pattern` separately - this command does both.
 
 1. **Ask user for confirmation:**
    ```
-   💾 Save this pattern to memory?
+   Save this pattern to memory?
 
    This will save:
    - Query: "[user's query]"
@@ -197,12 +200,12 @@ No need to run `/code-pattern` separately - this command does both.
 
 3. **Confirm save:**
    ```
-   ✅ Pattern saved to memory for future reference!
+   Pattern saved to memory for future reference!
    ```
 
 **If flag not provided:**
 ```
-ℹ️ To save this analysis for future projects, run:
+To save this analysis for future projects, run:
    /serena "[query]" --save-pattern
 ```
 
@@ -210,18 +213,18 @@ No need to run `/code-pattern` separately - this command does both.
 
 Keep output **concise and actionable**:
 
-- ✅ Show key findings only (not exhaustive lists)
-- ✅ Limit code snippets to 5-10 lines
-- ✅ Focus on differences and improvements
-- ✅ Provide specific file:line references
-- ❌ Don't repeat full code listings
-- ❌ Don't show extensive comparison tables
+- Show key findings only (not exhaustive lists)
+- Limit code snippets to 5-10 lines
+- Focus on differences and improvements
+- Provide specific file:line references
+- Don't repeat full code listings
+- Don't show extensive comparison tables
 
 **Example output structure:**
 ```
-📚 Past Patterns: [Brief summary]
-🔍 Current Code: [Key findings]
-💡 Recommendations: [3-5 actionable items]
+Past Patterns: [Brief summary]
+Current Code: [Key findings]
+Recommendations: [3-5 actionable items]
 ```
 
 ## Error Handling
@@ -256,15 +259,3 @@ Keep output **concise and actionable**:
 3. **Refactoring**: Find better implementations from past projects
 4. **Learning**: Understand how similar problems were solved before
 5. **Consistency**: Maintain similar patterns across projects
-
-## Comparison with `/code-pattern`
-
-| Feature | `/serena` | `/code-pattern` |
-|---------|-----------|-----------------|
-| Automatic memory check | ✅ Yes | ❌ No (manual) |
-| Primary focus | Current code + context | Pattern comparison |
-| Output length | Concise | Detailed |
-| Use case | Quick analysis | Deep pattern study |
-| Recommendation | ✅ **Use this for most cases** | Use for in-depth analysis |
-
-**In most cases, use `/serena` instead of `/code-pattern`.**

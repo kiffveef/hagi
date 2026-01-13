@@ -95,6 +95,9 @@ pub fn install_project(dry_run: bool, skip_paths: &[String]) -> Result<()> {
     let claude_dir = project_dir.join(".claude");
     ensure_directory(&claude_dir, dry_run)?;
 
+    // Step 3.5: Migrate deprecated commands/ to skills/
+    migrate_commands_to_skills(&claude_dir, dry_run)?;
+
     // Step 4: Copy templates
     templates::copy_all_templates_with_skip(&claude_dir, dry_run, skip_paths)?;
 
@@ -523,4 +526,56 @@ fn get_repository_name() -> String {
         .ok()
         .and_then(|path| path.file_name().map(|n| n.to_string_lossy().to_string()))
         .unwrap_or_else(|| "myproject".to_string())
+}
+
+// ============================================================================
+// Commands to Skills Migration
+// ============================================================================
+
+/// Migrate deprecated commands/ directory to skills/ format
+fn migrate_commands_to_skills(claude_dir: &Path, dry_run: bool) -> Result<()> {
+    let commands_dir = claude_dir.join("commands");
+    let commands_bak = claude_dir.join("commands.bak");
+
+    if !commands_dir.exists() {
+        return Ok(());
+    }
+
+    println!("\n{}", "Migrating deprecated commands/ to skills/...".yellow());
+
+    if dry_run {
+        println!("{} {}", "Would move:".yellow(), commands_dir.display());
+        println!("{} {}", "        to:".yellow(), commands_bak.display());
+        println!(
+            "{}",
+            "   After migration, remove with: rm -rf .claude/commands.bak/".dimmed()
+        );
+    } else {
+        if commands_bak.exists() {
+            std::fs::remove_dir_all(&commands_bak).with_context(|| {
+                format!("Failed to remove existing {}", commands_bak.display())
+            })?;
+        }
+
+        std::fs::rename(&commands_dir, &commands_bak).with_context(|| {
+            format!(
+                "Failed to move {} to {}",
+                commands_dir.display(),
+                commands_bak.display()
+            )
+        })?;
+
+        println!(
+            "  {} {} → {}",
+            "Moved:".green(),
+            "commands/".yellow(),
+            "commands.bak/".dimmed()
+        );
+        println!(
+            "  {}",
+            "New skills/ format will be installed. Review and delete commands.bak/ when ready.".dimmed()
+        );
+    }
+
+    Ok(())
 }
