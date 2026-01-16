@@ -31,14 +31,7 @@ hagiは、Claude Codeの開発環境を素早くセットアップするため�
 
 **jqのインストール:**
 ```bash
-# macOS
-brew install jq
-
-# Ubuntu/Debian
 sudo apt install jq
-
-# Windows (scoop)
-scoop install jq
 ```
 
 **Note**: `hagi install --global`実行時に、上記ツールの存在が自動チェックされます。不足している場合は警告とインストール手順が表示されますが、インストール処理は継続されます。jqがない場合、`.claude/` git操作防止機能は無効になります(警告が表示されます)。

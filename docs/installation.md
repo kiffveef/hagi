@@ -37,20 +37,8 @@ jq --version
 ```
 
 **インストール方法:**
-
-**macOS:**
-```bash
-brew install jq
-```
-
-**Ubuntu/Debian:**
 ```bash
 sudo apt install jq
-```
-
-**Windows (scoop):**
-```bash
-scoop install jq
 ```
 
 **Note**: jqがインストールされていない場合、`.claude/` git操作防止機能(Layer 1)は無効になりますが、警告が表示されます。
@@ -68,18 +56,9 @@ npm --version
 ```
 
 **インストール方法:**
-
-**Ubuntu/Debian:**
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
 sudo apt-get install -y nodejs
-```
-
-**Windows (nvm-windows):**
-```bash
-# https://github.com/coreybutler/nvm-windows/releases から最新版をダウンロード
-nvm install 18
-nvm use 18
 ```
 
 #### uv (Python package manager)
