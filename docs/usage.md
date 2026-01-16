@@ -569,7 +569,7 @@ Claude Codeを再起動してください。スラッシュコマンドは起動
 
 ### MCPサーバーが動作しない
 
-1. `~/.claude/mcp.json`で該当MCPの`disabled`設定を確認
+1. `hagi mcp list`で該当MCPの有効/無効状態を確認
 2. Node.js/uvがインストールされているか確認
 3. Claude Codeを再起動
 
