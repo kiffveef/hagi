@@ -158,13 +158,11 @@ To unstage: git restore --staged .claude/
 
 MIT
 
----
-
-## フィードバック
-
-バグ報告・機能要望: https://github.com/kiffveef/hagi/issues
-
 ## 参考リンク
 
 - [Claude Code公式ドキュメント](https://docs.claude.com/en/docs/claude-code/)
 - [Model Context Protocol](https://github.com/modelcontextprotocol)
+
+## フィードバック
+
+バグ報告・機能要望: https://github.com/kiffveef/hagi/issues
