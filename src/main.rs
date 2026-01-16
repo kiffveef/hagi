@@ -30,7 +30,7 @@ enum Commands {
         #[arg(long)]
         dry_run: bool,
 
-        /// Skip specific files or directories (can be used multiple times)
+        /// Skip specific files/directories or special values: "git" (skip git init)
         #[arg(long = "skip", value_name = "PATH")]
         skip: Vec<String>,
     },

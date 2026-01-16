@@ -90,8 +90,12 @@ pub fn install_project(dry_run: bool, skip_paths: &[String]) -> Result<()> {
     print_dry_run_header(dry_run);
     println!("{}", "Installing project configuration...".green());
 
-    // Step 1: Ensure git repository exists
-    ensure_git_repository(dry_run)?;
+    // Step 1: Ensure git repository exists (skip with --skip git)
+    if !skip_paths.iter().any(|s| s == "git") {
+        ensure_git_repository(dry_run)?;
+    } else {
+        println!("{}", "⏭ Skipping git repository check (--skip git)".yellow());
+    }
 
     // Step 2: Print skip list info
     print_skip_list(skip_paths);
@@ -135,9 +139,11 @@ fn ensure_git_repository(dry_run: bool) -> Result<()> {
 
 /// Print skip list if not empty
 fn print_skip_list(skip_paths: &[String]) {
-    if !skip_paths.is_empty() {
+    // Filter out special values (not paths)
+    let paths: Vec<_> = skip_paths.iter().filter(|s| *s != "git").collect();
+    if !paths.is_empty() {
         println!("\n{}", "Skipping the following paths:".yellow());
-        for path in skip_paths {
+        for path in paths {
             println!("  - {}", path);
         }
         println!();

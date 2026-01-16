@@ -131,6 +131,7 @@ hagi install
   - `Would run: git init`
   - `Would run: git commit --allow-empty -m "🌱 init"`
 - gitが既に初期化済みの場合はスキップされます
+- `--skip git`オプションでgit自動初期化をスキップできます(既存の非gitプロジェクトに追加する場合など)
 
 **オプション:**
 
@@ -159,17 +160,22 @@ hagi install --skip CLAUDE.md --skip instructions
 
 # 特定のファイルをスキップ
 hagi install --skip instructions/git-workflow.md
+
+# git自動初期化をスキップ(非gitプロジェクトに追加する場合)
+hagi install --skip git
 ```
 
 **スキップ対象の指定方法:**
 - ファイル名のみ: `CLAUDE.md` (`.claude/CLAUDE.md`がスキップされる)
 - ディレクトリ名: `instructions` (`.claude/instructions/`配下すべてがスキップされる)
 - 相対パス: `instructions/git-workflow.md` (特定ファイルのみスキップ)
+- 特殊値: `git` (git自動初期化をスキップ)
 
 **ユースケース:**
 - 既存のCLAUDE.mdを保持したい場合: `--skip CLAUDE.md`
 - カスタマイズ済みのinstructionsを保持したい場合: `--skip instructions`
 - mcp.jsonのみを更新したい場合: `--skip CLAUDE.md --skip instructions --skip skills`
+- gitリポジトリにしたくない場合: `--skip git`
 
 ### 使用例
 
