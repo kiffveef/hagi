@@ -217,103 +217,6 @@ cargo run -- mcp info sequential-thinking
 cargo run -- config validate mcp
 ```
 
-### 自動テスト(将来実装予定)
-
-```bash
-cargo test
-```
-
----
-
-## リリース
-
-### バージョン更新
-
-`Cargo.toml`のバージョンを更新:
-```toml
-[package]
-name = "hagi"
-version = "0.2.0"  # 更新
-```
-
-### タグ作成
-
-```bash
-git tag -a v0.2.0 -m "Release v0.2.0"
-git push origin v0.2.0
-```
-
-### GitHub Releasesで公開
-
-1. GitHubの「Releases」ページへ
-2. 「Draft a new release」をクリック
-3. タグを選択、リリースノートを記述
-4. 「Publish release」
-
----
-
-## 貢献ガイドライン
-
-### Issue作成
-
-バグ報告や機能要望は、GitHubのIssuesで受け付けています。
-
-**バグ報告テンプレート:**
-```
-## 症状
-何が起きたか
-
-## 再現手順
-1. ...
-2. ...
-
-## 期待する動作
-何が起きるべきか
-
-## 環境
-- OS:
-- hagiバージョン:
-- Rustバージョン:
-```
-
-**機能要望テンプレート:**
-```
-## 概要
-何を実現したいか
-
-## 動機
-なぜ必要か
-
-## 提案する実装
-どのように実装するか(任意)
-```
-
-### Pull Request
-
-1. Issueを作成(既存のIssueがあればスキップ)
-2. フォークしてブランチ作成
-3. 実装・テスト
-4. ドキュメント更新
-5. PRを作成
-
-**PRテンプレート:**
-```
-## 変更内容
-何を変更したか
-
-## 関連Issue
-Closes #123
-
-## テスト
-どのようにテストしたか
-
-## チェックリスト
-- [ ] cargo fmt 実行済み
-- [ ] cargo clippy 実行済み
-- [ ] 動作テスト完了
-- [ ] ドキュメント更新済み
-```
-
 ---
 
 ## よくある開発タスク
@@ -334,7 +237,6 @@ Closes #123
 
 1. `src/utils.rs` に関数追加
 2. 既存のコマンドで使用例を確認
-3. テストを追加(将来実装予定)
 
 ---
 
@@ -367,10 +269,3 @@ cargo run --release -- install -g
 - **[インストールガイド](./installation.md)**: インストール方法
 - **[コマンドリファレンス](./commands.md)**: 全コマンドの詳細
 - **[トラブルシューティング](./troubleshooting.md)**: よくある問題と解決策
-
----
-
-## 質問・サポート
-
-- **GitHub Issues**: https://github.com/kiffveef/hagi/issues
-- **GitHub Discussions**: https://github.com/kiffveef/hagi/discussions
