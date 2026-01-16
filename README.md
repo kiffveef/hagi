@@ -139,23 +139,23 @@ To unstage: git restore --staged .claude/
 
 ## コマンド一覧
 
-| コマンド | 説明 | 状態 |
-|---------|------|------|
-| `install` | グローバル/プロジェクト設定のインストール | ✅ 実装済 |
-| `uninstall` | 設定の削除 | ✅ 実装済 |
-| `status` | インストール状態確認 | ✅ 実装済 |
-| `sync init` | .claude同期の初期化 | ✅ 実装済 |
-| `sync pull` | 最新の.claude設定を取得 | ✅ 実装済 |
-| `sync push` | .claude変更をpush | ✅ 実装済 |
-| `sync status` | 同期状態確認 | ✅ 実装済 |
-| `mcp list` | MCPサーバー一覧表示 | ✅ 実装済 |
-| `mcp info` | MCPサーバー詳細表示 | ✅ 実装済 |
-| `mcp enable` | MCPサーバー有効化 | ✅ 実装済 |
-| `mcp disable` | MCPサーバー無効化 | ✅ 実装済 |
-| `config show` | 設定内容表示 | ✅ 実装済 |
-| `config validate` | 設定検証 | ✅ 実装済 |
-| `config edit` | 設定編集 | ✅ 実装済 |
-| `update` | hagiツール自体の更新 | ✅ 実装済 |
+| コマンド | 説明 |
+|---------|------|
+| `install` | グローバル/プロジェクト設定のインストール |
+| `uninstall` | 設定の削除 |
+| `status` | インストール状態確認 |
+| `sync init` | .claude同期の初期化 |
+| `sync pull` | 最新の.claude設定を取得 |
+| `sync push` | .claude変更をpush |
+| `sync status` | 同期状態確認 |
+| `mcp list` | MCPサーバー一覧表示 |
+| `mcp info` | MCPサーバー詳細表示 |
+| `mcp enable` | MCPサーバー有効化 |
+| `mcp disable` | MCPサーバー無効化 |
+| `config show` | 設定内容表示 |
+| `config validate` | 設定検証 |
+| `config edit` | 設定編集 |
+| `update` | hagiツール自体の更新 |
 
 詳細は[コマンドリファレンス](./docs/commands.md)または`hagi <COMMAND> --help`で確認できます。
 
