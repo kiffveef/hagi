@@ -160,6 +160,10 @@ MIT
 
 ---
 
+## フィードバック
+
+バグ報告・機能要望: https://github.com/kiffveef/hagi/issues
+
 ## 参考リンク
 
 - [Claude Code公式ドキュメント](https://docs.claude.com/en/docs/claude-code/)
