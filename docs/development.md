@@ -219,6 +219,17 @@ cargo run -- config validate mcp
 
 ---
 
+## バージョン更新
+
+```bash
+# 1. Cargo.tomlのversionを更新
+# 2. タグ作成
+git tag -a v0.2.1 -m "v0.2.1"
+git push origin v0.2.1
+```
+
+---
+
 ## よくある開発タスク
 
 ### テンプレートファイルの追加
