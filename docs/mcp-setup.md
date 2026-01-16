@@ -35,7 +35,7 @@
 
 ## MCPサーバー一覧
 
-### 🔥 推奨構成(Windows + WSL2最適化)
+### 推奨構成
 
 軽量・高速・完全ローカル動作を重視した構成です。
 
@@ -177,7 +177,7 @@ npx -y one-search-mcp
 
 **特徴:**
 - マルチエンジンWeb検索(DuckDuckGo、Bing、SearXNG、Tavily)
-- Windows + WSL2推奨: DuckDuckGoプロバイダー(Puppeteerなし)
+- DuckDuckGoプロバイダー推奨(Puppeteerなし、軽量)
 
 **プロバイダー選択:**
 
@@ -192,7 +192,7 @@ npx -y one-search-mcp
 ```
 
 **プロバイダー一覧:**
-- `duckduckgo` - 推奨(WSL2環境で軽量)
+- `duckduckgo` - 推奨(軽量)
 - `bing` - Bing API keyが必要
 - `searxng` - セルフホストSearXNGインスタンスが必要
 - `tavily` - Tavily API keyが必要
@@ -500,25 +500,6 @@ Rate limit exceeded
        }
      }
    }
-   ```
-
----
-
-### Windows + WSL2環境でのMCP起動遅延
-
-**症状:**
-- MCP起動に時間がかかる(3秒以上)
-
-**解決方法:**
-1. Docker依存のMCPを無効化
-2. DuckDuckGoプロバイダー使用(Puppeteerなし)
-3. npx版MCPを優先(sequential-thinking、context7、one-search)
-4. WSL2のメモリ制限を確認:
-   ```bash
-   # ~/.wslconfig
-   [wsl2]
-   memory=4GB
-   processors=2
    ```
 
 ---

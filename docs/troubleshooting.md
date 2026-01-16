@@ -18,14 +18,7 @@ Warning: jq not found, .claude/ git protection disabled
 **解決策:**
 1. jqをインストール
    ```bash
-   # macOS
-   brew install jq
-
-   # Ubuntu/Debian
    sudo apt install jq
-
-   # Windows (scoop)
-   scoop install jq
    ```
 
 2. インストール確認
