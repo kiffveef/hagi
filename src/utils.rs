@@ -21,7 +21,7 @@ pub fn claude_dir() -> Result<PathBuf> {
 }
 
 /// Get the ~/.local/share/claude/ directory path
-#[allow(dead_code)]
+#[expect(dead_code)]
 pub fn claude_data_dir() -> Result<PathBuf> {
     Ok(home_dir()?.join(".local/share/claude"))
 }
@@ -102,14 +102,12 @@ pub fn cleanup_old_backups(original_path: &Path, max_backups: usize) -> Result<(
     if let Ok(entries) = fs::read_dir(parent_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-                if name.starts_with(&backup_pattern) {
-                    if let Ok(metadata) = fs::metadata(&path) {
-                        if let Ok(modified) = metadata.modified() {
-                            backup_files.push((path, modified));
-                        }
-                    }
-                }
+            if let Some(name) = path.file_name().and_then(|n| n.to_str())
+                && name.starts_with(&backup_pattern)
+                && let Ok(metadata) = fs::metadata(&path)
+                && let Ok(modified) = metadata.modified()
+            {
+                backup_files.push((path, modified));
             }
         }
     }
@@ -232,7 +230,7 @@ pub fn merge_json_file(target_path: &Path, new_content: &serde_json::Value) -> R
 }
 
 /// Prompt user for confirmation
-#[allow(dead_code)]
+#[expect(dead_code)]
 pub fn confirm(message: &str) -> Result<bool> {
     print!("{} [Y/n]: ", message.yellow());
     io::stdout().flush()?;
@@ -245,7 +243,7 @@ pub fn confirm(message: &str) -> Result<bool> {
 }
 
 /// Copy file with message
-#[allow(dead_code)]
+#[expect(dead_code)]
 pub fn copy_file(from: &Path, to: &Path) -> Result<()> {
     fs::copy(from, to).with_context(|| {
         format!(
@@ -382,12 +380,12 @@ pub fn get_repository_name() -> String {
         .args(["remote", "get-url", "origin"])
         .output();
 
-    if let Ok(output) = output {
-        if output.status.success() {
-            let url = String::from_utf8_lossy(&output.stdout);
-            if let Some(name) = url.split('/').last() {
-                return name.trim_end_matches(".git\n").trim().to_string();
-            }
+    if let Ok(output) = output
+        && output.status.success()
+    {
+        let url = String::from_utf8_lossy(&output.stdout);
+        if let Some(name) = url.split('/').next_back() {
+            return name.trim_end_matches(".git\n").trim().to_string();
         }
     }
 

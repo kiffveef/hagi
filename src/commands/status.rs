@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
 use colored::*;
+use std::collections::{HashMap, HashSet};
 use std::env;
 
 use crate::utils;
@@ -30,7 +31,7 @@ fn check_global_configuration() -> Result<()> {
     let claude_dir = match utils::claude_dir() {
         Ok(dir) => dir,
         Err(_) => {
-            println!("{} {}", "✗".red(), "~/.claude/ not found");
+            println!("{} ~/.claude/ not found", "✗".red());
             return Ok(());
         }
     };
@@ -70,7 +71,7 @@ fn check_project_configuration() -> Result<()> {
     println!("{} {} - {}", "✓".green(), ".claude/".bold(), "installed".dimmed());
 
     // Check key template files
-    let files = vec![
+    let files = [
         ("CLAUDE.md", claude_dir.join("CLAUDE.md")),
         ("mcp.json", claude_dir.join("mcp.json")),
         ("settings.local.json", claude_dir.join("settings.local.json")),
@@ -95,15 +96,15 @@ fn check_project_configuration() -> Result<()> {
         println!("  {} .claude/instructions/ - {}", "✗".red(), "not found".dimmed());
     }
 
-    // Check commands directory
-    let commands_dir = claude_dir.join("commands");
-    if commands_dir.exists() && commands_dir.is_dir() {
-        let count = std::fs::read_dir(&commands_dir)
+    // Check skills directory (v0.2.0+)
+    let skills_dir = claude_dir.join("skills");
+    if skills_dir.exists() && skills_dir.is_dir() {
+        let count = std::fs::read_dir(&skills_dir)
             .map(|entries| entries.filter_map(Result::ok).count())
             .unwrap_or(0);
-        println!("  {} .claude/commands/ ({} files)", "✓".green(), count);
+        println!("  {} .claude/skills/ ({} files)", "✓".green(), count);
     } else {
-        println!("  {} .claude/commands/ - {}", "✗".red(), "not found".dimmed());
+        println!("  {} .claude/skills/ - {}", "✗".red(), "not found".dimmed());
     }
 
     Ok(())
@@ -135,7 +136,7 @@ fn check_mcp_servers() -> Result<()> {
     };
 
     if global_config.is_none() && local_config.is_none() {
-        println!("{} {}", "✗".red(), "No MCP configuration found");
+        println!("{} No MCP configuration found", "✗".red());
         println!("\nRun {} to install MCP configuration", "hagi install --global".yellow());
         return Ok(());
     }
@@ -144,8 +145,6 @@ fn check_mcp_servers() -> Result<()> {
     println!();
     println!("{}", "Global vs Local Configuration:".yellow().bold());
     println!();
-
-    use std::collections::HashSet;
 
     // Extract server status from both configs
     let global_servers = extract_server_status(&global_config);
@@ -185,20 +184,18 @@ fn check_mcp_servers() -> Result<()> {
 }
 
 /// Extract server names and their enabled status from config
-fn extract_server_status(config: &Option<serde_json::Value>) -> std::collections::HashMap<String, bool> {
-    use std::collections::HashMap;
-
+fn extract_server_status(config: &Option<serde_json::Value>) -> HashMap<String, bool> {
     let mut result = HashMap::new();
 
-    if let Some(config) = config {
-        if let Some(servers) = config.get("mcpServers").and_then(|v| v.as_object()) {
-            for (name, server_config) in servers {
-                let is_enabled = !server_config
-                    .get("disabled")
-                    .and_then(|v| v.as_bool())
-                    .unwrap_or(false);
-                result.insert(name.clone(), is_enabled);
-            }
+    if let Some(config) = config
+        && let Some(servers) = config.get("mcpServers").and_then(|v| v.as_object())
+    {
+        for (name, server_config) in servers {
+            let is_enabled = !server_config
+                .get("disabled")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false);
+            result.insert(name.clone(), is_enabled);
         }
     }
 

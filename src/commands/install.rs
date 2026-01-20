@@ -3,7 +3,7 @@ use colored::*;
 use std::env;
 #[cfg(unix)]
 use std::os::unix::fs::symlink;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::Command;
 
 use crate::{templates, utils};
@@ -273,8 +273,8 @@ fn install_settings(claude_dir: &Path, dry_run: bool) -> Result<()> {
 // ============================================================================
 
 /// Update .gitignore in project root
-fn update_project_gitignore(project_dir: &PathBuf, dry_run: bool) -> Result<()> {
-    let entries = vec![
+fn update_project_gitignore(project_dir: &Path, dry_run: bool) -> Result<()> {
+    let entries = [
         "/.claude/",
         "/.mcp.json",
         "/.serena/",
@@ -411,7 +411,7 @@ fn install_hook(hooks_dir: &std::path::Path, name: &str, content: &str) -> Resul
 
 
 /// Make Claude Code hook script executable and print summary
-fn setup_claude_hooks(claude_dir: &PathBuf, dry_run: bool) -> Result<()> {
+fn setup_claude_hooks(claude_dir: &Path, dry_run: bool) -> Result<()> {
     println!("\n{}", "Claude Code hooks...".green());
 
     let hook_script = claude_dir.join("hooks").join("check-claude-git.sh");
@@ -433,7 +433,7 @@ fn setup_claude_hooks(claude_dir: &PathBuf, dry_run: bool) -> Result<()> {
 }
 
 /// Install git hooks to .git/hooks/
-fn install_git_hooks(project_dir: &PathBuf, dry_run: bool) -> Result<()> {
+fn install_git_hooks(project_dir: &Path, dry_run: bool) -> Result<()> {
     let git_hooks_dir = project_dir.join(".git").join("hooks");
 
     if !git_hooks_dir.exists() {

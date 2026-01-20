@@ -13,7 +13,7 @@ pub fn uninstall_global(skip_confirm: bool) -> Result<()> {
     let claude_dir = match utils::claude_dir() {
         Ok(dir) => dir,
         Err(_) => {
-            println!("{} {}", "✗".red(), "~/.claude/ not found");
+            println!("{} ~/.claude/ not found", "✗".red());
             return Ok(());
         }
     };
@@ -31,7 +31,7 @@ pub fn uninstall_global(skip_confirm: bool) -> Result<()> {
     }
 
     if files_to_remove.is_empty() {
-        println!("{} {}", "○".dimmed(), "No global configuration found");
+        println!("{} No global configuration found", "○".dimmed());
         return Ok(());
     }
 
@@ -56,13 +56,13 @@ pub fn uninstall_global(skip_confirm: bool) -> Result<()> {
     }
 
     // Try to remove ~/.claude/ if empty
-    if let Ok(entries) = fs::read_dir(&claude_dir) {
-        if entries.count() == 0 {
-            if let Err(e) = fs::remove_dir(&claude_dir) {
-                println!("{} Could not remove empty ~/.claude/: {}", "○".dimmed(), e);
-            } else {
-                println!("{} Removed empty ~/.claude/", "✓".green());
-            }
+    if let Ok(entries) = fs::read_dir(&claude_dir)
+        && entries.count() == 0
+    {
+        if let Err(e) = fs::remove_dir(&claude_dir) {
+            println!("{} Could not remove empty ~/.claude/: {}", "○".dimmed(), e);
+        } else {
+            println!("{} Removed empty ~/.claude/", "✓".green());
         }
     }
 
@@ -78,7 +78,7 @@ pub fn uninstall_project(skip_confirm: bool) -> Result<()> {
     let claude_dir = project_dir.join(".claude");
 
     if !claude_dir.exists() {
-        println!("{} {}", "✗".red(), ".claude/ not found");
+        println!("{} .claude/ not found", "✗".red());
         return Ok(());
     }
 
@@ -120,7 +120,7 @@ fn cleanup_gitignore(project_dir: &std::path::Path) -> Result<()> {
     let content = fs::read_to_string(&gitignore_path)
         .context("Failed to read .gitignore")?;
 
-    let hagi_patterns = vec![
+    let hagi_patterns = [
         "/.claude/",
         "/.serena/",
     ];
