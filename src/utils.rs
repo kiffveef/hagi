@@ -366,6 +366,37 @@ pub fn expand_json_env_vars(value: &mut serde_json::Value) -> Result<()> {
     Ok(())
 }
 
+
+/// Check if a command exists in PATH
+pub fn command_exists(cmd: &str) -> bool {
+    std::process::Command::new("which")
+        .arg(cmd)
+        .output()
+        .map(|output| output.status.success())
+        .unwrap_or(false)
+}
+
+/// Get repository name from git remote or current directory
+pub fn get_repository_name() -> String {
+    let output = std::process::Command::new("git")
+        .args(["remote", "get-url", "origin"])
+        .output();
+
+    if let Ok(output) = output {
+        if output.status.success() {
+            let url = String::from_utf8_lossy(&output.stdout);
+            if let Some(name) = url.split('/').last() {
+                return name.trim_end_matches(".git\n").trim().to_string();
+            }
+        }
+    }
+
+    std::env::current_dir()
+        .ok()
+        .and_then(|path| path.file_name().map(|n| n.to_string_lossy().to_string()))
+        .unwrap_or_else(|| "myproject".to_string())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

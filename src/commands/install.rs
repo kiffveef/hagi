@@ -201,24 +201,20 @@ pub fn install_chat(dry_run: bool) -> Result<()> {
 /// Maximum characters to show in error messages for template preview
 const TEMPLATE_PREVIEW_LENGTH: usize = 200;
 
-/// Install JSON configuration from embedded template
-///
-/// # Arguments
-/// * `claude_dir` - Target directory for the config file
-/// * `template_name` - Name of the embedded template file
-/// * `target_name` - Name of the output file (can differ from template_name)
-/// * `expand_env` - Whether to expand environment variables in the template
-/// * `dry_run` - If true, only print what would be done
-fn install_json_template(
-    claude_dir: &PathBuf,
-    template_name: &str,
-    target_name: &str,
+/// Options for installing a JSON template
+struct JsonTemplateOptions<'a> {
+    claude_dir: &'a Path,
+    template_name: &'a str,
+    target_name: &'a str,
     expand_env: bool,
     dry_run: bool,
-) -> Result<()> {
-    let target = claude_dir.join(target_name);
-    let template_str = templates::get_template(template_name)
-        .with_context(|| format!("Failed to get embedded {} template", template_name))?;
+}
+
+/// Install JSON configuration from embedded template
+fn install_json_template(opts: JsonTemplateOptions) -> Result<()> {
+    let target = opts.claude_dir.join(opts.target_name);
+    let template_str = templates::get_template(opts.template_name)
+        .with_context(|| format!("Failed to get embedded {} template", opts.template_name))?;
 
     let mut template_content: serde_json::Value = serde_json::from_str(template_str)
         .with_context(|| {
@@ -229,41 +225,47 @@ fn install_json_template(
             };
             format!(
                 "Failed to parse {} template. Template may be corrupted.\nFirst {} chars: {}",
-                template_name, TEMPLATE_PREVIEW_LENGTH, preview
+                opts.template_name, TEMPLATE_PREVIEW_LENGTH, preview
             )
         })?;
 
-    if expand_env {
+    if opts.expand_env {
         utils::expand_json_env_vars(&mut template_content).with_context(|| {
             format!(
                 "Failed to expand environment variables in {} template.\n\
                  This may be due to missing HOME or other required environment variables.",
-                template_name
+                opts.template_name
             )
         })?;
     }
 
-    if dry_run {
+    if opts.dry_run {
         let action = if target.exists() { "Would merge into" } else { "Would create" };
         println!("{} {}", action.yellow(), target.display());
 
-        let env_note = if expand_env { " (with environment variables expanded)" } else { "" };
-        if template_name == target_name {
-            println!("  Template: embedded {}{}", template_name, env_note);
+        let env_note = if opts.expand_env { " (with environment variables expanded)" } else { "" };
+        if opts.template_name == opts.target_name {
+            println!("  Template: embedded {}{}", opts.template_name, env_note);
         } else {
-            println!("  Template: embedded {} → {}{}", template_name, target_name, env_note);
+            println!("  Template: embedded {} → {}{}", opts.template_name, opts.target_name, env_note);
         }
     } else {
         utils::merge_json_file(&target, &template_content)
-            .with_context(|| format!("Failed to install {} to {}", target_name, target.display()))?;
+            .with_context(|| format!("Failed to install {} to {}", opts.target_name, target.display()))?;
     }
 
     Ok(())
 }
 
 /// Install settings configuration from embedded template (rename settings.local.json → settings.json)
-fn install_settings(claude_dir: &PathBuf, dry_run: bool) -> Result<()> {
-    install_json_template(claude_dir, "settings.local.json", "settings.json", false, dry_run)
+fn install_settings(claude_dir: &Path, dry_run: bool) -> Result<()> {
+    install_json_template(JsonTemplateOptions {
+        claude_dir,
+        template_name: "settings.local.json",
+        target_name: "settings.json",
+        expand_env: false,
+        dry_run,
+    })
 }
 
 // ============================================================================
@@ -337,21 +339,12 @@ fn initialize_git_repository(dry_run: bool) -> Result<()> {
 // Dependency Checking
 // ============================================================================
 
-/// Check if a command exists in PATH
-fn command_exists(cmd: &str) -> bool {
-    Command::new("which")
-        .arg(cmd)
-        .output()
-        .map(|output| output.status.success())
-        .unwrap_or(false)
-}
-
 /// Check dependencies and show warnings
 fn check_dependencies() -> Vec<String> {
     let mut warnings = Vec::new();
 
     // Node.js check
-    if !command_exists("node") {
+    if !utils::command_exists("node") {
         warnings.push(format!(
             "{}\n  {}\n\n  {}:\n    curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -\n    sudo apt-get install -y nodejs",
             "Node.js not found".red(),
@@ -361,7 +354,7 @@ fn check_dependencies() -> Vec<String> {
     }
 
     // uv check
-    if !command_exists("uv") {
+    if !utils::command_exists("uv") {
         warnings.push(format!(
             "{}\n  {}\n\n  {}:\n    curl -LsSf https://astral.sh/uv/install.sh | sh",
             "uv not found".red(),
@@ -371,7 +364,7 @@ fn check_dependencies() -> Vec<String> {
     }
 
     // Python3 check
-    if !command_exists("python3") {
+    if !utils::command_exists("python3") {
         warnings.push(format!(
             "{}\n  {}\n\n  {}:\n    sudo apt-get update\n    sudo apt-get install -y python3 python3-pip",
             "Python3 not found".red(),
@@ -381,7 +374,7 @@ fn check_dependencies() -> Vec<String> {
     }
 
     // Git check
-    if !command_exists("git") {
+    if !utils::command_exists("git") {
         warnings.push(format!(
             "{}\n  {}\n\n  {}:\n    sudo apt-get install -y git",
             "Git not found".red(),
@@ -484,10 +477,10 @@ fn print_claude_sync_notice() -> Result<()> {
     println!("across machines using a private Git repository.");
     println!();
 
-    let repo_name = get_repository_name();
+    let repo_name = utils::get_repository_name();
     let claude_repo_name = format!("{}-claude", repo_name);
 
-    if command_exists("gh") {
+    if utils::command_exists("gh") {
         println!("{}", "✨ GitHub CLI detected - Auto setup available:".green().bold());
         println!();
         println!("  {}", "hagi sync init".yellow());
@@ -516,27 +509,6 @@ fn print_claude_sync_notice() -> Result<()> {
     println!("{}", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".cyan());
 
     Ok(())
-}
-
-/// Get repository name from git remote or current directory
-fn get_repository_name() -> String {
-    let output = Command::new("git")
-        .args(["remote", "get-url", "origin"])
-        .output();
-
-    if let Ok(output) = output {
-        if output.status.success() {
-            let url = String::from_utf8_lossy(&output.stdout);
-            if let Some(name) = url.split('/').last() {
-                return name.trim_end_matches(".git\n").trim().to_string();
-            }
-        }
-    }
-
-    env::current_dir()
-        .ok()
-        .and_then(|path| path.file_name().map(|n| n.to_string_lossy().to_string()))
-        .unwrap_or_else(|| "myproject".to_string())
 }
 
 // ============================================================================

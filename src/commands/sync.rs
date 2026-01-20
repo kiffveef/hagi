@@ -1,9 +1,10 @@
 use anyhow::{bail, Context, Result};
 use colored::*;
-use std::env;
 use std::io::Write;
 use std::path::Path;
 use std::process::Command;
+
+use crate::utils;
 
 /// Initialize .claude sync with a private Git repository
 pub fn sync_init(remote_url: Option<&str>) -> Result<()> {
@@ -32,7 +33,7 @@ pub fn sync_init(remote_url: Option<&str>) -> Result<()> {
     }
 
     // Check if gh CLI is available
-    if !command_exists("gh") {
+    if !utils::command_exists("gh") {
         println!("{}", "gh CLI not found.".yellow());
         println!();
         println!("To clone existing repository:");
@@ -45,7 +46,7 @@ pub fn sync_init(remote_url: Option<&str>) -> Result<()> {
     }
 
     // Check if <project>-claude repo already exists
-    let repo_name = get_repository_name();
+    let repo_name = utils::get_repository_name();
     let claude_repo_name = format!("{}-claude", repo_name);
 
     if check_repo_exists(&claude_repo_name) {
@@ -61,7 +62,7 @@ pub fn sync_init(remote_url: Option<&str>) -> Result<()> {
 
 /// Check if a repository exists on GitHub
 fn check_repo_exists(repo_name: &str) -> bool {
-    if !command_exists("gh") {
+    if !utils::command_exists("gh") {
         return false;
     }
 
@@ -255,12 +256,12 @@ pub fn sync_status() -> Result<()> {
 
 /// Create private repository interactively using gh CLI
 fn create_private_repo_interactive() -> Result<String> {
-    if !command_exists("gh") {
+    if !utils::command_exists("gh") {
         print_manual_setup_instructions();
         bail!("Please install gh CLI or specify remote URL manually");
     }
 
-    let repo_name = get_repository_name();
+    let repo_name = utils::get_repository_name();
     let claude_repo_name = format!("{}-claude", repo_name);
 
     println!();
@@ -426,11 +427,11 @@ fn print_manual_setup_instructions() {
     println!("1. Create private repository on GitHub:");
     println!("   {}", "https://github.com/new".cyan());
     println!();
-    println!("   Repository name: {}", format!("{}-claude", get_repository_name()).cyan());
+    println!("   Repository name: {}", format!("{}-claude", utils::get_repository_name()).cyan());
     println!("   Visibility: {}", "Private".green());
     println!();
     println!("2. Initialize sync:");
-    println!("   {}", format!("hagi sync init git@github.com:<username>/{}-claude.git", get_repository_name()).yellow());
+    println!("   {}", format!("hagi sync init git@github.com:<username>/{}-claude.git", utils::get_repository_name()).yellow());
     println!();
     println!("💡 Tip: Install GitHub CLI for automatic setup:");
     println!("   {}", "https://cli.github.com/".cyan());
@@ -451,36 +452,6 @@ fn get_github_username() -> Result<String> {
     }
 
     Ok(String::from_utf8(output.stdout)?.trim().to_string())
-}
-
-/// Get repository name from git remote or current directory
-fn get_repository_name() -> String {
-    let output = Command::new("git")
-        .args(["remote", "get-url", "origin"])
-        .output();
-
-    if let Ok(output) = output {
-        if output.status.success() {
-            let url = String::from_utf8_lossy(&output.stdout);
-            if let Some(name) = url.split('/').last() {
-                return name.trim_end_matches(".git\n").trim().to_string();
-            }
-        }
-    }
-
-    env::current_dir()
-        .ok()
-        .and_then(|path| path.file_name().map(|n| n.to_string_lossy().to_string()))
-        .unwrap_or_else(|| "myproject".to_string())
-}
-
-/// Check if a command exists in PATH
-fn command_exists(cmd: &str) -> bool {
-    Command::new("which")
-        .arg(cmd)
-        .output()
-        .map(|output| output.status.success())
-        .unwrap_or(false)
 }
 
 /// Clone .claude repository from URL (handles both fresh clone and replace)
