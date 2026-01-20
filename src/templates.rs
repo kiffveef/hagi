@@ -118,10 +118,10 @@ fn should_skip(path: &Path, skip_paths: &[String]) -> bool {
         }
 
         // Match file name only (for convenience)
-        if let Some(file_name) = path.file_name() {
-            if file_name.to_string_lossy() == skip.as_str() {
-                return true;
-            }
+        if let Some(file_name) = path.file_name()
+            && file_name.to_string_lossy() == skip.as_str()
+        {
+            return true;
         }
     }
     false

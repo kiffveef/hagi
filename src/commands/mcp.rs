@@ -117,20 +117,21 @@ pub fn info(name: &str) -> Result<()> {
     println!("{} {}", "Status:".green(), status);
 
     // Show command
-    if let Some(command) = config["command"].as_str() {
-        let mut cmd_str = command.to_string();
+    let Some(command) = config["command"].as_str() else {
+        println!("{} {}", "Description:".green(), get_server_description(name));
+        return Ok(());
+    };
 
-        // Add args if present
-        if let Some(args) = config["args"].as_array() {
-            for arg in args {
-                if let Some(arg_str) = arg.as_str() {
-                    cmd_str.push_str(&format!(" {}", arg_str));
-                }
-            }
+    let mut cmd_str = command.to_string();
+
+    // Add args if present
+    if let Some(args) = config["args"].as_array() {
+        for arg in args.iter().filter_map(|a| a.as_str()) {
+            cmd_str.push_str(&format!(" {}", arg));
         }
-
-        println!("{} {}", "Command:".green(), cmd_str);
     }
+
+    println!("{} {}", "Command:".green(), cmd_str);
 
     // Show environment variables (hide values)
     if let Some(env_vars) = config["env"].as_object() {
@@ -242,10 +243,10 @@ fn enable_single(name: &str, global: bool) -> Result<bool> {
     }
 
     // Remove disabled field
-    if let Some(server_config) = servers.get_mut(name) {
-        if let Some(obj) = server_config.as_object_mut() {
-            obj.remove("disabled");
-        }
+    if let Some(server_config) = servers.get_mut(name)
+        && let Some(obj) = server_config.as_object_mut()
+    {
+        obj.remove("disabled");
     }
 
     utils::write_json_file(&mcp_path, &mcp_config)?;
@@ -345,10 +346,10 @@ fn disable_single(name: &str, global: bool) -> Result<bool> {
     }
 
     // Set disabled to true
-    if let Some(server_config) = servers.get_mut(name) {
-        if let Some(obj) = server_config.as_object_mut() {
-            obj.insert("disabled".to_string(), Value::Bool(true));
-        }
+    if let Some(server_config) = servers.get_mut(name)
+        && let Some(obj) = server_config.as_object_mut()
+    {
+        obj.insert("disabled".to_string(), Value::Bool(true));
     }
 
     utils::write_json_file(&mcp_path, &mcp_config)?;
