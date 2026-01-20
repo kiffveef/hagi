@@ -30,7 +30,7 @@ pub fn update() -> Result<()> {
 
     // Run cargo install
     let status = Command::new("cargo")
-        .args(&[
+        .args([
             "install",
             "--git",
             "https://github.com/kiffveef/hagi",
