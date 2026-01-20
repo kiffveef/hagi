@@ -21,7 +21,7 @@ pub fn claude_dir() -> Result<PathBuf> {
 }
 
 /// Get the ~/.local/share/claude/ directory path
-#[allow(dead_code)]
+#[expect(dead_code)]
 pub fn claude_data_dir() -> Result<PathBuf> {
     Ok(home_dir()?.join(".local/share/claude"))
 }
@@ -230,7 +230,7 @@ pub fn merge_json_file(target_path: &Path, new_content: &serde_json::Value) -> R
 }
 
 /// Prompt user for confirmation
-#[allow(dead_code)]
+#[expect(dead_code)]
 pub fn confirm(message: &str) -> Result<bool> {
     print!("{} [Y/n]: ", message.yellow());
     io::stdout().flush()?;
@@ -243,7 +243,7 @@ pub fn confirm(message: &str) -> Result<bool> {
 }
 
 /// Copy file with message
-#[allow(dead_code)]
+#[expect(dead_code)]
 pub fn copy_file(from: &Path, to: &Path) -> Result<()> {
     fs::copy(from, to).with_context(|| {
         format!(
