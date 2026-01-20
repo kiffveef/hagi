@@ -164,18 +164,15 @@ fn check_mcp_servers() -> Result<()> {
         let global_enabled = global_servers.get(name).copied().unwrap_or(false);
         let local_enabled = local_servers.get(name).copied().unwrap_or(false);
 
-        // Only show servers that exist in at least one config
-        if global_servers.contains_key(name) || local_servers.contains_key(name) {
-            if global_enabled != local_enabled {
-                differences_found = true;
-                let global_status = if global_enabled { "enabled".green() } else { "disabled".red() };
-                let local_status = if local_enabled { "enabled".green() } else { "disabled".red() };
-                println!("  {} {} [global: {}, local: {}]",
-                    "⚠".yellow(), name.cyan(), global_status, local_status);
-            } else {
-                let status = if global_enabled { "enabled".green() } else { "disabled".dimmed() };
-                println!("  {} {} [{}]", "✓".dimmed(), name.cyan(), status);
-            }
+        if global_enabled != local_enabled {
+            differences_found = true;
+            let global_status = if global_enabled { "enabled".green() } else { "disabled".red() };
+            let local_status = if local_enabled { "enabled".green() } else { "disabled".red() };
+            println!("  {} {} [global: {}, local: {}]",
+                "⚠".yellow(), name.cyan(), global_status, local_status);
+        } else {
+            let status = if global_enabled { "enabled".green() } else { "disabled".dimmed() };
+            println!("  {} {} [{}]", "✓".dimmed(), name.cyan(), status);
         }
     }
 
