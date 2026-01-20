@@ -610,41 +610,52 @@ fn create_mcp_symlink(project_dir: &Path, dry_run: bool) -> Result<()> {
 
     println!("\n{}", "Creating MCP symlink for Claude Code 2.1+...".green());
 
+    // Handle dry-run mode
     if dry_run {
-        if mcp_link.exists() {
-            if mcp_link.is_symlink() {
-                println!("{} {} (already symlink)", "Would skip:".yellow(), mcp_link.display());
-            } else {
-                println!("{} {} → .claude/mcp.json", "Would replace:".yellow(), mcp_link.display());
-            }
-        } else {
-            println!("{} {} → .claude/mcp.json", "Would create:".yellow(), mcp_link.display());
-        }
+        return print_symlink_dry_run(&mcp_link);
+    }
+
+    // Check if correct symlink already exists
+    if is_correct_symlink(&mcp_link) {
+        println!("  {} .mcp.json symlink already exists", "✓".green());
         return Ok(());
     }
 
-    // Check if symlink already exists and points to correct target
-    if let Ok(target) = std::fs::read_link(&mcp_link) {
-        if target == Path::new(".claude/mcp.json") {
-            println!("  {} .mcp.json symlink already exists", "✓".green());
-            return Ok(());
-        }
-        // Symlink exists but points to wrong target
-        std::fs::remove_file(&mcp_link)
-            .with_context(|| format!("Failed to remove existing symlink {}", mcp_link.display()))?;
-    } else if mcp_link.exists() {
-        // Regular file exists, remove it
+    // Remove existing file or incorrect symlink
+    if mcp_link.exists() || mcp_link.is_symlink() {
         std::fs::remove_file(&mcp_link)
             .with_context(|| format!("Failed to remove existing {}", mcp_link.display()))?;
     }
 
-    // Create relative symlink: .mcp.json -> .claude/mcp.json
+    // Create relative symlink
     symlink(".claude/mcp.json", &mcp_link)
         .with_context(|| format!("Failed to create symlink {}", mcp_link.display()))?;
 
     println!("  {} .mcp.json → .claude/mcp.json", "✅ Created:".green());
 
     Ok(())
+}
+
+
+/// Print dry-run message for symlink creation
+#[cfg(unix)]
+fn print_symlink_dry_run(mcp_link: &Path) -> Result<()> {
+    if mcp_link.is_symlink() {
+        println!("{} {} (already symlink)", "Would skip:".yellow(), mcp_link.display());
+    } else if mcp_link.exists() {
+        println!("{} {} → .claude/mcp.json", "Would replace:".yellow(), mcp_link.display());
+    } else {
+        println!("{} {} → .claude/mcp.json", "Would create:".yellow(), mcp_link.display());
+    }
+    Ok(())
+}
+
+/// Check if symlink exists and points to correct target
+#[cfg(unix)]
+fn is_correct_symlink(mcp_link: &Path) -> bool {
+    std::fs::read_link(mcp_link)
+        .map(|target| target == Path::new(".claude/mcp.json"))
+        .unwrap_or(false)
 }
 
 #[cfg(not(unix))]
