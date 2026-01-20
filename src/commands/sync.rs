@@ -16,7 +16,7 @@ fn git_in_claude(args: &[&str]) -> Result<ExitStatus> {
         .args(args)
         .current_dir(".claude")
         .status()
-        .with_context(|| format!("Failed to run git {}", args.first().unwrap_or(&"")))
+        .with_context(|| format!("Failed to run: git {}", args.join(" ")))
 }
 
 /// Run git command in .claude directory and capture output
@@ -25,7 +25,7 @@ fn git_in_claude_output(args: &[&str]) -> Result<Output> {
         .args(args)
         .current_dir(".claude")
         .output()
-        .with_context(|| format!("Failed to run git {}", args.first().unwrap_or(&"")))
+        .with_context(|| format!("Failed to run: git {}", args.join(" ")))
 }
 
 /// Initialize .claude sync with a private Git repository
