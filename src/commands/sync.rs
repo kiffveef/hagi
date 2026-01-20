@@ -2,9 +2,31 @@ use anyhow::{bail, Context, Result};
 use colored::*;
 use std::io::Write;
 use std::path::Path;
-use std::process::Command;
+use std::process::{Command, ExitStatus, Output, Stdio};
 
 use crate::utils;
+
+// ============================================================================
+// Git Command Helpers
+// ============================================================================
+
+/// Run git command in .claude directory
+fn git_in_claude(args: &[&str]) -> Result<ExitStatus> {
+    Command::new("git")
+        .args(args)
+        .current_dir(".claude")
+        .status()
+        .with_context(|| format!("Failed to run git {}", args.first().unwrap_or(&"")))
+}
+
+/// Run git command in .claude directory and capture output
+fn git_in_claude_output(args: &[&str]) -> Result<Output> {
+    Command::new("git")
+        .args(args)
+        .current_dir(".claude")
+        .output()
+        .with_context(|| format!("Failed to run git {}", args.first().unwrap_or(&"")))
+}
 
 /// Initialize .claude sync with a private Git repository
 pub fn sync_init(remote_url: Option<&str>) -> Result<()> {
@@ -68,8 +90,8 @@ fn check_repo_exists(repo_name: &str) -> bool {
 
     Command::new("gh")
         .args(["repo", "view", repo_name])
-        .stdout(std::process::Stdio::null())
-        .stderr(std::process::Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
         .status()
         .map(|s| s.success())
         .unwrap_or(false)
@@ -115,27 +137,11 @@ fn clone_and_replace_claude(remote_url: &str) -> Result<()> {
 
 /// Pull latest changes from remote
 pub fn sync_pull() -> Result<()> {
-    let claude_dir = Path::new(".claude");
-
-    if !claude_dir.exists() {
-        bail!(".claude directory not found");
-    }
-
-    if !claude_dir.join(".git").exists() {
-        bail!(
-            ".claude is not a Git repository.\n\
-             Run 'hagi sync init' first to initialize sync."
-        );
-    }
+    ensure_claude_git_repo()?;
 
     println!("{}", "Pulling latest .claude changes...".green());
 
-    let status = Command::new("git")
-        .args(["pull", "origin", "main", "--rebase"])
-        .current_dir(claude_dir)
-        .status()
-        .context("Failed to run git pull")?;
-
+    let status = git_in_claude(&["pull", "origin", "main", "--rebase"])?;
     if !status.success() {
         bail!("git pull failed");
     }
@@ -145,8 +151,8 @@ pub fn sync_pull() -> Result<()> {
     Ok(())
 }
 
-/// Push changes to remote
-pub fn sync_push(message: Option<&str>) -> Result<()> {
+/// Ensure .claude directory exists and is a git repository
+fn ensure_claude_git_repo() -> Result<()> {
     let claude_dir = Path::new(".claude");
 
     if !claude_dir.exists() {
@@ -160,42 +166,31 @@ pub fn sync_push(message: Option<&str>) -> Result<()> {
         );
     }
 
+    Ok(())
+}
+
+/// Push changes to remote
+pub fn sync_push(message: Option<&str>) -> Result<()> {
+    ensure_claude_git_repo()?;
+
     println!("{}", "Pushing .claude changes...".green());
 
     // First, add all files respecting local .gitignore
-    let status = Command::new("git")
-        .args(["add", "."])
-        .current_dir(claude_dir)
-        .status()
-        .context("Failed to run git add")?;
-
+    let status = git_in_claude(&["add", "."])?;
     if !status.success() {
         bail!("git add failed");
     }
 
     // Force-add files that might be excluded by parent's .gitignore
-    let _ = Command::new("git")
-        .args(["add", "--force", "CLAUDE.md", "TODO.md"])
-        .current_dir(claude_dir)
-        .status();
+    let _ = git_in_claude(&["add", "--force", "CLAUDE.md", "TODO.md"]);
 
     let commit_msg = message.unwrap_or("Update .claude config");
-    let commit_status = Command::new("git")
-        .args(["commit", "-m", commit_msg])
-        .current_dir(claude_dir)
-        .status()
-        .context("Failed to run git commit")?;
-
+    let commit_status = git_in_claude(&["commit", "-m", commit_msg])?;
     if !commit_status.success() {
         println!("{}", "⚠ Nothing to commit".yellow());
     }
 
-    let output = Command::new("git")
-        .args(["rev-list", "--count", "origin/main..HEAD"])
-        .current_dir(claude_dir)
-        .output()
-        .context("Failed to check commits ahead")?;
-
+    let output = git_in_claude_output(&["rev-list", "--count", "origin/main..HEAD"])?;
     let ahead_count = String::from_utf8_lossy(&output.stdout)
         .trim()
         .parse::<u32>()
@@ -208,12 +203,7 @@ pub fn sync_push(message: Option<&str>) -> Result<()> {
 
     println!("{}", format!("Pushing {} commit(s)...", ahead_count).green());
 
-    let status = Command::new("git")
-        .args(["push"])
-        .current_dir(claude_dir)
-        .status()
-        .context("Failed to run git push")?;
-
+    let status = git_in_claude(&["push"])?;
     if !status.success() {
         bail!("git push failed");
     }
@@ -241,12 +231,7 @@ pub fn sync_status() -> Result<()> {
     println!("{}", "📊 .claude sync status:".cyan().bold());
     println!();
 
-    let status = Command::new("git")
-        .args(["status"])
-        .current_dir(claude_dir)
-        .status()
-        .context("Failed to run git status")?;
-
+    let status = git_in_claude(&["status"])?;
     if !status.success() {
         bail!("git status failed");
     }
@@ -318,12 +303,7 @@ fn init_claude_git_repo(remote_url: &str) -> Result<()> {
     println!();
     println!("{}", "Initializing .claude as Git repository...".green());
 
-    let status = Command::new("git")
-        .args(["init"])
-        .current_dir(claude_dir)
-        .status()
-        .context("Failed to run git init")?;
-
+    let status = git_in_claude(&["init"])?;
     if !status.success() {
         bail!("git init failed");
     }
@@ -337,12 +317,7 @@ fn init_claude_git_repo(remote_url: &str) -> Result<()> {
 
     println!("{}", "✅ Created .gitignore (excludes backup files)".green());
 
-    let status = Command::new("git")
-        .args(["remote", "add", "origin", remote_url])
-        .current_dir(claude_dir)
-        .status()
-        .context("Failed to add remote")?;
-
+    let status = git_in_claude(&["remote", "add", "origin", remote_url])?;
     if !status.success() {
         bail!("git remote add failed");
     }
@@ -350,51 +325,28 @@ fn init_claude_git_repo(remote_url: &str) -> Result<()> {
     println!("{}", format!("✅ Added remote: {}", remote_url).green());
 
     // First, add all files respecting local .gitignore
-    let status = Command::new("git")
-        .args(["add", "."])
-        .current_dir(claude_dir)
-        .status()
-        .context("Failed to run git add")?;
-
+    let status = git_in_claude(&["add", "."])?;
     if !status.success() {
         bail!("git add failed");
     }
 
     // Force-add files that might be excluded by parent's .gitignore
     // This ensures CLAUDE.md, TODO.md etc are tracked even if parent ignores .claude/
-    let _ = Command::new("git")
-        .args(["add", "--force", "CLAUDE.md", "TODO.md"])
-        .current_dir(claude_dir)
-        .status();
+    let _ = git_in_claude(&["add", "--force", "CLAUDE.md", "TODO.md"]);
 
-    let status = Command::new("git")
-        .args(["commit", "-m", "🌱 first: Initial .claude config"])
-        .current_dir(claude_dir)
-        .status()
-        .context("Failed to run git commit")?;
-
+    let status = git_in_claude(&["commit", "-m", "🌱 first: Initial .claude config"])?;
     if !status.success() {
         bail!("git commit failed");
     }
 
     println!("{}", "✅ Created initial commit".green());
 
-    let status = Command::new("git")
-        .args(["branch", "-M", "main"])
-        .current_dir(claude_dir)
-        .status()
-        .context("Failed to rename branch")?;
-
+    let status = git_in_claude(&["branch", "-M", "main"])?;
     if !status.success() {
         bail!("git branch failed");
     }
 
-    let status = Command::new("git")
-        .args(["push", "-u", "origin", "main"])
-        .current_dir(claude_dir)
-        .status()
-        .context("Failed to run git push")?;
-
+    let status = git_in_claude(&["push", "-u", "origin", "main"])?;
     if !status.success() {
         bail!("git push failed");
     }

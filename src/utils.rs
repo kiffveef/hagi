@@ -102,14 +102,12 @@ pub fn cleanup_old_backups(original_path: &Path, max_backups: usize) -> Result<(
     if let Ok(entries) = fs::read_dir(parent_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-                if name.starts_with(&backup_pattern) {
-                    if let Ok(metadata) = fs::metadata(&path) {
-                        if let Ok(modified) = metadata.modified() {
-                            backup_files.push((path, modified));
-                        }
-                    }
-                }
+            if let Some(name) = path.file_name().and_then(|n| n.to_str())
+                && name.starts_with(&backup_pattern)
+                && let Ok(metadata) = fs::metadata(&path)
+                && let Ok(modified) = metadata.modified()
+            {
+                backup_files.push((path, modified));
             }
         }
     }
@@ -382,12 +380,12 @@ pub fn get_repository_name() -> String {
         .args(["remote", "get-url", "origin"])
         .output();
 
-    if let Ok(output) = output {
-        if output.status.success() {
-            let url = String::from_utf8_lossy(&output.stdout);
-            if let Some(name) = url.split('/').last() {
-                return name.trim_end_matches(".git\n").trim().to_string();
-            }
+    if let Ok(output) = output
+        && output.status.success()
+    {
+        let url = String::from_utf8_lossy(&output.stdout);
+        if let Some(name) = url.split('/').next_back() {
+            return name.trim_end_matches(".git\n").trim().to_string();
         }
     }
 
