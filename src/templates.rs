@@ -30,66 +30,75 @@ fn copy_dir_recursive(dir: &Dir, target_base: &Path, dry_run: bool, skip_paths: 
     for entry in dir.entries() {
         match entry {
             include_dir::DirEntry::Dir(sub_dir) => {
-                let relative_path = sub_dir.path();
-
-                // Check if this directory should be skipped
-                if should_skip(relative_path, skip_paths) {
-                    if dry_run {
-                        println!("{} {}", "Would skip directory:".yellow(), relative_path.display());
-                    } else {
-                        println!("{} {}", "Skipped directory:".yellow(), relative_path.display());
-                    }
-                    continue;
-                }
-
-                let target_subdir = target_base.join(relative_path);
-                if dry_run {
-                    println!("{} {}", "Would create:".yellow(), target_subdir.display());
-                } else {
-                    utils::ensure_dir(&target_subdir)?;
-                }
-                copy_dir_recursive(sub_dir, target_base, dry_run, skip_paths)?;
+                copy_sub_dir(sub_dir, target_base, dry_run, skip_paths)?;
             }
             include_dir::DirEntry::File(file) => {
-                let relative_path = file.path();
-
-                // Check if this file should be skipped
-                if should_skip(relative_path, skip_paths) {
-                    if dry_run {
-                        println!("{} {}", "Would skip file:".yellow(), relative_path.display());
-                    } else {
-                        println!("{} {}", "Skipped file:".yellow(), relative_path.display());
-                    }
-                    continue;
-                }
-
-                let target_file = target_base.join(relative_path);
-                let content = file
-                    .contents_utf8()
-                    .context("Template file is not valid UTF-8")?;
-
-                if dry_run {
-                    if target_file.exists() {
-                        println!("{} {}", "Would overwrite:".yellow(), target_file.display());
-                    } else {
-                        println!("{} {}", "Would create:".yellow(), target_file.display());
-                    }
-                } else {
-                    if target_file.exists() {
-                        utils::backup_file(&target_file)?;
-                        utils::cleanup_old_backups(&target_file, utils::DEFAULT_MAX_BACKUPS)?;
-                    }
-                    if let Some(parent) = target_file.parent() {
-                        utils::ensure_dir(parent)?;
-                    }
-                    fs::write(&target_file, content).with_context(|| {
-                        format!("Failed to write template file: {}", target_file.display())
-                    })?;
-                    println!("{} {}", "Wrote:".green(), target_file.display());
-                }
+                copy_file_entry(file, target_base, dry_run, skip_paths)?;
             }
         }
     }
+    Ok(())
+}
+
+
+/// Copy a subdirectory entry from embedded templates
+fn copy_sub_dir(sub_dir: &Dir, target_base: &Path, dry_run: bool, skip_paths: &[String]) -> Result<()> {
+    let relative_path = sub_dir.path();
+
+    if should_skip(relative_path, skip_paths) {
+        let msg = if dry_run { "Would skip directory:" } else { "Skipped directory:" };
+        println!("{} {}", msg.yellow(), relative_path.display());
+        return Ok(());
+    }
+
+    let target_subdir = target_base.join(relative_path);
+    if dry_run {
+        println!("{} {}", "Would create:".yellow(), target_subdir.display());
+    } else {
+        utils::ensure_dir(&target_subdir)?;
+    }
+
+    copy_dir_recursive(sub_dir, target_base, dry_run, skip_paths)
+}
+
+/// Copy a file entry from embedded templates
+fn copy_file_entry(file: &include_dir::File, target_base: &Path, dry_run: bool, skip_paths: &[String]) -> Result<()> {
+    let relative_path = file.path();
+
+    if should_skip(relative_path, skip_paths) {
+        let msg = if dry_run { "Would skip file:" } else { "Skipped file:" };
+        println!("{} {}", msg.yellow(), relative_path.display());
+        return Ok(());
+    }
+
+    let target_file = target_base.join(relative_path);
+    let content = file
+        .contents_utf8()
+        .context("Template file is not valid UTF-8")?;
+
+    if dry_run {
+        let action = if target_file.exists() { "Would overwrite:" } else { "Would create:" };
+        println!("{} {}", action.yellow(), target_file.display());
+        return Ok(());
+    }
+
+    // Backup existing file
+    if target_file.exists() {
+        utils::backup_file(&target_file)?;
+        utils::cleanup_old_backups(&target_file, utils::DEFAULT_MAX_BACKUPS)?;
+    }
+
+    // Ensure parent directory exists
+    if let Some(parent) = target_file.parent() {
+        utils::ensure_dir(parent)?;
+    }
+
+    fs::write(&target_file, content).with_context(|| {
+        format!("Failed to write template file: {}", target_file.display())
+    })?;
+
+    println!("{} {}", "Wrote:".green(), target_file.display());
+
     Ok(())
 }
 

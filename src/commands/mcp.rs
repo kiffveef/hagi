@@ -170,6 +170,13 @@ pub fn enable_multiple(names: &[String], global: bool) -> Result<()> {
     println!("{} Enabling MCP servers in {} configuration...", "⚙️".cyan(), scope_label);
     println!();
 
+    // Backup once before any modifications
+    let mcp_path = get_mcp_config_path(global)?;
+    if mcp_path.exists() {
+        utils::backup_file(&mcp_path)?;
+        utils::cleanup_old_backups(&mcp_path, utils::DEFAULT_MAX_BACKUPS)?;
+    }
+
     let mut success_count = 0;
     let mut failed_count = 0;
     let mut env_warnings = Vec::new();
@@ -234,14 +241,7 @@ fn enable_single(name: &str, global: bool) -> Result<bool> {
         return Err(anyhow::anyhow!("MCP server not found"));
     }
 
-    // Backup before modification (only on first server in batch)
-    static BACKUP_DONE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-    if !BACKUP_DONE.swap(true, std::sync::atomic::Ordering::SeqCst) {
-        utils::backup_file(&mcp_path)?;
-        utils::cleanup_old_backups(&mcp_path, utils::DEFAULT_MAX_BACKUPS)?;
-    }
-
-    // Remove disabled field or set to false
+    // Remove disabled field
     if let Some(server_config) = servers.get_mut(name) {
         if let Some(obj) = server_config.as_object_mut() {
             obj.remove("disabled");
@@ -252,7 +252,6 @@ fn enable_single(name: &str, global: bool) -> Result<bool> {
 
     println!("{} MCP server '{}' enabled", "✅".green(), name.cyan().bold());
 
-    // Return whether this server needs env setup
     Ok(needs_env_setup(name))
 }
 
@@ -274,6 +273,13 @@ pub fn disable_multiple(names: &[String], global: bool) -> Result<()> {
     let scope_label = "project";
     println!("{} Disabling MCP servers in {} configuration...", "⚙️".cyan(), scope_label);
     println!();
+
+    // Backup once before any modifications
+    let mcp_path = get_mcp_config_path(global)?;
+    if mcp_path.exists() {
+        utils::backup_file(&mcp_path)?;
+        utils::cleanup_old_backups(&mcp_path, utils::DEFAULT_MAX_BACKUPS)?;
+    }
 
     let mut success_count = 0;
     let mut failed_count = 0;
@@ -338,13 +344,6 @@ fn disable_single(name: &str, global: bool) -> Result<bool> {
         return Err(anyhow::anyhow!("MCP server not found"));
     }
 
-    // Backup before modification (only on first server in batch)
-    static BACKUP_DONE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-    if !BACKUP_DONE.swap(true, std::sync::atomic::Ordering::SeqCst) {
-        utils::backup_file(&mcp_path)?;
-        utils::cleanup_old_backups(&mcp_path, utils::DEFAULT_MAX_BACKUPS)?;
-    }
-
     // Set disabled to true
     if let Some(server_config) = servers.get_mut(name) {
         if let Some(obj) = server_config.as_object_mut() {
@@ -356,7 +355,6 @@ fn disable_single(name: &str, global: bool) -> Result<bool> {
 
     println!("{} MCP server '{}' disabled", "✅".green(), name.cyan().bold());
 
-    // Return whether this is a critical server
     Ok(is_critical_server(name))
 }
 
