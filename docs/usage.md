@@ -161,13 +161,13 @@ cd ~/.chat && claude
 
 ### 特徴
 
-- **MCPサーバーなし**: 純粋な会話のみ、軽量起動
+- **軽量MCP**: 会話記憶(memory)とWeb検索(one-search)のみ
 - **プロジェクト文脈なし**: 開発ルールに縛られない自由な対話
-- **カスタマイズ可能**: `~/.chat/CLAUDE.md` を編集して独自ルールを設定
+- **カスタマイズ可能**: `~/.chat/.claude/CLAUDE.md` や `instructions/` を編集
 
 ### カスタマイズ例
 
-`~/.chat/CLAUDE.md` を編集:
+`~/.chat/.claude/CLAUDE.md` を編集:
 
 ```markdown
 # Chat Mode

@@ -233,13 +233,16 @@ hagi install --chat
 ```
 
 **セットアップ内容:**
-- `~/.chat/` ディレクトリ作成
-- `~/.chat/CLAUDE.md` - 雑談用のカスタマイズ可能な設定
+- `~/.chat/.claude/` ディレクトリ作成
+- `~/.chat/.claude/CLAUDE.md` - 雑談用設定
+- `~/.chat/.claude/instructions/` - 応答スタイル・文化的視点のルール
+- `~/.chat/.claude/skills/note/` - 会話サマリースキル
+- `~/.chat/.claude/mcp.json` - 軽量MCP設定(memory、one-search)
 
 **特徴:**
-- MCPサーバーなし(純粋な会話のみ)
+- 軽量MCP(会話記憶・Web検索のみ)
 - プロジェクト文脈なし(開発ルールに縛られない)
-- 軽量起動
+- カジュアルな会話に最適化
 
 **使い方:**
 ```bash
