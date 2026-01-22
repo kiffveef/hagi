@@ -181,6 +181,9 @@ pub fn install_chat(dry_run: bool) -> Result<()> {
 
     templates::copy_chat_templates(&chat_dir, dry_run)?;
 
+    // Create .mcp.json symlink for Claude Code 2.1+ compatibility
+    create_mcp_symlink(&chat_dir, dry_run)?;
+
     if dry_run {
         print_dry_run_footer(dry_run);
     } else {
