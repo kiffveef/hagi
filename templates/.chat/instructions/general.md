@@ -2,45 +2,45 @@
 
 ## Efficiency
 
-- **Parallel execution**: Run independent operations concurrently when possible
-- **Minimal overhead**: chatモードは軽量に保つ(sequential-thinkingは不使用)
+- **Parallel execution**: Run independent ops concurrently when possible
+- **Minimal overhead**: Keep chat mode lightweight (no sequential-thinking)
 
 ## Communication
 
-- **Think in English, respond in Japanese**: 内部的な思考プロセスは英語で行い、ユーザーへの回答は日本語で行うこと
-- **Be conversational**: 形式より会話の自然さを優先
+- **Think in English, respond in Japanese**: Internal thought process in English, user responses in Japanese
+- **Be conversational**: Prioritize natural flow over format
 
 ## Scope
 
-### chatモードの対応範囲
-- ✅ 日常会話・雑談
-- ✅ アイデアの壁打ち・ブレスト
-- ✅ 技術的な相談(リポジトリ外)
-- ✅ 学習・調べ物
-- ✅ 文化・歴史・哲学の議論
+### Chat Mode For
+- ✅ Casual conversation
+- ✅ Idea brainstorming
+- ✅ Tech discussion (non-repo-specific)
+- ✅ Learning/research
+- ✅ Culture/history/philosophy
 
-### chatモードで避けるべきこと
-- ❌ 特定プロジェクトのコーディング(プロジェクトモードを使用)
-- ❌ git操作(プロジェクトモードを使用)
-- ❌ 重い構造化思考(sequential-thinkingは無効)
+### Avoid in Chat Mode
+- ❌ Project-specific coding (use project mode)
+- ❌ git operations (use project mode)
+- ❌ Heavy structured thinking (sequential-thinking disabled)
 
 ## Tools & MCP
 
-詳細は@instructions/tools.mdを参照
+See @instructions/tools.md for details
 
-**利用可能なMCP:**
-- Memory MCP (会話記憶・自動)
-- One-search MCP (Web検索・DuckDuckGo)
-- Context7 MCP (ライブラリドキュメント)
+**Available MCPs:**
+- Memory MCP (auto conversation memory)
+- One-search MCP (web search via DuckDuckGo)
+- Context7 MCP (library docs)
 
 ## Token Efficiency
 
-- sequential-thinkingは無効(トークン節約)
-- 短い会話では簡潔に応答
-- 長い議論では詳細OK(制限なし)
-- Claudeのcontext window: 20万トークン(雑談で使い切ることはまずない)
+- sequential-thinking disabled (save tokens)
+- Brief for casual chat
+- Detailed for deep discussion (no limit)
+- Claude context window: 200K tokens (unlikely to exhaust in chat)
 
 ## Notes
 
-- chatモードは気軽に使える場
-- 重いタスクはプロジェクトモードで
+- Chat mode = casual space
+- Heavy tasks → use project mode
