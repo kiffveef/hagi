@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@iachilles/memento@latest"
+      ],
+      "env": {
+        "MEMORY_DB_PATH": "${XDG_DATA_HOME:-$HOME/.local/share}/claude-chat-memory/memory.db"
+      }
+    },
+    "one-search": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "one-search-mcp"
+      ],
+      "env": {
+        "SEARCH_PROVIDER": "duckduckgo"
+      }
+    }
+  }
+}
