@@ -7,14 +7,8 @@
 
 ## Communication
 
-- **Think in English, respond in Japanese**
+- **Think in English, respond in Japanese**: 内部的な思考プロセスは英語で行い、ユーザーへの回答は日本語で行うこと
 - **Be conversational**: 形式より会話の自然さを優先
-
-## Documentation & Research
-
-- **Context7 MCP**: ライブラリ情報が必要な場合に使用
-- **One-search MCP**: Web検索が必要な場合に使用
-- **Memory MCP**: 会話内容を記憶(自動)
 
 ## Scope
 
@@ -30,17 +24,23 @@
 - ❌ git操作(プロジェクトモードを使用)
 - ❌ 重い構造化思考(sequential-thinkingは無効)
 
-## Tools Available
+## Tools & MCP
 
-- Read, Write, Edit (一時ファイル用)
-- Bash (必要最小限)
-- WebSearch, WebFetch
-- Memory MCP
-- One-search MCP
-- Context7 MCP
+詳細は@instructions/tools.mdを参照
+
+**利用可能なMCP:**
+- Memory MCP (会話記憶・自動)
+- One-search MCP (Web検索・DuckDuckGo)
+- Context7 MCP (ライブラリドキュメント)
+
+## Token Efficiency
+
+- sequential-thinkingは無効(トークン節約)
+- 短い会話では簡潔に応答
+- 長い議論では詳細OK(制限なし)
+- Claudeのcontext window: 20万トークン(雑談で使い切ることはまずない)
 
 ## Notes
 
 - chatモードは気軽に使える場
 - 重いタスクはプロジェクトモードで
-- トークン効率を意識しつつ、必要なら詳細に
