@@ -1,6 +1,7 @@
 ---
 name: serena
 description: Intelligent code analysis combining serena + memory - automatic pattern integration. Use when analyzing code patterns, reviewing implementations, or finding similar code across projects.
+memory: project
 ---
 
 # Serena

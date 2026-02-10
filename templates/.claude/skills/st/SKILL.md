@@ -1,6 +1,7 @@
 ---
 name: st
 description: Use for complex problems requiring step-by-step analysis. Auto-selects WebSearch/Context7 for research, TodoWrite for multi-step tasks. Checks memory for similar patterns.
+memory: project
 ---
 
 # Structured Thinking

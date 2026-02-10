@@ -1,6 +1,7 @@
 ---
 name: design
 description: Document design decisions and specifications in .claude/designs/. Use when planning features, recording architectural decisions, or documenting implementation approaches.
+memory: project
 ---
 
 # Design Documentation
