@@ -30,7 +30,6 @@
     ],
     "allowedTools": [
       "Read(**)",
-      "Read(/tmp/**)",
       "Edit(**/*.rs)",
       "Edit(**/*.toml)",
       "Edit(**/*.md)",
@@ -45,7 +44,10 @@
       "Bash(npx *)",
       "Bash(uv *)",
       "Bash(jq *)",
-      "Bash(rm -r *)",
+      "Bash(rm -r target/*)",
+      "Bash(rm -r node_modules/*)",
+      "Bash(rm -r dist/*)",
+      "Bash(rm -r /tmp/*)",
       "Bash(curl *)",
       "Bash(ls *)",
       "Bash(mkdir *)",
@@ -54,7 +56,7 @@
       "mcp__sqlite__*",
       "mcp__file-search__*",
       "mcp__serena__*",
-      "mcp__contex7__*",
+      "mcp__context7__*",
       "mcp__one-search__*",
       "mcp__memory__*",
       "mcp__sequential-thinking__*",
@@ -64,6 +66,7 @@
       "WebFetch"
     ]
   },
+  "language": "japanese",
   "respectGitignore": true,
   "alwaysThinkingEnabled": true,
   "spinnerTipsEnabled": true

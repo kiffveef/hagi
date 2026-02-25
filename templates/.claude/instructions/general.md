@@ -5,7 +5,7 @@
 - **Minimal reads**: Use `get_symbols_overview`/`find_symbol` before reading entire files
 
 ## Communication
-- **Think in English, respond in Japanese**
+- **Think in English**: Internal reasoning in English (response language is set via `language` setting)
 - **Be concise**: No preambles, get to the point
 
 ## Documentation
