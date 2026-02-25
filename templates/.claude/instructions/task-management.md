@@ -1,17 +1,27 @@
 # Task Management
 
-## TodoWrite ↔ TODO.md Sync
+## Task API ↔ TODO.md Sync
 
-**Every TodoWrite call → IMMEDIATELY Edit .claude/TODO.md (same changes, same message)**
+**Every TaskCreate/TaskUpdate call → IMMEDIATELY Edit .claude/TODO.md (same changes)**
 
 ```
 1. Read .claude/TODO.md (if exists)
-2. TodoWrite → update status
-3. Edit .claude/TODO.md → same changes
-4. Repeat for every TodoWrite call
+2. TaskCreate/TaskUpdate → manage tasks
+3. Edit .claude/TODO.md → reflect same changes
 ```
 
-TodoWrite is session-only. TODO.md persists across sessions.
+Task API is session-only. TODO.md persists across sessions.
+
+---
+
+## Tools
+
+| Tool | Purpose |
+|------|---------|
+| `TaskCreate` | Create new task (subject, description, activeForm) |
+| `TaskUpdate` | Update status, set dependencies, delete |
+| `TaskGet` | Get task details before updating |
+| `TaskList` | List all tasks and find next work |
 
 ---
 
@@ -20,16 +30,27 @@ TodoWrite is session-only. TODO.md persists across sessions.
 | State | Meaning | Rule |
 |-------|---------|------|
 | pending | Not started | - |
-| in_progress | Working now | **Only ONE at a time** |
+| in_progress | Working now | Mark BEFORE starting work. **Multiple allowed** for parallel work |
 | completed | Done | Mark immediately when finished |
 
-**Required fields:**
-- `content`: Imperative form ("Run tests")
+**Required fields on create:**
+- `subject`: Imperative form ("Run tests")
 - `activeForm`: Present continuous ("Running tests")
+- `description`: What needs to be done
 
 ---
 
-## When to Use TodoWrite
+## Dependencies
+
+Use `addBlockedBy` and `addBlocks` to express task ordering:
+
+```
+TaskUpdate({ taskId: "2", addBlockedBy: ["1"] })
+```
+
+---
+
+## When to Use Tasks
 
 **Use for:**
 - Tasks with 3+ steps
@@ -54,23 +75,3 @@ TodoWrite is session-only. TODO.md persists across sessions.
 - Tests failing
 - Implementation partial
 - Errors unresolved
-
----
-
-## Memento Save Trigger
-
-When user says: "保存して", "save", "記録して", "record"
-
-**Both actions required:**
-1. Edit .claude/TODO.md
-2. create_entities to Memento
-
-```
-create_entities({
-  "entities": [{
-    "name": "Task: <name>",
-    "entityType": "task_completion",
-    "observations": ["Status: completed", "Date: YYYY-MM-DD", "Project: <name>"]
-  }]
-})
-```
