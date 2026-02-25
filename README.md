@@ -10,7 +10,7 @@ hagiは、Claude Codeの開発環境を素早くセットアップするため�
 
 - **グローバルセットアップ**: `~/.claude/settings.json`にパーミッション設定とhooks設定を配置
 - **プロジェクトセットアップ**: プロジェクトごとの`.claude/`ディレクトリとMCP設定、テンプレートを配置
-- **MCP管理**: sequential-thinking、context7、serena、one-search、memory、gitの統合設定
+- **MCP管理**: context7、memory、serena、one-search、gitの統合設定
 - **複数マシン同期**: `.claude`ディレクトリをプライベートGitリポジトリで同期（設計ドキュメント、タスク管理を共有）
 - **安全な操作**: バックアップ自動作成・世代管理(最新3世代保持)、ドライラン、確認プロンプト機能
 - **git操作防止**: `.claude/`ディレクトリの誤コミットを2層防御で自動ブロック
@@ -26,7 +26,7 @@ hagiは、Claude Codeの開発環境を素早くセットアップするため�
 - jq - Claude Code hookによる`.claude/` git操作防止に必要
 
 **推奨(MCP機能を使う場合):**
-- Node.js (v18以降) - sequential-thinking、context7、one-search、memory用
+- Node.js (v18以降) - context7、one-search、memory用
 - uv (Python package manager) - serena用
 
 **jqのインストール:**
@@ -78,7 +78,6 @@ Claude Code 2.1+互換のため`.mcp.json`シンボリックリンクも作成�
 
 | MCP | 用途 | デフォルト状態 | 備考 |
 |-----|------|----------------|------|
-| sequential-thinking | 構造化思考支援 | ✅ 有効 | 軽量、起動即座 |
 | context7 | 公式ドキュメント検索 | ✅ 有効 | API keyなしで基本機能利用可 |
 | memory | 長期記憶管理(完全ローカル) | ✅ 有効 | Memento(BGE-M3多言語) |
 | one-search | Web検索(DuckDuckGo他) | ❌ 無効 | 軽量、Puppeteerなし |

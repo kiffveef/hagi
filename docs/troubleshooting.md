@@ -172,8 +172,8 @@ find ~/.claude -name "*.backup.*" -type f -delete
 
 4. MCPサーバーのコマンドが実行可能か確認
    ```bash
-   # sequential-thinkingの場合
-   npx -y @modelcontextprotocol/server-sequential-thinking --help
+   # context7の場合
+   npx -y @upstash/context7-mcp --help
    ```
 
 ---
@@ -188,7 +188,7 @@ Claude Code起動時にMCPサーバーのエラーが表示される
 **解決策:**
 1. 依存関係を確認
    ```bash
-   node --version  # sequential-thinking, github, context7に必要
+   node --version  # context7, one-search, memoryに必要
    uv --version    # gitに必要
    ```
 
@@ -204,7 +204,7 @@ Claude Code起動時にMCPサーバーのエラーが表示される
 
 3. MCPサーバーを再度有効化
    ```bash
-   hagi mcp enable sequential-thinking
+   hagi mcp enable context7
    ```
 
 ---
@@ -261,7 +261,7 @@ GitHub MCPサーバーで認証エラーが発生
 
 2. 正しい名前で再実行
    ```bash
-   hagi mcp enable sequential-thinking
+   hagi mcp enable context7
    ```
 
 ---
