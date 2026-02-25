@@ -351,7 +351,7 @@ fn check_dependencies() -> Vec<String> {
         warnings.push(format!(
             "{}\n  {}\n\n  {}:\n    curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -\n    sudo apt-get install -y nodejs",
             "Node.js not found".red(),
-            "Required for: context7, sequential-thinking, one-search",
+            "Required for: context7, one-search, memory",
             "Install"
         ));
     }

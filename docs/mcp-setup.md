@@ -41,7 +41,6 @@
 
 | MCP | 用途 | インストール方法 | デフォルト状態 | 備考 |
 |-----|------|------------------|----------------|------|
-| sequential-thinking | 構造化思考支援 | npx (自動) | ✅ 有効 | 軽量、起動即座 |
 | context7 | 公式ドキュメント検索 | npx (自動) | ✅ 有効 | 軽量、API keyなしで基本機能利用可 |
 | memory | 長期記憶管理 | npx (自動) | ✅ 有効 | Memento(BGE-M3埋め込み、SQLite) |
 | one-search | Web検索 | npx (自動) | ❌ 無効 | DuckDuckGo推奨(Puppeteerなし) |
@@ -57,18 +56,7 @@
 
 ## インストール手順
 
-### 1. sequential-thinking (自動インストール)
-
-`hagi install`実行時にnpx経由で自動的にインストールされます。
-
-**手動確認:**
-```bash
-npx -y @modelcontextprotocol/server-sequential-thinking
-```
-
----
-
-### 2. serena (uvx経由インストール、デフォルト無効)
+### 1. serena (uvx経由インストール、デフォルト無効)
 
 有効化時にuvx経由でGitHubリポジトリから自動的にインストールされます。
 
@@ -306,7 +294,6 @@ hagi install
 - `.gitignore`の更新
 
 **デフォルト有効MCP:**
-- sequential-thinking(構造化思考支援)
 - context7(公式ドキュメント検索)
 - memory(長期記憶管理)
 
@@ -510,5 +497,4 @@ Rate limit exceeded
 - [one-search MCP](https://github.com/supercorp-ai/one-search-mcp) - マルチエンジンWeb検索
 - [Memento (@iachilles/memento)](https://www.npmjs.com/package/@iachilles/memento) - BGE-M3多言語メモリ管理
 - [serena MCP](https://github.com/oraios/serena) - セマンティックコード解析
-- [sequential-thinking MCP](https://github.com/modelcontextprotocol/servers)
 - [git MCP](https://github.com/modelcontextprotocol/servers)

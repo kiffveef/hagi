@@ -19,7 +19,7 @@ hagi install --skip CLAUDE.md --skip instructions
 
 ### /st - Structured Thinking
 
-sequential-thinking MCPを使った構造化思考支援。複雑な問題を段階的に分析・解決します。memory連携で過去のパターンを再利用できます。
+Claudeの組み込みthinkingを使った構造化思考支援。複雑な問題を段階的に分析・解決します。memory連携で過去のパターンを再利用できます。
 
 #### 使い方
 
@@ -188,18 +188,6 @@ cd ~/.chat && claude
 ## MCPサーバーの活用
 
 hagiでセットアップされるMCPサーバーの使い方を説明します。
-
-### sequential-thinking (デフォルト有効)
-
-構造化思考を支援するMCPサーバー。
-
-**用途:**
-- 複雑な問題の段階的な分析
-- 論理的な実装計画の立案
-- エラー原因の体系的な調査
-
-**使い方:**
-`/st`コマンドまたは直接sequential-thinkingツールを使用
 
 ### context7 (デフォルト有効)
 

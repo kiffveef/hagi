@@ -59,7 +59,7 @@ hagi install -g
 
 | ツール | 必要なMCP | インストールコマンド |
 |--------|-----------|---------------------|
-| Node.js | context7、sequential-thinking、one-search、memory | `curl -fsSL https://deb.nodesource.com/setup_18.x \| sudo -E bash -` <br> `sudo apt-get install -y nodejs` |
+| Node.js | context7、one-search、memory | `curl -fsSL https://deb.nodesource.com/setup_18.x \| sudo -E bash -` <br> `sudo apt-get install -y nodejs` |
 | uv | serena、git | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
 | jq | .claude/ git保護 | `sudo apt install jq` |
 
@@ -389,7 +389,6 @@ hagi status
 ✅ .mcp.json symlink - exists
 
 [MCP Servers]
-✅ sequential-thinking - enabled
 ✅ context7 - enabled
 ✅ memory - enabled
 ❌ one-search - disabled
@@ -456,7 +455,6 @@ hagi mcp list
 ```
 ═══ Project MCP Configuration (.claude/mcp.json) ═══
 
-  sequential-thinking [enabled] - Structured thinking and problem-solving
   context7 [enabled] - Library documentation and code examples
   memory [enabled] - Long-term memory (SQLite-vec, local)
   one-search [disabled] - Web search (DuckDuckGo, SearXNG)
@@ -601,7 +599,7 @@ Note: Restart Claude Code to apply changes.
 ```
 
 **注意:**
-- 重要なサーバー(sequential-thinking、context7)を無効化する際は警告が表示されます
+- 重要なサーバー(context7)を無効化する際は警告が表示されます
 - 設定変更後はClaude Codeの再起動が必要です
 
 ---
@@ -636,9 +634,9 @@ File: /home/user/.claude/mcp.json
 
 {
   "mcpServers": {
-    "sequential-thinking": {
+    "context7": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+      "args": ["-y", "@upstash/context7-mcp"]
     },
     ...
   }

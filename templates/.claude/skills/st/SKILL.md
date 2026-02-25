@@ -1,12 +1,12 @@
 ---
 name: st
-description: Use for complex problems requiring step-by-step analysis. Auto-selects WebSearch/Context7 for research, TodoWrite for multi-step tasks. Checks memory for similar patterns.
+description: Use for complex problems requiring step-by-step analysis. Auto-selects WebSearch/Context7 for research, TaskCreate for multi-step tasks. Checks memory for similar patterns.
 memory: project
 ---
 
 # Structured Thinking
 
-Use sequential-thinking MCP to break down complex problems systematically. Integrates with memory to reuse past problem-solving patterns.
+Use Claude's built-in thinking to break down complex problems systematically. Integrates with memory to reuse past problem-solving patterns.
 
 ## Usage
 
@@ -76,7 +76,7 @@ Use sequential-thinking MCP to break down complex problems systematically. Integ
 - Context7 MCP for library documentation
 
 **Multi-step tasks**:
-- TodoWrite for progress tracking
+- TaskCreate for progress tracking
 - Sync with `.claude/TODO.md` if exists (see @instructions/task-management.md)
 
 **Design documentation needed**:
@@ -102,7 +102,7 @@ Use sequential-thinking MCP to break down complex problems systematically. Integ
       "Approach: <key approach/methodology used>",
       "Solution: <outcome/answer summary>",
       "Steps: <number of steps taken>",
-      "Tools: <tools used - WebSearch/Context7/TodoWrite/etc>",
+      "Tools: <tools used - WebSearch/Context7/TaskCreate/etc>",
       "Project: <current project name>",
       "Date: YYYY-MM-DD"
     ]

@@ -362,7 +362,6 @@ fn disable_single(name: &str, global: bool) -> Result<bool> {
 /// Get description for a known MCP server
 fn get_server_description(name: &str) -> &'static str {
     match name {
-        "sequential-thinking" => "Structured thinking and problem-solving",
         "git" => "Git operations and repository management",
         "context7" => "Library documentation and code examples",
         "serena" => "Code analysis and semantic search (token-optimized)",
@@ -379,5 +378,5 @@ fn needs_env_setup(_name: &str) -> bool {
 
 /// Check if server is critical for recommended workflow
 fn is_critical_server(name: &str) -> bool {
-    matches!(name, "sequential-thinking" | "context7")
+    matches!(name, "context7")
 }

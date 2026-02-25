@@ -47,7 +47,7 @@ sudo apt install jq
 
 #### Node.js (v18以降推奨)
 
-sequential-thinking、github、context7などのMCPサーバーに必要です。
+context7、one-search、memoryなどのMCPサーバーに必要です。
 
 **インストール確認:**
 ```bash

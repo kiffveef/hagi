@@ -211,7 +211,7 @@ cargo run -- install --dry-run
 
 # MCPコマンドテスト
 cargo run -- mcp list
-cargo run -- mcp info sequential-thinking
+cargo run -- mcp info context7
 
 # 設定コマンドテスト
 cargo run -- config validate mcp

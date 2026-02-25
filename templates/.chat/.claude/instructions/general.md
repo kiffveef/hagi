@@ -3,7 +3,7 @@
 ## Efficiency
 
 - **Parallel execution**: Run independent ops concurrently when possible
-- **Minimal overhead**: Keep chat mode lightweight (no sequential-thinking)
+- **Minimal overhead**: Keep chat mode lightweight (use built-in thinking)
 
 ## Communication
 
@@ -22,7 +22,7 @@
 ### Avoid in Chat Mode
 - ❌ Project-specific coding (use project mode)
 - ❌ git operations (use project mode)
-- ❌ Heavy structured thinking (sequential-thinking disabled)
+- ❌ Heavy structured thinking (use project mode)
 
 ## Tools & MCP
 
@@ -35,7 +35,7 @@ See @instructions/tools.md for details
 
 ## Token Efficiency
 
-- sequential-thinking disabled (save tokens)
+- Built-in thinking used (no extra MCP overhead)
 - Brief for casual chat
 - Detailed for deep discussion (no limit)
 - Claude context window: 200K tokens (unlikely to exhaust in chat)
