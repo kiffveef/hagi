@@ -32,6 +32,8 @@
 
 @instructions/code-style.md
 
+@instructions/simplicity.md
+
 @instructions/task-management.md
 
 @instructions/git-workflow.md
