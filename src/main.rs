@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{bail, Result};
 use clap::{Parser, Subcommand};
 
 mod commands;
@@ -33,6 +33,10 @@ enum Commands {
         /// Skip specific files/directories or special values: "git" (skip git init)
         #[arg(long = "skip", value_name = "PATH")]
         skip: Vec<String>,
+
+        /// Install only specific categories (instructions, skills, hooks, config, docs, designs)
+        #[arg(long = "only", value_name = "CATEGORY")]
+        only: Vec<String>,
     },
 
     /// Uninstall hagi configuration
@@ -141,13 +145,21 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Install { global, chat, dry_run, skip } => {
+        Commands::Install { global, chat, dry_run, skip, only } => {
+            if !only.is_empty() && (global || chat) {
+                bail!("--only cannot be used with --global or --chat");
+            }
+
+            // Validate and parse category names
+            let categories = commands::install::parse_categories(&only)?;
+
             if global {
                 commands::install::install_global(dry_run)?;
             } else if chat {
                 commands::install::install_chat(dry_run)?;
             } else {
-                commands::install::install_project(dry_run, &skip)?;
+                let filter = templates::InstallFilter::new(categories, skip);
+                commands::install::install_project(dry_run, &filter)?;
             }
         }
         Commands::Uninstall { global, yes } => {

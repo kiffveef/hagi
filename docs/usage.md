@@ -89,7 +89,24 @@ cd ~/.chat && claude
 | `mcp.json` | MCP設定 |
 | `settings.local.json` | パーミッション(危険コマンドの制限) |
 
-カスタマイズ後に更新する場合は`hagi install --skip CLAUDE.md --skip instructions`で保持できる。
+カスタマイズ後に特定カテゴリだけ更新する場合は`--only`で選択できる。
+
+```bash
+# instructionsテンプレートのみ更新(CLAUDE.mdの参照も自動更新)
+hagi install --only instructions
+
+# skills + instructionsを更新
+hagi install --only instructions skills
+
+# 特定ファイルを除外しつつ更新
+hagi install --only instructions --skip instructions/simplicity.md
+```
+
+`--skip`による除外指定も引き続き利用可能。
+
+```bash
+hagi install --skip CLAUDE.md --skip instructions
+```
 
 ---
 
