@@ -6,7 +6,8 @@ use std::os::unix::fs::symlink;
 use std::path::Path;
 use std::process::Command;
 
-use crate::{templates, utils};
+use crate::templates::{self, Category, InstallFilter};
+use crate::utils;
 
 // ============================================================================
 // Common Helpers
@@ -34,6 +35,20 @@ fn ensure_directory(path: &Path, dry_run: bool) -> Result<()> {
         utils::ensure_dir(path)?;
     }
     Ok(())
+}
+
+// ============================================================================
+// Category Parsing
+// ============================================================================
+
+/// Parse and validate category name strings into Category values
+pub fn parse_categories(names: &[String]) -> Result<Vec<Category>> {
+    let mut categories = Vec::new();
+    for name in names {
+        let cat: Category = name.parse()?;
+        categories.push(cat);
+    }
+    Ok(categories)
 }
 
 // ============================================================================
@@ -86,43 +101,66 @@ fn print_dependency_warnings() {
 // ============================================================================
 
 /// Install project-specific configuration to .claude/
-pub fn install_project(dry_run: bool, skip_paths: &[String]) -> Result<()> {
+pub fn install_project(dry_run: bool, filter: &InstallFilter) -> Result<()> {
     print_dry_run_header(dry_run);
-    println!("{}", "Installing project configuration...".green());
 
-    // Step 1: Ensure git repository exists (skip with --skip git)
-    if !skip_paths.iter().any(|s| s == "git") {
-        ensure_git_repository(dry_run)?;
+    let selective = filter.has_only();
+
+    if selective {
+        let names: Vec<&str> = filter.only.iter().map(|c| c.as_str()).collect();
+        println!(
+            "{} [{}]",
+            "Installing selected categories:".green(),
+            names.join(", ")
+        );
     } else {
-        println!("{}", "⏭ Skipping git repository check (--skip git)".yellow());
+        println!("{}", "Installing project configuration...".green());
     }
 
-    // Step 2: Print skip list info
-    print_skip_list(skip_paths);
-
-    // Step 3: Setup directories
     let project_dir = env::current_dir().context("Failed to get current directory")?;
     let claude_dir = project_dir.join(".claude");
-    ensure_directory(&claude_dir, dry_run)?;
 
-    // Step 3.5: Migrate deprecated commands/ to skills/
-    migrate_commands_to_skills(&claude_dir, dry_run)?;
+    if selective {
+        // --only mode: only copy filtered templates + update managed section
+        ensure_directory(&claude_dir, dry_run)?;
 
-    // Step 4: Copy templates
-    templates::copy_all_templates_with_skip(&claude_dir, dry_run, skip_paths)?;
+        templates::copy_all_templates_filtered(&claude_dir, dry_run, filter)?;
 
-    // Step 4.5: Create .mcp.json symlink for Claude Code 2.1+ compatibility
-    create_mcp_symlink(&project_dir, dry_run)?;
+        // Update CLAUDE.md managed section when instructions category is included
+        if filter.includes_category(Category::Instructions) {
+            let claude_md = claude_dir.join("CLAUDE.md");
+            templates::update_managed_instructions(&claude_md, dry_run)?;
+        }
 
-    // Step 5: Setup Claude Code hooks
-    setup_claude_hooks(&claude_dir, dry_run)?;
+        print_dry_run_footer(dry_run);
+        if !dry_run {
+            println!("{}", "\n✅ Selected categories installed successfully!".green().bold());
+        }
+    } else {
+        // Full install mode
+        if !filter.skip.iter().any(|s| s == "git") {
+            ensure_git_repository(dry_run)?;
+        } else {
+            println!("{}", "⏭ Skipping git repository check (--skip git)".yellow());
+        }
 
-    // Step 6: Update project configuration
-    update_project_gitignore(&project_dir, dry_run)?;
-    install_git_hooks(&project_dir, dry_run)?;
+        print_skip_list(&filter.skip);
 
-    // Step 7: Print completion message
-    print_project_completion(dry_run)?;
+        ensure_directory(&claude_dir, dry_run)?;
+
+        migrate_commands_to_skills(&claude_dir, dry_run)?;
+
+        templates::copy_all_templates_filtered(&claude_dir, dry_run, filter)?;
+
+        create_mcp_symlink(&project_dir, dry_run)?;
+
+        setup_claude_hooks(&claude_dir, dry_run)?;
+
+        update_project_gitignore(&project_dir, dry_run)?;
+        install_git_hooks(&project_dir, dry_run)?;
+
+        print_project_completion(dry_run)?;
+    }
 
     Ok(())
 }
