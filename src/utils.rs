@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
 /// Maximum number of backup files to keep (default)
-pub const DEFAULT_MAX_BACKUPS: usize = 3;
+pub const DEFAULT_MAX_BACKUPS: usize = 1;
 
 /// Get the home directory path
 pub fn home_dir() -> Result<PathBuf> {
