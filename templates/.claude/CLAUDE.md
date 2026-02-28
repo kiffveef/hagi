@@ -24,19 +24,21 @@
 
 ## Rules
 
+<!-- hagi:instructions:start -->
 @instructions/general.md
 
-@instructions/tools.md
+@instructions/code-style.md
 
 @instructions/coding.md
 
-@instructions/code-style.md
+@instructions/git-workflow.md
 
 @instructions/simplicity.md
 
 @instructions/task-management.md
 
-@instructions/git-workflow.md
+@instructions/tools.md
+<!-- hagi:instructions:end -->
 
 ---
 

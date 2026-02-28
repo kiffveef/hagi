@@ -53,7 +53,32 @@ hagi install --chat
 | `--global`, `-g` | グローバルセットアップ |
 | `--chat` | チャットモードセットアップ |
 | `--dry-run` | 変更内容の確認のみ |
+| `--only <CATEGORY>` | 指定カテゴリのみインストール(複数指定可) |
 | `--skip <PATH>` | 指定ファイル/ディレクトリをスキップ(複数指定可) |
+
+**`--only`のカテゴリ:**
+
+| カテゴリ | 対象 |
+|---------|------|
+| `instructions` | `instructions/` + CLAUDE.mdマネージドセクション更新 |
+| `skills` | `skills/` |
+| `hooks` | `hooks/` |
+| `config` | `mcp.json`, `settings.local.json` |
+| `docs` | `CLAUDE.md`, `TODO.md` |
+| `designs` | `designs/` |
+
+`--only`使用時はテンプレートコピーのみ実行し、git初期化・hooks設置等のセットアップステップはスキップされる。`--global`/`--chat`との併用不可。
+
+```bash
+# instructionsのみ更新
+hagi install --only instructions
+
+# 複数カテゴリを同時に更新
+hagi install --only instructions skills
+
+# --skipとの併用(カテゴリ内で更に絞り込み)
+hagi install --only instructions --skip instructions/simplicity.md
+```
 
 **`--skip`の指定方法:**
 
@@ -68,6 +93,12 @@ hagi install --chat
 # カスタマイズ済みファイルを保持しつつ更新
 hagi install --skip CLAUDE.md --skip instructions
 ```
+
+### CLAUDE.mdマネージドセクション
+
+`--only instructions`実行時、CLAUDE.md内の`<!-- hagi:instructions:start/end -->`マーカー間を自動更新する。テンプレートに存在する全instructionファイルへの`@instructions/`参照が最新の状態に置換される。
+
+マーカーがない場合は警告を表示し、CLAUDE.md自体が存在しない場合はinstructionファイルのコピーのみ実行する。
 
 ---
 
