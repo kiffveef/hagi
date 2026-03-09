@@ -289,66 +289,11 @@ fn should_skip(path: &Path, skip_paths: &[String]) -> bool {
 }
 
 // ============================================================================
-// Managed Section (CLAUDE.md @instructions/ references)
+// CLAUDE.md Update (preserve project section)
 // ============================================================================
 
-const INSTRUCTIONS_START: &str = "<!-- hagi:instructions:start -->";
-const INSTRUCTIONS_END: &str = "<!-- hagi:instructions:end -->";
 const PROJECT_START: &str = "<!-- hagi:project:start -->";
 const PROJECT_END: &str = "<!-- hagi:project:end -->";
-
-// general.md sets the overall tone and must be read first by Claude
-const PRIORITY_INSTRUCTION: &str = "general.md";
-
-/// Build the instructions section content from current instruction templates
-fn build_instructions_content() -> String {
-    let mut instruction_files: Vec<String> = Vec::new();
-
-    if let Some(dir) = TEMPLATES.get_dir("instructions") {
-        for entry in dir.entries() {
-            if let include_dir::DirEntry::File(file) = entry {
-                if let Some(name) = file.path().file_name() {
-                    let name_str = name.to_string_lossy().to_string();
-                    if name_str != PRIORITY_INSTRUCTION {
-                        instruction_files.push(name_str);
-                    }
-                }
-            }
-        }
-    }
-
-    instruction_files.sort();
-    instruction_files.insert(0, PRIORITY_INSTRUCTION.to_string());
-
-    let entries: Vec<String> = instruction_files
-        .iter()
-        .map(|name| format!("@instructions/{}", name))
-        .collect();
-
-    format!(
-        "{}\n{}\n{}",
-        INSTRUCTIONS_START,
-        entries.join("\n\n"),
-        INSTRUCTIONS_END,
-    )
-}
-
-/// Build template CLAUDE.md with dynamic instructions section
-fn build_template_claude_md() -> Result<String> {
-    let template = get_template(CLAUDE_MD)?;
-
-    let start_idx = template.find(INSTRUCTIONS_START);
-    let end_idx = template.find(INSTRUCTIONS_END);
-
-    match (start_idx, end_idx) {
-        (Some(s), Some(e)) if s < e => {
-            let end_of_marker = e + INSTRUCTIONS_END.len();
-            let instructions = build_instructions_content();
-            Ok(format!("{}{}{}", &template[..s], instructions, &template[end_of_marker..]))
-        }
-        _ => Ok(template.to_string()),
-    }
-}
 
 /// Extract project section with byte range from CLAUDE.md
 fn extract_project_section(content: &str) -> Option<(usize, usize, &str)> {
@@ -366,7 +311,7 @@ fn extract_project_section(content: &str) -> Option<(usize, usize, &str)> {
 ///
 /// Returns true if updated, false if no markers found.
 pub fn update_claude_md(claude_md_path: &Path, dry_run: bool) -> Result<bool> {
-    let template = build_template_claude_md()?;
+    let template = get_template(CLAUDE_MD)?;
 
     if !claude_md_path.exists() {
         if dry_run {

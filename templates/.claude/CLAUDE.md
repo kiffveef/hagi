@@ -24,7 +24,6 @@
 
 ## Rules
 
-<!-- hagi:instructions:start -->
 @instructions/general.md
 
 @instructions/code-style.md
@@ -40,7 +39,6 @@
 @instructions/tools.md
 
 @instructions/memory.md
-<!-- hagi:instructions:end -->
 
 ---
 
