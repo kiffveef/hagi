@@ -12,14 +12,13 @@ No need to run `/code-pattern` separately - this command does both.
 ## Usage
 
 ```
-/serena <query> [--skip-memory] [--save-pattern]
+/serena <query> [--skip-memory]
 ```
 
 ## Arguments
 
 - `<query>`: Code pattern or feature to search for (required)
 - `--skip-memory`: Skip memory search, use serena only (faster)
-- `--save-pattern`: Save analysis results to memory for future reference
 
 ## Examples
 
@@ -27,7 +26,6 @@ No need to run `/code-pattern` separately - this command does both.
 /serena "error handling in async functions"
 /serena "REST API pagination implementation"
 /serena "authentication middleware" --skip-memory
-/serena "database connection pooling" --save-pattern
 ```
 
 ## Workflow (Automatic Integration)
@@ -38,10 +36,10 @@ No need to run `/code-pattern` separately - this command does both.
 
 **Check for related past patterns in memory:**
 
-1. **If memento MCP is available:**
+1. **If memory MCP is available:**
    - Use `search_nodes` to find related patterns
    - Query: the user's query
-   - Filter by entityType: `code_pattern`, `implementation`, `best_practice`
+   - Filter by entityType: `code_pattern`, `design_decision`
    - Limit: top 3 most relevant results
 
 2. **If patterns found, display:**
@@ -64,7 +62,7 @@ No need to run `/code-pattern` separately - this command does both.
    No past patterns found in memory. This will be the first record!
    ```
 
-4. **If memento MCP not available:**
+4. **If memory MCP not available:**
    ```
    Memory not available - searching current codebase only
    ```
@@ -112,7 +110,7 @@ No need to run `/code-pattern` separately - this command does both.
       hagi mcp enable serena
    ```
 
-**Important:** This is the ONLY step if `--skip-memory` is provided.
+**Note:** This is the ONLY step if `--skip-memory` is provided.
 
 ---
 
@@ -154,8 +152,6 @@ No need to run `/code-pattern` separately - this command does both.
    **Suggested Improvements:**
    - [Improvement based on general best practices]
    - [Another improvement]
-
-   Tip: Use `--save-pattern` to save this analysis for future projects!
    ```
 
 3. **Provide actionable recommendations:**
@@ -165,24 +161,13 @@ No need to run `/code-pattern` separately - this command does both.
 
 ---
 
-### Step 3: Optional Save to Memory
+### Step 3: Save to Memory
 
-**If `--save-pattern` flag is provided:**
+**Save analysis results to memory for future reference.**
 
-1. **Ask user for confirmation:**
-   ```
-   Save this pattern to memory?
+1. **Check if memory MCP is available**
+2. **IF available, save with:**
 
-   This will save:
-   - Query: "[user's query]"
-   - Current implementation approaches
-   - Recommended best practices
-   - Date: [today's date]
-
-   Use `create_entities` to save? (y/n)
-   ```
-
-2. **If user confirms, save with Memento entity structure:**
    ```json
    {
      "entities": [{
@@ -191,9 +176,9 @@ No need to run `/code-pattern` separately - this command does both.
        "observations": [
          "Implementation: [summary of current approaches]",
          "Best practice: [recommended approach]",
-         "Project: [current project name if detectable]",
+         "Project: [current project name]",
          "Date: [YYYY-MM-DD]",
-         "Tags: [relevant], [tags], [from], [query]"
+         "Tags: [relevant], [tags]"
        ]
      }]
    }
@@ -203,12 +188,6 @@ No need to run `/code-pattern` separately - this command does both.
    ```
    Pattern saved to memory for future reference!
    ```
-
-**If flag not provided:**
-```
-To save this analysis for future projects, run:
-   /serena "[query]" --save-pattern
-```
 
 ## Output Format
 
@@ -248,9 +227,8 @@ Recommendations: [3-5 actionable items]
 ## Notes
 
 - This command **replaces the need for manual `/code-pattern` execution**
-- Memory check is automatic (unless `--skip-memory`)
+- Memory check and save are automatic (unless `--skip-memory`)
 - Use `--skip-memory` for faster results when you don't need historical context
-- Use `--save-pattern` when you find a good implementation worth remembering
 - Patterns accumulate over time, making this command more valuable with use
 
 ## Best Use Cases

@@ -8,22 +8,21 @@
 
 ### /st - 構造化思考
 
-複雑な問題を段階的に分析・解決する。文脈に応じてWebSearch、Context7、TodoWriteを自動選択。memory連携で過去パターンを再利用可能。
+複雑な問題を段階的に分析・解決する。文脈に応じてWebSearch、Context7、TodoWriteを自動選択。memory MCPで過去パターンを自動検索・保存。
 
 ```
 /st データベース設計を最適化する方法
 /st Axum0.7でWebSocket実装
-/st "認証フロー設計" --save     # memoryに保存
 /st "似た問題" --fresh          # memory検索スキップ
 ```
 
 ### /design - 設計文書
 
-設計決定や仕様を`.claude/designs/`に文書化する。
+設計決定や仕様を`.claude/designs/`に文書化する。memory MCPに自動保存。
 
 ```
 /design "authentication flow"
-/design "error handling strategy" --memory  # memoryにも保存
+/design "error handling strategy"
 ```
 
 ### /note - 会話メモ
@@ -37,11 +36,11 @@
 
 ### /serena - コード分析
 
-serena + mementoでコードパターンを検索・分析する。
+serena + memory MCPでコードパターンを検索・分析する。分析結果はmemoryに自動保存。
 
 ```
 /serena "error handling in async functions"
-/serena "database pooling" --save-pattern
+/serena "database pooling"
 ```
 
 ### /review - コードレビュー
@@ -87,7 +86,7 @@ cd ~/.chat && claude
 | `instructions/` | Git操作、タスク管理、推奨ツール等のルール |
 | `skills/` | スラッシュコマンド |
 | `mcp.json` | MCP設定 |
-| `settings.local.json` | パーミッション(危険コマンドの制限) |
+| `settings.local.json` | パーミッション、auto memory無効化 |
 
 カスタマイズ後に特定カテゴリだけ更新する場合は`--only`で選択できる。
 

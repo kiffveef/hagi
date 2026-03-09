@@ -73,5 +73,6 @@
   "language": "japanese",
   "respectGitignore": true,
   "alwaysThinkingEnabled": true,
-  "spinnerTipsEnabled": true
+  "spinnerTipsEnabled": true,
+  "autoMemoryEnabled": false
 }

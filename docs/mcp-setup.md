@@ -9,7 +9,7 @@ hagiが管理するMCPサーバーの設定・活用方法。
 | MCP | 用途 | 実行方法 | デフォルト |
 |-----|------|----------|-----------|
 | context7 | 公式ドキュメント検索 | npx | ✅ 有効 |
-| memory | 長期記憶(Memento、BGE-M3多言語) | npx | ✅ 有効 |
+| memory | 長期記憶(セッション間の学習保持) | npx | ✅ 有効 |
 | one-search | Web検索(DuckDuckGo他) | npx | ❌ 無効 |
 | serena | セマンティックコード解析 | uvx | ❌ 無効 |
 | git | Git操作 | uvx | ❌ 無効 |
@@ -50,12 +50,14 @@ API keyなしで基本機能が使える。制限緩和にはAPI keyを設定す
 }
 ```
 
-### memory (Memento)
+### memory
 
 完全ローカルの長期記憶。SQLiteベース、XDG Base Directory準拠。
 
 - データ: `~/.local/share/claude-memory/memory.db`
-- `/st`, `/design`, `/serena`と連携
+- セッション中の学習・発見を自動記録、作業開始時に過去の知見を自動検索
+- 組み込みauto memoryの代替(`autoMemoryEnabled: false`で無効化済み)
+- `/st`, `/design`, `/serena`でも自動連携
 
 ### one-search
 

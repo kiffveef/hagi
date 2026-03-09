@@ -92,7 +92,7 @@ WSL2環境ではPuppeteer依存のプロバイダーを避け、DuckDuckGoを使
 }
 ```
 
-### Memento (memory) 起動エラー
+### memory MCP 起動エラー
 
 ```bash
 # 手動起動テスト

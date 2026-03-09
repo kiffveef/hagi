@@ -38,6 +38,8 @@
 @instructions/task-management.md
 
 @instructions/tools.md
+
+@instructions/memory.md
 <!-- hagi:instructions:end -->
 
 ---
