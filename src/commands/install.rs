@@ -121,13 +121,12 @@ pub fn install_project(dry_run: bool, filter: &InstallFilter) -> Result<()> {
     let claude_dir = project_dir.join(".claude");
 
     if selective {
-        // --only mode: only copy filtered templates + update managed section
+        // --only mode: only copy filtered templates
         ensure_directory(&claude_dir, dry_run)?;
 
-        // Skip CLAUDE.md overwrite if it already exists (preserve project-specific content)
+        // Always skip CLAUDE.md from template copy (handled separately by update_claude_md)
         let claude_md = claude_dir.join("CLAUDE.md");
-        let skip_claude_md = claude_md.exists();
-        let filter = if skip_claude_md {
+        let filter = if filter.includes_category(Category::Docs) || filter.includes_category(Category::Instructions) {
             let mut extended_skip = filter.skip.clone();
             extended_skip.push("CLAUDE.md".to_string());
             templates::InstallFilter::new(filter.only.clone(), extended_skip)
@@ -137,9 +136,9 @@ pub fn install_project(dry_run: bool, filter: &InstallFilter) -> Result<()> {
 
         templates::copy_all_templates_filtered(&claude_dir, dry_run, &filter)?;
 
-        // Update CLAUDE.md managed section when instructions category is included
-        if filter.includes_category(Category::Instructions) {
-            templates::update_managed_instructions(&claude_md, dry_run)?;
+        // Update CLAUDE.md: replace template parts, preserve project section
+        if filter.includes_category(Category::Docs) || filter.includes_category(Category::Instructions) {
+            templates::update_claude_md(&claude_md, dry_run)?;
         }
 
         print_dry_run_footer(dry_run);
