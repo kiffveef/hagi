@@ -4,6 +4,7 @@ use std::io::Write;
 use std::path::Path;
 use std::process::{Command, ExitStatus, Output, Stdio};
 
+use crate::templates;
 use crate::utils;
 
 // ============================================================================
@@ -182,7 +183,7 @@ pub fn sync_push(message: Option<&str>) -> Result<()> {
     }
 
     // Force-add files that might be excluded by parent's .gitignore
-    let _ = git_in_claude(&["add", "--force", "CLAUDE.md", "TODO.md"]);
+    let _ = git_in_claude(&["add", "--force", templates::CLAUDE_MD, "TODO.md"]);
 
     let commit_msg = message.unwrap_or("Update .claude config");
     let commit_status = git_in_claude(&["commit", "-m", commit_msg])?;
@@ -332,7 +333,7 @@ fn init_claude_git_repo(remote_url: &str) -> Result<()> {
 
     // Force-add files that might be excluded by parent's .gitignore
     // This ensures CLAUDE.md, TODO.md etc are tracked even if parent ignores .claude/
-    let _ = git_in_claude(&["add", "--force", "CLAUDE.md", "TODO.md"]);
+    let _ = git_in_claude(&["add", "--force", templates::CLAUDE_MD, "TODO.md"]);
 
     let status = git_in_claude(&["commit", "-m", "🌱 first: Initial .claude config"])?;
     if !status.success() {

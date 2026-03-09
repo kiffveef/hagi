@@ -14,6 +14,9 @@ pub static TEMPLATES: Dir = include_dir!("$CARGO_MANIFEST_DIR/templates/.claude"
 /// Embedded chat template directory
 pub static CHAT_TEMPLATES: Dir = include_dir!("$CARGO_MANIFEST_DIR/templates/.chat");
 
+/// CLAUDE.md filename (used across install, status, sync)
+pub const CLAUDE_MD: &str = "CLAUDE.md";
+
 // ============================================================================
 // Category System
 // ============================================================================
@@ -63,7 +66,7 @@ impl Category {
                 path_str == "mcp.json" || path_str == "settings.local.json"
             }
             Category::Docs => {
-                path_str == "CLAUDE.md" || path_str == "TODO.md"
+                path_str == CLAUDE_MD || path_str == "TODO.md"
             }
             Category::Designs => path_str.starts_with("designs/"),
         }
@@ -332,7 +335,7 @@ fn build_instructions_content() -> String {
 
 /// Build template CLAUDE.md with dynamic instructions section
 fn build_template_claude_md() -> Result<String> {
-    let template = get_template("CLAUDE.md")?;
+    let template = get_template(CLAUDE_MD)?;
 
     let start_idx = template.find(INSTRUCTIONS_START);
     let end_idx = template.find(INSTRUCTIONS_END);
