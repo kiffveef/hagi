@@ -98,14 +98,7 @@ hagi install --skip CLAUDE.md --skip instructions
 
 ### CLAUDE.mdの更新方式
 
-CLAUDE.mdは2種類のマーカーで管理される:
-
-| マーカー | 用途 |
-|---------|------|
-| `<!-- hagi:instructions:start/end -->` | instructionファイルへの`@instructions/`参照(テンプレートから自動生成) |
-| `<!-- hagi:project:start/end -->` | プロジェクト固有の記述(ユーザーが編集、更新時も保持) |
-
-`hagi install`実行時、CLAUDE.mdはテンプレートから再生成されるが、プロジェクトセクション内の内容はそのまま保持される。CLAUDE.md自体が存在しない場合はテンプレートから新規作成する。プロジェクトセクションのマーカーがない場合は警告を表示しスキップする。
+`hagi install`実行時、CLAUDE.mdはテンプレートから再生成されるが、`<!-- hagi:project:start/end -->`マーカーで囲まれたプロジェクト固有セクションはそのまま保持される。CLAUDE.md自体が存在しない場合はテンプレートから新規作成する。マーカーがない場合は警告を表示しスキップする。
 
 ---
 
