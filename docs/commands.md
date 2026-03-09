@@ -60,14 +60,16 @@ hagi install --chat
 
 | カテゴリ | 対象 |
 |---------|------|
-| `instructions` | `instructions/` + CLAUDE.mdマネージドセクション更新 |
+| `instructions` | `instructions/` + CLAUDE.md更新(プロジェクトセクション保持) |
 | `skills` | `skills/` |
 | `hooks` | `hooks/` |
 | `config` | `mcp.json`, `settings.local.json` |
-| `docs` | `CLAUDE.md`, `TODO.md` |
+| `docs` | CLAUDE.md更新(プロジェクトセクション保持), `TODO.md` |
 | `designs` | `designs/` |
 
 `--only`使用時はテンプレートコピーのみ実行し、git初期化・hooks設置等のセットアップステップはスキップされる。`--global`/`--chat`との併用不可。
+
+`instructions`または`docs`指定時、CLAUDE.mdはテンプレートから再生成されるが、`<!-- hagi:project:start/end -->`マーカーで囲まれたプロジェクト固有セクションは保持される。
 
 ```bash
 # instructionsのみ更新
@@ -94,11 +96,16 @@ hagi install --only instructions --skip instructions/simplicity.md
 hagi install --skip CLAUDE.md --skip instructions
 ```
 
-### CLAUDE.mdマネージドセクション
+### CLAUDE.mdの更新方式
 
-`--only instructions`実行時、CLAUDE.md内の`<!-- hagi:instructions:start/end -->`マーカー間を自動更新する。テンプレートに存在する全instructionファイルへの`@instructions/`参照が最新の状態に置換される。
+CLAUDE.mdは2種類のマーカーで管理される:
 
-マーカーがない場合は警告を表示し、CLAUDE.md自体が存在しない場合はinstructionファイルのコピーのみ実行する。
+| マーカー | 用途 |
+|---------|------|
+| `<!-- hagi:instructions:start/end -->` | instructionファイルへの`@instructions/`参照(テンプレートから自動生成) |
+| `<!-- hagi:project:start/end -->` | プロジェクト固有の記述(ユーザーが編集、更新時も保持) |
+
+`hagi install`実行時、CLAUDE.mdはテンプレートから再生成されるが、プロジェクトセクション内の内容はそのまま保持される。CLAUDE.md自体が存在しない場合はテンプレートから新規作成する。プロジェクトセクションのマーカーがない場合は警告を表示しスキップする。
 
 ---
 

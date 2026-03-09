@@ -88,10 +88,10 @@ cd ~/.chat && claude
 | `mcp.json` | MCP設定 |
 | `settings.local.json` | パーミッション、auto memory無効化 |
 
-カスタマイズ後に特定カテゴリだけ更新する場合は`--only`で選択できる。
+カスタマイズ後に特定カテゴリだけ更新する場合は`--only`で選択できる。CLAUDE.mdはプロジェクト固有セクション(`<!-- hagi:project:start/end -->`)を保持したまま更新される。
 
 ```bash
-# instructionsテンプレートのみ更新(CLAUDE.mdの参照も自動更新)
+# instructionsテンプレートのみ更新(CLAUDE.mdも自動更新、プロジェクトセクション保持)
 hagi install --only instructions
 
 # skills + instructionsを更新

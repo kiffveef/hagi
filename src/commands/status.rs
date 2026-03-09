@@ -3,6 +3,7 @@ use colored::*;
 use std::collections::{HashMap, HashSet};
 use std::env;
 
+use crate::templates;
 use crate::utils;
 
 /// Show installation status
@@ -72,7 +73,7 @@ fn check_project_configuration() -> Result<()> {
 
     // Check key template files
     let files = [
-        ("CLAUDE.md", claude_dir.join("CLAUDE.md")),
+        (templates::CLAUDE_MD, claude_dir.join(templates::CLAUDE_MD)),
         ("mcp.json", claude_dir.join("mcp.json")),
         ("settings.local.json", claude_dir.join("settings.local.json")),
     ];

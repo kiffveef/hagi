@@ -52,6 +52,27 @@ pub fn parse_categories(names: &[String]) -> Result<Vec<Category>> {
 }
 
 // ============================================================================
+// CLAUDE.md Install Helper
+// ============================================================================
+
+/// Build a filter that skips CLAUDE.md from template copy (handled separately by update_claude_md)
+fn skip_claude_md_filter(filter: &InstallFilter, needs_separate_update: bool) -> InstallFilter {
+    if !needs_separate_update {
+        return filter.clone();
+    }
+    let mut extended_skip = filter.skip.clone();
+    extended_skip.push(templates::CLAUDE_MD.to_string());
+    templates::InstallFilter::new(filter.only.clone(), extended_skip)
+}
+
+/// Install CLAUDE.md via smart update (preserve project section)
+fn install_claude_md(claude_dir: &Path, dry_run: bool) -> Result<()> {
+    let claude_md = claude_dir.join(templates::CLAUDE_MD);
+    templates::update_claude_md(&claude_md, dry_run)?;
+    Ok(())
+}
+
+// ============================================================================
 // Global Install
 // ============================================================================
 
@@ -124,21 +145,14 @@ pub fn install_project(dry_run: bool, filter: &InstallFilter) -> Result<()> {
         // --only mode: only copy filtered templates
         ensure_directory(&claude_dir, dry_run)?;
 
-        // Always skip CLAUDE.md from template copy (handled separately by update_claude_md)
-        let claude_md = claude_dir.join("CLAUDE.md");
-        let filter = if filter.includes_category(Category::Docs) || filter.includes_category(Category::Instructions) {
-            let mut extended_skip = filter.skip.clone();
-            extended_skip.push("CLAUDE.md".to_string());
-            templates::InstallFilter::new(filter.only.clone(), extended_skip)
-        } else {
-            filter.clone()
-        };
+        let needs_claude_md = filter.includes_category(Category::Docs)
+            || filter.includes_category(Category::Instructions);
+        let copy_filter = skip_claude_md_filter(filter, needs_claude_md);
 
-        templates::copy_all_templates_filtered(&claude_dir, dry_run, &filter)?;
+        templates::copy_all_templates_filtered(&claude_dir, dry_run, &copy_filter)?;
 
-        // Update CLAUDE.md: replace template parts, preserve project section
-        if filter.includes_category(Category::Docs) || filter.includes_category(Category::Instructions) {
-            templates::update_claude_md(&claude_md, dry_run)?;
+        if needs_claude_md {
+            install_claude_md(&claude_dir, dry_run)?;
         }
 
         print_dry_run_footer(dry_run);
@@ -159,22 +173,13 @@ pub fn install_project(dry_run: bool, filter: &InstallFilter) -> Result<()> {
 
         migrate_commands_to_skills(&claude_dir, dry_run)?;
 
-        // Skip CLAUDE.md from template copy (handled by update_claude_md)
-        let claude_md = claude_dir.join("CLAUDE.md");
-        let skip_claude_md = !filter.skip.iter().any(|s| s == "CLAUDE.md");
-        let full_filter = if skip_claude_md {
-            let mut extended_skip = filter.skip.clone();
-            extended_skip.push("CLAUDE.md".to_string());
-            templates::InstallFilter::new(filter.only.clone(), extended_skip)
-        } else {
-            filter.clone()
-        };
+        let needs_claude_md = !filter.skip.iter().any(|s| s == templates::CLAUDE_MD);
+        let copy_filter = skip_claude_md_filter(filter, needs_claude_md);
 
-        templates::copy_all_templates_filtered(&claude_dir, dry_run, &full_filter)?;
+        templates::copy_all_templates_filtered(&claude_dir, dry_run, &copy_filter)?;
 
-        // Update CLAUDE.md: preserve project section, replace everything else
-        if skip_claude_md {
-            templates::update_claude_md(&claude_md, dry_run)?;
+        if needs_claude_md {
+            install_claude_md(&claude_dir, dry_run)?;
         }
 
         create_mcp_symlink(&project_dir, dry_run)?;
