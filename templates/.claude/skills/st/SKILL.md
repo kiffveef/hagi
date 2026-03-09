@@ -11,13 +11,12 @@ Use Claude's built-in thinking to break down complex problems systematically. In
 ## Usage
 
 ```
-/st <problem> [--save] [--fresh]
+/st <problem> [--fresh]
 ```
 
 ## Arguments
 
 - `<problem>`: Problem or task to analyze (required)
-- `--save`: Save thinking pattern to memory after completion
 - `--fresh`: Skip memory check, start fresh analysis
 
 ## Process
@@ -28,7 +27,7 @@ Use Claude's built-in thinking to break down complex problems systematically. In
 3. **Plan** - Determine sequence of actions
 4. **Execute** - Work through each step
 5. **Verify** - Check results
-6. **Save** - Optionally save pattern to memory
+6. **Save** - Save pattern to memory
 
 ## Step 0: Pattern Check (Automatic)
 
@@ -36,7 +35,7 @@ Use Claude's built-in thinking to break down complex problems systematically. In
 
 **Instructions:**
 
-1. **IF memento is available AND `--fresh` not provided:**
+1. **IF memory MCP is available AND `--fresh` not provided:**
    - Use `search_nodes` with the problem as query
    - Filter by entityType: `thinking_pattern`
    - Limit: top 3 results
@@ -60,7 +59,7 @@ Use Claude's built-in thinking to break down complex problems systematically. In
    - Display: "No similar patterns found. Starting fresh analysis..."
    - Continue to Step 1
 
-4. **IF memento not available:**
+4. **IF memory MCP not available:**
    - Skip memory check silently
    - Continue to Step 1
 
@@ -82,15 +81,11 @@ Use Claude's built-in thinking to break down complex problems systematically. In
 **Design documentation needed**:
 - Suggest `/design` for capturing design decisions
 
-## Step 6: Save to Memory (--save only)
+## Step 6: Save to Memory
 
 **Save thinking pattern for future reuse.**
 
-**Trigger:** `--save` flag provided
-
-**IF `--save` not provided:** Skip this step.
-
-**Entity Format (Memento):**
+**Entity Format:**
 
 ```json
 {
@@ -133,7 +128,7 @@ Next time: `/st <similar problem>` will find this automatically.
 ```
 /st "How to implement authentication for this API"
 /st "Debug failing test in user module" --fresh
-/st "Design database schema for multi-tenant app" --save
+/st "Design database schema for multi-tenant app"
 ```
 
 ## Output Format
@@ -160,12 +155,11 @@ Keep output structured and actionable:
 <Outcome and verification>
 
 ---
-Pattern saved: No | Yes (for future: `/st <similar>`)
+Pattern saved to memory (for future: `/st <similar>`)
 ```
 
 ## Notes
 
 - Memory integration reduces redundant analysis for similar problems
 - Use `--fresh` when you want to approach a problem differently
-- Use `--save` for patterns worth reusing across projects
 - For formal design documentation, use `/design` skill

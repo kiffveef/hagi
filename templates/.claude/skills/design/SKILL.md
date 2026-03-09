@@ -11,19 +11,18 @@ Create and maintain design documents in `.claude/designs/` to preserve design in
 ## Usage
 
 ```
-/design <topic> [--memory]
+/design <topic>
 ```
 
 ## Arguments
 
 - `<topic>`: Design topic or feature name (required)
-- `--memory`: Also save to memory for cross-project reference
 
 ## Examples
 
 ```
 /design "authentication flow"
-/design "error handling strategy" --memory
+/design "error handling strategy"
 ```
 
 ## Workflow
@@ -62,8 +61,9 @@ Create and maintain design documents in `.claude/designs/` to preserve design in
    - Use AskUserQuestion for ambiguous requirements
    - Confirm key decisions before documenting
 
-3. **If memory is available, check for related patterns:**
-   - Search memory for similar designs from other projects
+3. **If memory MCP is available, check for related patterns:**
+   - Use `search_nodes` with the topic as query
+   - Filter by entityType: `design_decision`
    - Display relevant findings if any
 
 ### Step 3: Create/Update Design Document
@@ -132,13 +132,13 @@ Create and maintain design documents in `.claude/designs/` to preserve design in
 2. **Write document** using the template above
 3. **Display confirmation:** "Design saved to .claude/designs/<filename>"
 
-### Step 4: Memory Storage (Optional)
+### Step 4: Memory Storage
 
-**IF `--memory` flag provided, save to memory for cross-project access.**
+**Save to memory for cross-project access.**
 
 **Instructions:**
 
-1. **Check if memento is available**
+1. **Check if memory MCP is available**
 2. **IF available, save with:**
 
 ```json
@@ -180,8 +180,6 @@ Next steps:
 1. Review and refine the design
 2. Get approval if needed
 3. Start implementation
-
-Tip: Use `--memory` to save for cross-project reference.
 ```
 
 ## When to Use This Skill
@@ -207,6 +205,6 @@ Tip: Use `--memory` to save for cross-project reference.
 ## Notes
 
 - Design documents are stored in `.claude/designs/` (git-trackable)
-- Use `--memory` for patterns you want to reuse across projects
+- Design decisions are automatically saved to memory for cross-project reference
 - Keep designs concise but complete enough to understand intent later
 - Update status as design progresses: Draft → Approved → Implemented

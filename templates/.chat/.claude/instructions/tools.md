@@ -54,9 +54,9 @@
 ## Memory
 
 **Memory MCP:**
-- Auto conversation memory
-- Reference past conversations
-- Usually no explicit ops needed
+- Proactively record learnings/discoveries with `create_entities`
+- Search past knowledge with `search_nodes` before related work
+- Record: patterns, config, decisions, preferences, debug insights
 
 ## File Operations (Temporary)
 
