@@ -347,12 +347,13 @@ fn build_template_claude_md() -> Result<String> {
     }
 }
 
-/// Extract project section from existing CLAUDE.md
-fn extract_project_section(content: &str) -> Option<&str> {
+/// Extract project section with byte range from CLAUDE.md
+fn extract_project_section(content: &str) -> Option<(usize, usize, &str)> {
     let start = content.find(PROJECT_START)?;
     let end = content.find(PROJECT_END)?;
     if start < end {
-        Some(&content[start..end + PROJECT_END.len()])
+        let end_pos = end + PROJECT_END.len();
+        Some((start, end_pos, &content[start..end_pos]))
     } else {
         None
     }
@@ -380,7 +381,7 @@ pub fn update_claude_md(claude_md_path: &Path, dry_run: bool) -> Result<bool> {
 
     // Extract project section from existing file
     let project_section = match extract_project_section(&existing) {
-        Some(section) => section.to_string(),
+        Some((_, _, section)) => section.to_string(),
         None => {
             println!(
                 "{} CLAUDE.md has no project section markers. Skipping update.",
@@ -392,7 +393,9 @@ pub fn update_claude_md(claude_md_path: &Path, dry_run: bool) -> Result<bool> {
 
     // Replace project section placeholder in template with existing project content
     let new_content = match extract_project_section(&template) {
-        Some(template_project) => template.replace(template_project, &project_section),
+        Some((start, end, _)) => {
+            format!("{}{}{}", &template[..start], project_section, &template[end..])
+        }
         None => return Ok(false),
     };
 

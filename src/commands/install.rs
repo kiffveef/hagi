@@ -159,7 +159,23 @@ pub fn install_project(dry_run: bool, filter: &InstallFilter) -> Result<()> {
 
         migrate_commands_to_skills(&claude_dir, dry_run)?;
 
-        templates::copy_all_templates_filtered(&claude_dir, dry_run, filter)?;
+        // Skip CLAUDE.md from template copy (handled by update_claude_md)
+        let claude_md = claude_dir.join("CLAUDE.md");
+        let skip_claude_md = !filter.skip.iter().any(|s| s == "CLAUDE.md");
+        let full_filter = if skip_claude_md {
+            let mut extended_skip = filter.skip.clone();
+            extended_skip.push("CLAUDE.md".to_string());
+            templates::InstallFilter::new(filter.only.clone(), extended_skip)
+        } else {
+            filter.clone()
+        };
+
+        templates::copy_all_templates_filtered(&claude_dir, dry_run, &full_filter)?;
+
+        // Update CLAUDE.md: preserve project section, replace everything else
+        if skip_claude_md {
+            templates::update_claude_md(&claude_md, dry_run)?;
+        }
 
         create_mcp_symlink(&project_dir, dry_run)?;
 
