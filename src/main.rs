@@ -31,11 +31,11 @@ enum Commands {
         dry_run: bool,
 
         /// Skip specific files/directories or special values: "git" (skip git init)
-        #[arg(long = "skip", value_name = "PATH")]
+        #[arg(long = "skip", value_name = "PATH", num_args = 1..)]
         skip: Vec<String>,
 
         /// Install only specific categories (instructions, skills, hooks, config, docs, designs)
-        #[arg(long = "only", value_name = "CATEGORY")]
+        #[arg(long = "only", value_name = "CATEGORY", num_args = 1..)]
         only: Vec<String>,
     },
 
