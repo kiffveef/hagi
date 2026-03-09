@@ -2,7 +2,7 @@
 
 ## Principles
 - **Clarity over brevity**: Readable code beats short code
-- **Minimal scope**: Only implement what was explicitly requested
+- **Minimal scope**: Only implement what was explicitly requested (applies to code and output, not investigation)
 
 ## Prohibited Patterns
 - Nested ternary operators
