@@ -289,14 +289,16 @@ fn should_skip(path: &Path, skip_paths: &[String]) -> bool {
 // Managed Section (CLAUDE.md @instructions/ references)
 // ============================================================================
 
-const MANAGED_START: &str = "<!-- hagi:instructions:start -->";
-const MANAGED_END: &str = "<!-- hagi:instructions:end -->";
+const INSTRUCTIONS_START: &str = "<!-- hagi:instructions:start -->";
+const INSTRUCTIONS_END: &str = "<!-- hagi:instructions:end -->";
+const PROJECT_START: &str = "<!-- hagi:project:start -->";
+const PROJECT_END: &str = "<!-- hagi:project:end -->";
 
 // general.md sets the overall tone and must be read first by Claude
 const PRIORITY_INSTRUCTION: &str = "general.md";
 
-/// Build the managed section content from current instruction templates
-fn build_managed_instructions_content() -> String {
+/// Build the instructions section content from current instruction templates
+fn build_instructions_content() -> String {
     let mut instruction_files: Vec<String> = Vec::new();
 
     if let Some(dir) = TEMPLATES.get_dir("instructions") {
@@ -322,48 +324,85 @@ fn build_managed_instructions_content() -> String {
 
     format!(
         "{}\n{}\n{}",
-        MANAGED_START,
+        INSTRUCTIONS_START,
         entries.join("\n\n"),
-        MANAGED_END,
+        INSTRUCTIONS_END,
     )
 }
 
-/// Update the managed instructions section in an existing CLAUDE.md
+/// Build template CLAUDE.md with dynamic instructions section
+fn build_template_claude_md() -> Result<String> {
+    let template = get_template("CLAUDE.md")?;
+
+    let start_idx = template.find(INSTRUCTIONS_START);
+    let end_idx = template.find(INSTRUCTIONS_END);
+
+    match (start_idx, end_idx) {
+        (Some(s), Some(e)) if s < e => {
+            let end_of_marker = e + INSTRUCTIONS_END.len();
+            let instructions = build_instructions_content();
+            Ok(format!("{}{}{}", &template[..s], instructions, &template[end_of_marker..]))
+        }
+        _ => Ok(template.to_string()),
+    }
+}
+
+/// Extract project section from existing CLAUDE.md
+fn extract_project_section(content: &str) -> Option<&str> {
+    let start = content.find(PROJECT_START)?;
+    let end = content.find(PROJECT_END)?;
+    if start < end {
+        Some(&content[start..end + PROJECT_END.len()])
+    } else {
+        None
+    }
+}
+
+/// Update CLAUDE.md: preserve project section, replace everything else from template
 ///
-/// Returns true if the section was found and updated, false if markers not found.
-pub fn update_managed_instructions(claude_md_path: &Path, dry_run: bool) -> Result<bool> {
+/// Returns true if updated, false if no markers found.
+pub fn update_claude_md(claude_md_path: &Path, dry_run: bool) -> Result<bool> {
+    let template = build_template_claude_md()?;
+
     if !claude_md_path.exists() {
-        return Ok(false);
+        if dry_run {
+            println!("{} {}", "Would create:".yellow(), claude_md_path.display());
+        } else {
+            fs::write(claude_md_path, &template)
+                .with_context(|| format!("Failed to write {}", claude_md_path.display()))?;
+            println!("{} {}", "Created:".green(), claude_md_path.display());
+        }
+        return Ok(true);
     }
 
-    let content = fs::read_to_string(claude_md_path)
+    let existing = fs::read_to_string(claude_md_path)
         .with_context(|| format!("Failed to read {}", claude_md_path.display()))?;
 
-    let start_idx = content.find(MANAGED_START);
-    let end_idx = content.find(MANAGED_END);
-
-    let (start, end) = match (start_idx, end_idx) {
-        (Some(s), Some(e)) if s < e => (s, e),
-        _ => {
+    // Extract project section from existing file
+    let project_section = match extract_project_section(&existing) {
+        Some(section) => section.to_string(),
+        None => {
             println!(
-                "{} CLAUDE.md has no managed section markers. Skipping @instructions/ update.",
+                "{} CLAUDE.md has no project section markers. Skipping update.",
                 "⚠".yellow()
             );
             return Ok(false);
         }
     };
 
-    let new_section = build_managed_instructions_content();
-    let end_of_marker = end + MANAGED_END.len();
-    let new_content = format!("{}{}{}", &content[..start], new_section, &content[end_of_marker..]);
+    // Replace project section placeholder in template with existing project content
+    let new_content = match extract_project_section(&template) {
+        Some(template_project) => template.replace(template_project, &project_section),
+        None => return Ok(false),
+    };
 
-    if content == new_content {
-        println!("{} CLAUDE.md managed section already up to date", "✓".green());
+    if existing == new_content {
+        println!("{} CLAUDE.md already up to date", "✓".green());
         return Ok(true);
     }
 
     if dry_run {
-        println!("{} CLAUDE.md managed @instructions/ section", "Would update:".yellow());
+        println!("{} CLAUDE.md (preserving project section)", "Would update:".yellow());
         return Ok(true);
     }
 
@@ -373,7 +412,7 @@ pub fn update_managed_instructions(claude_md_path: &Path, dry_run: bool) -> Resu
     fs::write(claude_md_path, new_content)
         .with_context(|| format!("Failed to write {}", claude_md_path.display()))?;
 
-    println!("{} CLAUDE.md managed @instructions/ section", "Updated:".green());
+    println!("{} CLAUDE.md (project section preserved)", "Updated:".green());
     Ok(true)
 }
 
