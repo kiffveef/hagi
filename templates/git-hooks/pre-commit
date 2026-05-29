@@ -20,6 +20,11 @@ if [ -n "$CLAUDE_FILES" ]; then
 fi
 
 # Check if committing to protected branches
+# Skip branch protection for initial commit (no HEAD yet)
+if ! git rev-parse --verify HEAD &>/dev/null; then
+    exit 0
+fi
+
 # To add more protected branches, add them to the condition below:
 # if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ] || [ "$BRANCH" = "custom" ]; then
 BRANCH=$(git branch --show-current)
