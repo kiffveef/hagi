@@ -24,13 +24,13 @@ EOF
   exit 0
 fi
 
-# Block git add . / git add -A / git add --all (if .claude/ exists)
+# Block git add . / git add -A / git add --all only if .claude/ is not gitignored
 if [[ "$command" =~ git[[:space:]]+add[[:space:]]+(\.|-A|--all)[[:space:]]*$ ]]; then
-  if [ -d ".claude" ]; then
+  if [ -d ".claude" ] && ! git check-ignore -q .claude/ 2>/dev/null; then
     cat << 'EOF'
 {
   "decision": "block",
-  "reason": "git add . would include .claude/ which is outside git workflow.\n\nUse specific paths instead: git add src/ or git add <file>\n\n📖 See: .claude/instructions/git-workflow.md"
+  "reason": ".claude/ is not gitignored. git add . would include it.\n\nAdd /.claude/ to .gitignore first, or run: hagi install"
 }
 EOF
     exit 0
