@@ -86,7 +86,7 @@ cd ~/.chat && claude
 | `instructions/` | Git操作、タスク管理、推奨ツール等のルール |
 | `skills/` | スラッシュコマンド |
 | `mcp.json` | MCP設定 |
-| `settings.local.json` | パーミッション、auto memory無効化 |
+| `settings.local.json` | パーミッション、language/thinking設定、auto memory無効化 |
 
 カスタマイズ後に特定カテゴリだけ更新する場合は`--only`で選択できる。CLAUDE.mdはプロジェクト固有セクション(`<!-- hagi:project:start/end -->`)を保持したまま更新される。
 
@@ -113,8 +113,8 @@ hagi install --skip CLAUDE.md --skip instructions
 
 `settings.local.json`で危険コマンドを制限している。
 
-**拒否**: `rm -f`, `sudo`, `chmod 777`, `git push --force`, `git reset`
+**拒否**: `rm`, `sudo`, `chmod 777`, `git push`(全体), `git reset --hard`, `cat`, `grep`, `find`, `wget`, `.env`書き込み、SSH鍵読み込み
 
-**許可**: `cargo`, `git add/commit/status/diff/log/branch/checkout/merge`, `rg/fd/bat`, `npx/uv`
+**許可**: `cargo`, `git add/commit/status/diff/log/branch/checkout/merge/stash/fetch/tag`, `rg/fd/bat`, `npx/uv`, `curl`, `ls/mkdir/cp/mv`
 
 詳細は`.claude/settings.local.json`を参照。
