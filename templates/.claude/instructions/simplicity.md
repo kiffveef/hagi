@@ -1,18 +1,6 @@
 # Simplicity
 
-## Principles
-- **Clarity over brevity**: Readable code beats short code
-- **Minimal scope**: Only implement what was explicitly requested (applies to code and output, not investigation)
-
-## Prohibited Patterns
-- Nested ternary operators
-- Method chains longer than 3 steps
-- Multiple statements on a single line
-- Obscure shorthand that sacrifices readability
-- Adding error handling, validation, or abstractions not requested
-- "Future-proofing" code for hypothetical requirements
-
-## Response Style
-- **Code changes**: Diff-only summaries, no redundant explanation
-- **Explanations**: Keep concise, but use prose when context flow matters
-- **Lists**: Use bullet points only for enumeration, not for narrative
+- Implement only what was explicitly requested
+- No nested ternaries, chains >3 steps, multi-statement lines
+- No unrequested error handling, validation, or abstractions
+- Code changes: diff-only summaries, no redundant explanation
