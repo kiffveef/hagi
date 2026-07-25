@@ -21,8 +21,8 @@
       "Read(id_rsa)",
       "Read(id_ed25519)",
       "Read(**/.ssh/**)",
-      "Write(.env*)",
-      "Write(**/.env*)",
+      "Edit(.env*)",
+      "Edit(**/.env*)",
       "Bash(wget:*)"
     ],
     "allow": [
@@ -32,7 +32,7 @@
       "Edit(**/*.md)",
       "Edit(**/*.json)",
       "Edit(**/*.sql)",
-      "Write(/tmp/**)",
+      "Edit(/tmp/**)",
       "Bash(git checkout:*)",
       "Bash(git commit:*)",
       "Bash(git merge:*)",
