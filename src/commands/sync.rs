@@ -30,7 +30,7 @@ fn git_in_claude_output(args: &[&str]) -> Result<Output> {
 }
 
 /// Initialize .claude sync with a private Git repository
-pub fn sync_init(remote_url: Option<&str>) -> Result<()> {
+pub fn sync_init(remote_url: Option<&str>, message: Option<&str>) -> Result<()> {
     let claude_dir = Path::new(".claude");
 
     // If .claude/.git exists, already initialized
@@ -80,7 +80,7 @@ pub fn sync_init(remote_url: Option<&str>) -> Result<()> {
     }
 
     // Create new repository
-    create_private_repo_interactive().and_then(|remote| init_claude_git_repo(&remote))
+    create_private_repo_interactive().and_then(|remote| init_claude_git_repo(&remote, message))
 }
 
 /// Check if a repository exists on GitHub
@@ -356,7 +356,7 @@ fn create_private_repo_interactive() -> Result<String> {
 }
 
 /// Initialize .claude as Git repository and push to remote
-fn init_claude_git_repo(remote_url: &str) -> Result<()> {
+fn init_claude_git_repo(remote_url: &str, message: Option<&str>) -> Result<()> {
     let claude_dir = Path::new(".claude");
 
     if claude_dir.join(".git").exists() {
@@ -392,7 +392,8 @@ fn init_claude_git_repo(remote_url: &str) -> Result<()> {
 
     stage_claude_files()?;
 
-    let status = git_in_claude(&["commit", "-m", "🌱 first: Initial .claude config"])?;
+    let commit_msg = message.unwrap_or("🌱 first: Initial .claude config");
+    let status = git_in_claude(&["commit", "-m", commit_msg])?;
     if !status.success() {
         bail!("git commit failed");
     }

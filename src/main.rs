@@ -128,6 +128,9 @@ enum SyncCommands {
         /// Remote repository URL (e.g., git@github.com:user/repo-claude.git)
         /// If not provided, will attempt to create repository using gh CLI
         remote_url: Option<String>,
+        /// Commit message for the initial commit
+        #[arg(short, long)]
+        message: Option<String>,
     },
     /// Pull latest .claude changes from remote
     Pull,
@@ -201,8 +204,8 @@ fn main() -> Result<()> {
             }
         },
         Commands::Sync { command } => match command {
-            SyncCommands::Init { remote_url } => {
-                commands::sync::sync_init(remote_url.as_deref())?;
+            SyncCommands::Init { remote_url, message } => {
+                commands::sync::sync_init(remote_url.as_deref(), message.as_deref())?;
             }
             SyncCommands::Pull => {
                 commands::sync::sync_pull()?;
