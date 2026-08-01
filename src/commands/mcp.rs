@@ -362,10 +362,8 @@ fn disable_single(name: &str, global: bool) -> Result<bool> {
 /// Get description for a known MCP server
 fn get_server_description(name: &str) -> &'static str {
     match name {
-        "git" => "Git operations and repository management",
         "context7" => "Library documentation and code examples",
         "serena" => "Code analysis and semantic search (token-optimized)",
-        "one-search" => "Web search (DuckDuckGo, SearXNG)",
         "memory" => "Long-term memory (SQLite-vec, local)",
         _ => "Custom MCP server",
     }

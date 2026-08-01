@@ -1,22 +1,20 @@
 # Memory
 
-Record learnings proactively when memory MCP is available.
+Built-in auto memory is enabled. Claude records learnings to MEMORY.md automatically.
 
-## When to Record
-After solving problems, discovering patterns, making decisions, learning preferences.
+## Writing Rules
 
-## entityType
+- **Write memory entries in English**, even when the session is in Japanese
+- Keep MEMORY.md concise: one line per entry
+- Move details into topic files (debugging.md, patterns.md, ...)
 
-| Type | Use |
-|------|-----|
-| `thinking_pattern` | Problem-solving approaches |
-| `code_pattern` | Implementation patterns |
-| `design_decision` | Architecture decisions |
-| `debug_insight` | Debugging insights |
-| `user_preference` | User preferences |
-| `project_config` | Project settings/commands |
+## What to Record
 
-## Search
-Search memory FIRST: memory → codebase → Context7 → WebSearch.
-Always search `project_config` at session start.
-During skill execution (`/st`, `/serena`, `/design`): follow the skill's search instructions instead.
+After solving problems, discovering patterns, making decisions, learning preferences:
+build commands, debugging insights, design decisions, user preferences, project conventions.
+
+## Memento MCP (optional)
+
+Disabled by default. Enable with `hagi mcp enable memory` only if
+cross-project semantic search is needed. When enabled, search it before
+codebase / Context7 / WebSearch.

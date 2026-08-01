@@ -47,15 +47,14 @@
 
 ## Web Search & Research
 
-**One-search MCP:** DuckDuckGo web search
+**WebSearch/WebFetch:** Web search (built-in)
 **Context7 MCP:** Library docs
-**WebSearch/WebFetch:** Backup
 
 ## Memory
 
-**Memory MCP:**
-- Proactively record learnings/discoveries with `create_entities`
-- Search past knowledge with `search_nodes` before related work
+Built-in auto memory records learnings automatically.
+
+- Write memory entries in English, even when chatting in Japanese
 - Record: patterns, config, decisions, preferences, debug insights
 
 ## File Operations (Temporary)
@@ -74,4 +73,4 @@ Chat mode: temp files only
 | File display | `cat` | `bat -p` |
 | File search | `find` | `fd` |
 | File ops | Bash | Read/Edit/Write |
-| Web search | curl | WebSearch/One-search |
+| Web search | curl | WebSearch |

@@ -419,7 +419,7 @@ fn check_dependencies() -> Vec<String> {
         warnings.push(format!(
             "{}\n  {}\n\n  {}:\n    curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -\n    sudo apt-get install -y nodejs",
             "Node.js not found".red(),
-            "Required for: context7, one-search, memory",
+            "Required for: context7, memory",
             "Install"
         ));
     }
@@ -429,7 +429,7 @@ fn check_dependencies() -> Vec<String> {
         warnings.push(format!(
             "{}\n  {}\n\n  {}:\n    curl -LsSf https://astral.sh/uv/install.sh | sh",
             "uv not found".red(),
-            "Required for: memento MCP",
+            "Required for: serena MCP",
             "Install"
         ));
     }
@@ -439,7 +439,7 @@ fn check_dependencies() -> Vec<String> {
         warnings.push(format!(
             "{}\n  {}\n\n  {}:\n    sudo apt-get update\n    sudo apt-get install -y python3 python3-pip",
             "Python3 not found".red(),
-            "Required for: memento MCP setup",
+            "Required for: serena MCP",
             "Install"
         ));
     }
@@ -449,7 +449,7 @@ fn check_dependencies() -> Vec<String> {
         warnings.push(format!(
             "{}\n  {}\n\n  {}:\n    sudo apt-get install -y git",
             "Git not found".red(),
-            "Required for: memento MCP",
+            "Required for: hagi sync, serena MCP",
             "Install"
         ));
     }

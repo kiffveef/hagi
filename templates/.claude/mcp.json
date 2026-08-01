@@ -10,18 +10,8 @@
         "CONTEXT7_API_KEY": ""
       }
     },
-    "one-search": {
-      "disabled": true,
-      "command": "npx",
-      "args": [
-        "-y",
-        "one-search-mcp"
-      ],
-      "env": {
-        "SEARCH_PROVIDER": "duckduckgo"
-      }
-    },
     "memory": {
+      "disabled": true,
       "command": "npx",
       "args": [
         "-y",
@@ -30,15 +20,6 @@
       "env": {
         "MEMORY_DB_PATH": "${XDG_DATA_HOME:-$HOME/.local/share}/claude-memory/memory.db"
       }
-    },
-    "git": {
-      "command": "uvx",
-      "args": [
-        "mcp-server-git",
-        "--repository",
-        "."
-      ],
-      "disabled": true
     },
     "serena": {
       "command": "uvx",
