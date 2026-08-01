@@ -123,6 +123,22 @@ fn clone_and_replace_claude(remote_url: &str) -> Result<()> {
         bail!("git clone failed");
     }
 
+    // An empty remote clones "successfully" but has no commits (unborn HEAD).
+    // Deleting the backup here would destroy the local config, so restore it
+    // and keep the cloned .git for the first push.
+    if !claude_rev_exists("HEAD")? {
+        std::fs::rename(claude_dir.join(".git"), backup_dir.join(".git"))
+            .context("Failed to move cloned .git into backup")?;
+        std::fs::remove_dir_all(claude_dir).context("Failed to remove empty clone")?;
+        std::fs::rename(backup_dir, claude_dir).context("Failed to restore .claude backup")?;
+
+        println!("{}", "⚠ Remote repository is empty. Kept local .claude files.".yellow());
+        println!();
+        println!("Run {} to make the first push.", "hagi sync push".yellow());
+        println!();
+        return Ok(());
+    }
+
     // Remove backup on success
     std::fs::remove_dir_all(backup_dir).ok();
 
@@ -142,7 +158,8 @@ pub fn sync_pull() -> Result<()> {
 
     println!("{}", "Pulling latest .claude changes...".green());
 
-    let status = git_in_claude(&["pull", "origin", "main", "--rebase"])?;
+    let branch = current_claude_branch()?;
+    let status = git_in_claude(&["pull", "origin", &branch, "--rebase"])?;
     if !status.success() {
         bail!("git pull failed");
     }
@@ -170,40 +187,74 @@ fn ensure_claude_git_repo() -> Result<()> {
     Ok(())
 }
 
+/// Stage all files, force-adding ones the parent repo's .gitignore may exclude
+fn stage_claude_files() -> Result<()> {
+    let status = git_in_claude(&["add", "."])?;
+    if !status.success() {
+        bail!("git add failed");
+    }
+
+    // Add individually: one missing pathspec aborts a combined add entirely
+    let _ = git_in_claude_output(&["add", "--force", "--", templates::CLAUDE_MD]);
+    let _ = git_in_claude_output(&["add", "--force", "--", "TODO.md"]);
+
+    Ok(())
+}
+
+/// Resolve the current branch name of the .claude repository
+fn current_claude_branch() -> Result<String> {
+    let output = git_in_claude_output(&["symbolic-ref", "--short", "HEAD"])?;
+    if !output.status.success() {
+        bail!("Failed to resolve current branch in .claude (detached HEAD?)");
+    }
+    Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
+}
+
+/// Check whether a revision exists in the .claude repository
+fn claude_rev_exists(rev: &str) -> Result<bool> {
+    let output = git_in_claude_output(&["rev-parse", "--verify", "--quiet", rev])?;
+    Ok(output.status.success())
+}
+
 /// Push changes to remote
 pub fn sync_push(message: Option<&str>) -> Result<()> {
     ensure_claude_git_repo()?;
 
     println!("{}", "Pushing .claude changes...".green());
 
-    // First, add all files respecting local .gitignore
-    let status = git_in_claude(&["add", "."])?;
-    if !status.success() {
-        bail!("git add failed");
-    }
+    stage_claude_files()?;
 
-    // Force-add files that might be excluded by parent's .gitignore
-    // Add individually: one missing pathspec aborts a combined add entirely
-    let _ = git_in_claude_output(&["add", "--force", "--", templates::CLAUDE_MD]);
-    let _ = git_in_claude_output(&["add", "--force", "--", "TODO.md"]);
-
-    let commit_msg = message.unwrap_or("Update .claude config");
-    let commit_status = git_in_claude(&["commit", "-m", commit_msg])?;
-    if !commit_status.success() {
+    // Distinguish "nothing staged" from a real commit failure (missing user.name, hook, ...)
+    let staged = git_in_claude_output(&["status", "--porcelain"])?;
+    if staged.stdout.is_empty() {
         println!("{}", "⚠ Nothing to commit".yellow());
+    } else {
+        let commit_msg = message.unwrap_or("Update .claude config");
+        let status = git_in_claude(&["commit", "-m", commit_msg])?;
+        if !status.success() {
+            bail!("git commit failed");
+        }
     }
 
-    // origin/main is absent before the first push (e.g. cloned from an empty repo)
-    let origin_main_exists = git_in_claude_output(&["rev-parse", "--verify", "--quiet", "origin/main"])?
-        .status
-        .success();
+    // Unborn HEAD: fresh clone of an empty remote with no local files yet
+    if !claude_rev_exists("HEAD")? {
+        bail!("No commits in .claude yet. Add files and run 'hagi sync push' again.");
+    }
 
-    if origin_main_exists {
-        let output = git_in_claude_output(&["rev-list", "--count", "origin/main..HEAD"])?;
-        let ahead_count = String::from_utf8_lossy(&output.stdout)
+    let branch = current_claude_branch()?;
+    let remote_ref = format!("origin/{}", branch);
+
+    // The remote branch is absent before the first push (e.g. cloned from an empty repo)
+    if claude_rev_exists(&remote_ref)? {
+        let range = format!("{}..HEAD", remote_ref);
+        let output = git_in_claude_output(&["rev-list", "--count", &range])?;
+        if !output.status.success() {
+            bail!("git rev-list failed");
+        }
+        let ahead_count: u32 = String::from_utf8_lossy(&output.stdout)
             .trim()
-            .parse::<u32>()
-            .unwrap_or(0);
+            .parse()
+            .context("Failed to parse commit count from git rev-list")?;
 
         if ahead_count == 0 {
             println!("{}", "✅ Already up to date with remote".green());
@@ -211,17 +262,16 @@ pub fn sync_push(message: Option<&str>) -> Result<()> {
         }
 
         println!("{}", format!("Pushing {} commit(s)...", ahead_count).green());
+        let status = git_in_claude(&["push"])?;
+        if !status.success() {
+            bail!("git push failed");
+        }
     } else {
-        println!("{}", "First push: setting upstream to origin/main...".green());
-    }
-
-    let status = if origin_main_exists {
-        git_in_claude(&["push"])?
-    } else {
-        git_in_claude(&["push", "-u", "origin", "main"])?
-    };
-    if !status.success() {
-        bail!("git push failed");
+        println!("{}", format!("First push: setting upstream to {}...", remote_ref).green());
+        let status = git_in_claude(&["push", "-u", "origin", &branch])?;
+        if !status.success() {
+            bail!("git push failed");
+        }
     }
 
     println!("{}", "✅ Pushed .claude changes".green().bold());
@@ -340,16 +390,7 @@ fn init_claude_git_repo(remote_url: &str) -> Result<()> {
 
     println!("{}", format!("✅ Added remote: {}", remote_url).green());
 
-    // First, add all files respecting local .gitignore
-    let status = git_in_claude(&["add", "."])?;
-    if !status.success() {
-        bail!("git add failed");
-    }
-
-    // Force-add files that might be excluded by parent's .gitignore
-    // Add individually: one missing pathspec aborts a combined add entirely
-    let _ = git_in_claude_output(&["add", "--force", "--", templates::CLAUDE_MD]);
-    let _ = git_in_claude_output(&["add", "--force", "--", "TODO.md"]);
+    stage_claude_files()?;
 
     let status = git_in_claude(&["commit", "-m", "🌱 first: Initial .claude config"])?;
     if !status.success() {
