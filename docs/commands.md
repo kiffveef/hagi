@@ -44,7 +44,7 @@ hagi install
 hagi install --chat
 ```
 
-`~/.chat/.claude/`に軽量設定(memory)を配置する。
+`~/.chat/.claude/`に軽量設定を配置する(記憶は組み込みauto memoryを使用)。
 
 ### オプション
 

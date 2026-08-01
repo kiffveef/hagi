@@ -8,7 +8,7 @@
 
 ### /st - 構造化思考
 
-複雑な問題を段階的に分析・解決する。文脈に応じてWebSearch、Context7、Task APIを自動選択。memory MCPで過去パターンを自動検索・保存。
+複雑な問題を段階的に分析・解決する。文脈に応じてWebSearch、Context7、Task APIを自動選択。auto memoryで過去パターンを自動検索・保存。
 
 ```
 /st データベース設計を最適化する方法
@@ -18,7 +18,7 @@
 
 ### /design - 設計文書
 
-設計決定や仕様を`.claude/designs/`に文書化する。memory MCPに自動保存。
+設計決定や仕様を`.claude/designs/`に文書化する(memory MCP有効時はパターンも自動保存)。
 
 ```
 /design "authentication flow"
@@ -36,7 +36,7 @@
 
 ### /serena - コード分析
 
-serena + memory MCPでコードパターンを検索・分析する。分析結果はmemoryに自動保存。
+serenaでコードパターンを検索・分析する(memory MCP有効時は分析結果を自動保存)。
 
 ```
 /serena "error handling in async functions"
@@ -72,7 +72,7 @@ hagi install --chat
 cd ~/.chat && claude
 ```
 
-軽量MCP(memory)のみ。Web検索は組み込みWebSearchを使用。`~/.chat/.claude/CLAUDE.md`で応答スタイルをカスタマイズ可能。
+MCPはデフォルト無効。Web検索は組み込みWebSearch、記憶は組み込みauto memoryを使用。`~/.chat/.claude/CLAUDE.md`で応答スタイルをカスタマイズ可能。
 
 ---
 
@@ -86,7 +86,7 @@ cd ~/.chat && claude
 | `instructions/` | Git操作、タスク管理、推奨ツール等のルール |
 | `skills/` | スラッシュコマンド |
 | `mcp.json` | MCP設定 |
-| `settings.local.json` | パーミッション、language/thinking設定、auto memory無効化 |
+| `settings.local.json` | パーミッション、language/thinking設定、auto memory有効化 |
 
 カスタマイズ後に特定カテゴリだけ更新する場合は`--only`で選択できる。CLAUDE.mdはプロジェクト固有セクション(`<!-- hagi:project:start/end -->`)を保持したまま更新される。
 

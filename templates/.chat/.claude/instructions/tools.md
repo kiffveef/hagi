@@ -52,9 +52,9 @@
 
 ## Memory
 
-**Memory MCP:**
-- Proactively record learnings/discoveries with `create_entities`
-- Search past knowledge with `search_nodes` before related work
+Built-in auto memory records learnings automatically.
+
+- Write memory entries in English, even when chatting in Japanese
 - Record: patterns, config, decisions, preferences, debug insights
 
 ## File Operations (Temporary)

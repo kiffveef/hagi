@@ -29,10 +29,10 @@
 See @instructions/tools.md for details
 
 **Available MCPs:**
-- Memory MCP (auto conversation memory)
 - Context7 MCP (library docs)
 
 Web search: built-in WebSearch/WebFetch
+Memory: built-in auto memory
 
 ## Token Efficiency
 

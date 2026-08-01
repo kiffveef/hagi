@@ -72,5 +72,5 @@
   "respectGitignore": true,
   "alwaysThinkingEnabled": true,
   "spinnerTipsEnabled": true,
-  "autoMemoryEnabled": false
+  "autoMemoryEnabled": true
 }
