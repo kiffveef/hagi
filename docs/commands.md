@@ -210,11 +210,13 @@ hagi config edit <TYPE>
 ### init
 
 ```bash
-hagi sync init              # gh CLIで自動セットアップ
-hagi sync init <REMOTE_URL> # 手動指定
+hagi sync init [-m <MESSAGE>]              # gh CLIで自動セットアップ
+hagi sync init <REMOTE_URL> [-m <MESSAGE>] # 手動指定
 ```
 
 `gh`コマンドがある場合、`<project>-claude`リポジトリを自動作成する。ない場合はリモートURLを手動指定する。
+`-m`で初回コミットのメッセージを指定できる(省略時は`🌱 first: Initial .claude config`)。
+リモートが空の場合はcloneのみ行い、初回コミットは`hagi sync push -m <MESSAGE>`で作成する。
 
 ### pull / push
 
