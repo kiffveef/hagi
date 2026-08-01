@@ -8,7 +8,7 @@
 
 ### /st - 構造化思考
 
-複雑な問題を段階的に分析・解決する。文脈に応じてWebSearch、Context7、TodoWriteを自動選択。memory MCPで過去パターンを自動検索・保存。
+複雑な問題を段階的に分析・解決する。文脈に応じてWebSearch、Context7、Task APIを自動選択。memory MCPで過去パターンを自動検索・保存。
 
 ```
 /st データベース設計を最適化する方法
@@ -72,7 +72,7 @@ hagi install --chat
 cd ~/.chat && claude
 ```
 
-軽量MCP(memory + one-search)のみ。`~/.chat/.claude/CLAUDE.md`で応答スタイルをカスタマイズ可能。
+軽量MCP(memory)のみ。Web検索は組み込みWebSearchを使用。`~/.chat/.claude/CLAUDE.md`で応答スタイルをカスタマイズ可能。
 
 ---
 

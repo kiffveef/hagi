@@ -10,9 +10,9 @@ hagiが管理するMCPサーバーの設定・活用方法。
 |-----|------|----------|-----------|
 | context7 | 公式ドキュメント検索 | npx | ✅ 有効 |
 | memory | 長期記憶(セッション間の学習保持) | npx | ✅ 有効 |
-| one-search | Web検索(DuckDuckGo他) | npx | ❌ 無効 |
 | serena | セマンティックコード解析 | uvx | ❌ 無効 |
-| git | Git操作 | uvx | ❌ 無効 |
+
+Web検索は組み込みのWebSearch/WebFetch、Git操作はBash経由のgitコマンドを使用する(専用MCPは不要)。
 
 **前提条件:** npx系はNode.js v18以降、uvx系はuvが必要。
 
@@ -26,7 +26,7 @@ hagi install
 
 # 有効化/無効化
 hagi mcp enable serena
-hagi mcp disable git
+hagi mcp disable serena
 
 # 状態確認
 hagi mcp list
@@ -59,22 +59,6 @@ API keyなしで基本機能が使える。制限緩和にはAPI keyを設定す
 - 組み込みauto memoryの代替(`autoMemoryEnabled: false`で無効化済み)
 - `/st`, `/design`, `/serena`でも自動連携
 
-### one-search
-
-マルチエンジンWeb検索。DuckDuckGoプロバイダーが推奨(Puppeteerなし、軽量)。
-
-`.claude/mcp.json`でプロバイダーを変更可能:
-
-```json
-"one-search": {
-  "env": {
-    "SEARCH_PROVIDER": "duckduckgo"
-  }
-}
-```
-
-他のプロバイダー: `bing`(API key必要)、`searxng`(セルフホスト)、`tavily`(API key必要)
-
 ### serena
 
 セマンティックコード解析。LSP対応(Python、TypeScript/JavaScript、Rust、Go、PHP、Java、C/C++)。
@@ -86,14 +70,6 @@ API keyなしで基本機能が使える。制限緩和にはAPI keyを設定す
 **キャッシュクリーンアップ:**
 ```bash
 find .serena/ -type f -mtime +30 -delete
-```
-
-### git
-
-uvx経由のGit操作MCP。
-
-```bash
-hagi mcp enable git
 ```
 
 ---

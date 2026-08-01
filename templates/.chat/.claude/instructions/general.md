@@ -30,8 +30,9 @@ See @instructions/tools.md for details
 
 **Available MCPs:**
 - Memory MCP (auto conversation memory)
-- One-search MCP (web search via DuckDuckGo)
 - Context7 MCP (library docs)
+
+Web search: built-in WebSearch/WebFetch
 
 ## Token Efficiency
 

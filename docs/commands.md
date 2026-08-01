@@ -17,8 +17,8 @@ hagi install -g
 
 | ツール | 必要なMCP | インストール |
 |--------|-----------|-------------|
-| Node.js | context7、one-search、memory | `curl -fsSL https://deb.nodesource.com/setup_18.x \| sudo -E bash -` |
-| uv | serena、git | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
+| Node.js | context7、memory | `curl -fsSL https://deb.nodesource.com/setup_18.x \| sudo -E bash -` |
+| uv | serena | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
 | jq | .claude/ git保護 | `sudo apt install jq` |
 
 ### プロジェクトセットアップ
@@ -44,7 +44,7 @@ hagi install
 hagi install --chat
 ```
 
-`~/.chat/.claude/`に軽量設定(memory + one-search)を配置する。
+`~/.chat/.claude/`に軽量設定(memory)を配置する。
 
 ### オプション
 
@@ -169,8 +169,8 @@ hagi mcp disable <SERVER_NAME> [SERVER_NAME...]
 
 ```bash
 # 例
-hagi mcp enable serena memory git
-hagi mcp disable git one-search
+hagi mcp enable serena memory
+hagi mcp disable serena
 ```
 
 ---

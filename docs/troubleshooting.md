@@ -61,8 +61,8 @@ fd -e backup -X rm
 2. 設定ファイルを確認: `hagi config validate mcp`
 3. 依存関係を確認:
    ```bash
-   node --version  # context7, one-search, memory
-   uv --version    # serena, git
+   node --version  # context7, memory
+   uv --version    # serena
    ```
 
 ### MCPサーバーが起動しない
@@ -81,16 +81,6 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ### context7 API制限
 
 API keyなしの場合、レート制限がある。`.claude/mcp.json`にAPI keyを設定して解除。
-
-### one-search接続エラー
-
-WSL2環境ではPuppeteer依存のプロバイダーを避け、DuckDuckGoを使用する。
-
-```json
-"one-search": {
-  "env": { "SEARCH_PROVIDER": "duckduckgo" }
-}
-```
 
 ### memory MCP 起動エラー
 

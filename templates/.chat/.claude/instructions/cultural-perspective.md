@@ -92,7 +92,7 @@ Good response:
 
 Best-effort guideline:
 - AI training data is Western-centric (perfect neutrality impossible)
-- One-search MCP/Memory source limitations
+- WebSearch/Memory source limitations
 - Welcome user feedback when Eastern perspective lacking
 
 ## Note

@@ -15,8 +15,8 @@
 
 | ツール | 必要なMCP | インストール |
 |--------|-----------|-------------|
-| Node.js v18+ | context7, one-search, memory | `curl -fsSL https://deb.nodesource.com/setup_18.x \| sudo -E bash -` |
-| uv | serena, git | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
+| Node.js v18+ | context7, memory | `curl -fsSL https://deb.nodesource.com/setup_18.x \| sudo -E bash -` |
+| uv | serena | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
 
 ---
 

@@ -47,9 +47,8 @@
 
 ## Web Search & Research
 
-**One-search MCP:** DuckDuckGo web search
+**WebSearch/WebFetch:** Web search (built-in)
 **Context7 MCP:** Library docs
-**WebSearch/WebFetch:** Backup
 
 ## Memory
 
@@ -74,4 +73,4 @@ Chat mode: temp files only
 | File display | `cat` | `bat -p` |
 | File search | `find` | `fd` |
 | File ops | Bash | Read/Edit/Write |
-| Web search | curl | WebSearch/One-search |
+| Web search | curl | WebSearch |

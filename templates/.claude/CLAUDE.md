@@ -12,7 +12,7 @@
 **Before editing files:**
 1. `git branch --show-current` → If on main, create branch first
 2. Read `.claude/TODO.md` if exists
-3. Keep TodoWrite ↔ TODO.md in sync
+3. Keep Task API (TaskCreate/TaskUpdate) ↔ TODO.md in sync
 
 ---
 
