@@ -183,7 +183,9 @@ pub fn sync_push(message: Option<&str>) -> Result<()> {
     }
 
     // Force-add files that might be excluded by parent's .gitignore
-    let _ = git_in_claude(&["add", "--force", templates::CLAUDE_MD, "TODO.md"]);
+    // Add individually: one missing pathspec aborts a combined add entirely
+    let _ = git_in_claude_output(&["add", "--force", "--", templates::CLAUDE_MD]);
+    let _ = git_in_claude_output(&["add", "--force", "--", "TODO.md"]);
 
     let commit_msg = message.unwrap_or("Update .claude config");
     let commit_status = git_in_claude(&["commit", "-m", commit_msg])?;
@@ -191,20 +193,33 @@ pub fn sync_push(message: Option<&str>) -> Result<()> {
         println!("{}", "⚠ Nothing to commit".yellow());
     }
 
-    let output = git_in_claude_output(&["rev-list", "--count", "origin/main..HEAD"])?;
-    let ahead_count = String::from_utf8_lossy(&output.stdout)
-        .trim()
-        .parse::<u32>()
-        .unwrap_or(0);
+    // origin/main is absent before the first push (e.g. cloned from an empty repo)
+    let origin_main_exists = git_in_claude_output(&["rev-parse", "--verify", "--quiet", "origin/main"])?
+        .status
+        .success();
 
-    if ahead_count == 0 {
-        println!("{}", "✅ Already up to date with remote".green());
-        return Ok(());
+    if origin_main_exists {
+        let output = git_in_claude_output(&["rev-list", "--count", "origin/main..HEAD"])?;
+        let ahead_count = String::from_utf8_lossy(&output.stdout)
+            .trim()
+            .parse::<u32>()
+            .unwrap_or(0);
+
+        if ahead_count == 0 {
+            println!("{}", "✅ Already up to date with remote".green());
+            return Ok(());
+        }
+
+        println!("{}", format!("Pushing {} commit(s)...", ahead_count).green());
+    } else {
+        println!("{}", "First push: setting upstream to origin/main...".green());
     }
 
-    println!("{}", format!("Pushing {} commit(s)...", ahead_count).green());
-
-    let status = git_in_claude(&["push"])?;
+    let status = if origin_main_exists {
+        git_in_claude(&["push"])?
+    } else {
+        git_in_claude(&["push", "-u", "origin", "main"])?
+    };
     if !status.success() {
         bail!("git push failed");
     }
@@ -332,8 +347,9 @@ fn init_claude_git_repo(remote_url: &str) -> Result<()> {
     }
 
     // Force-add files that might be excluded by parent's .gitignore
-    // This ensures CLAUDE.md, TODO.md etc are tracked even if parent ignores .claude/
-    let _ = git_in_claude(&["add", "--force", templates::CLAUDE_MD, "TODO.md"]);
+    // Add individually: one missing pathspec aborts a combined add entirely
+    let _ = git_in_claude_output(&["add", "--force", "--", templates::CLAUDE_MD]);
+    let _ = git_in_claude_output(&["add", "--force", "--", "TODO.md"]);
 
     let status = git_in_claude(&["commit", "-m", "🌱 first: Initial .claude config"])?;
     if !status.success() {
