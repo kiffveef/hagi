@@ -196,7 +196,7 @@ fn stage_claude_files() -> Result<()> {
 
     // Add individually: one missing pathspec aborts a combined add entirely
     let _ = git_in_claude_output(&["add", "--force", "--", templates::CLAUDE_MD]);
-    let _ = git_in_claude_output(&["add", "--force", "--", "TODO.md"]);
+    let _ = git_in_claude_output(&["add", "--force", "--", templates::TODO_MD]);
 
     Ok(())
 }

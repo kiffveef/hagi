@@ -1,9 +1,9 @@
 # Project Guidelines
 
-**📌 About This File:**
+**About This File:**
 - Project-specific rules (overrides `~/.claude/CLAUDE.md`)
 - `instructions/` - Detailed rules via `@instructions/`
-- `TODO.md` - Task tracking for `/st`
+- `TODO.md` - Task tracking across sessions (imported below)
 
 ---
 
@@ -11,12 +11,12 @@
 
 **Before editing files:**
 1. `git branch --show-current` → If on main, create branch first
-2. Read `.claude/TODO.md` if exists
-3. Keep Task API (TaskCreate/TaskUpdate) ↔ TODO.md in sync
+2. Resume from In Progress in TODO.md if any
+3. Track progress by editing TODO.md directly
 
 ---
 
-## 📋 Current Tasks
+## Current Tasks
 
 @TODO.md
 
