@@ -61,7 +61,20 @@ API keyなしで基本機能が使える。制限緩和にはAPI keyを設定す
 
 ### serena
 
-セマンティックコード解析。LSP対応(Python、TypeScript/JavaScript、Rust、Go、PHP、Java、C/C++)。
+セマンティックコード解析。LSPベースで40以上の言語に対応。
+
+**組み込みLSPとの使い分け:**
+
+Claude Codeは組み込みLSPツール(2.0.74以降)を持ち、定義ジャンプ・参照検索・シンボル一覧はserenaと重複する。
+組み込みLSPは言語ごとの公式プラグインと言語サーバー本体が必要。
+
+| 言語 | 推奨 |
+|------|------|
+| 公式プラグインあり(Rust、C/C++、TypeScript/JavaScript、Python、Go、Java、Kotlin、C#、PHP、Swift、Lua) | 公式LSPプラグイン(例: `/plugin install rust-analyzer-lsp@claude-plugins-official`)。serena不要 |
+| 公式プラグインなし(Ruby、Dart/Flutter、Scalaなど) | 必要なら `hagi mcp enable serena` |
+
+serena固有の機能はシンボル単位の編集(`replace_symbol_body`、`rename_symbol`等)。これが必要な場合も有効化する。
+プラグイン名と必要な言語サーバーは[公式ドキュメント](https://code.claude.com/docs/en/discover-plugins#code-intelligence)を参照。
 
 - キャッシュ: `.serena/`(`.gitignore`に自動追加済み)
 - 初回起動はGitHubからクローンするため遅い(2回目以降はキャッシュ済み)
