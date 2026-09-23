@@ -64,7 +64,7 @@ hagi install --chat
 | `skills` | `skills/` |
 | `hooks` | `hooks/` |
 | `config` | `mcp.json`, `settings.local.json` |
-| `docs` | CLAUDE.md更新(プロジェクトセクション保持), `TODO.md` |
+| `docs` | CLAUDE.md更新(プロジェクトセクション保持), `TODO.md`(未作成時のみ) |
 | `designs` | `designs/` |
 
 `--only`使用時はテンプレートコピーのみ実行し、git初期化・hooks設置等のセットアップステップはスキップされる。`--global`/`--chat`との併用不可。

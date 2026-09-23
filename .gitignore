@@ -22,6 +22,8 @@ Thumbs.db
 
 # Exception: Track template files
 !templates/.claude/
+# Override global excludes that commonly ignore TODO.md
+!templates/.claude/TODO.md
 
 
 # Added by cargo

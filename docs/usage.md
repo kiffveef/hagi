@@ -8,7 +8,7 @@
 
 ### /st - 構造化思考
 
-複雑な問題を段階的に分析・解決する。文脈に応じてWebSearch、Context7、Task APIを自動選択。auto memoryで過去パターンを自動検索・保存。
+複雑な問題を段階的に分析・解決する。文脈に応じてWebSearch、Context7を自動選択し、複数ステップのタスクは`.claude/TODO.md`で追跡。auto memoryで過去パターンを自動検索・保存。
 
 ```
 /st データベース設計を最適化する方法

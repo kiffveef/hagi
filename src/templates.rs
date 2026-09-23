@@ -17,6 +17,9 @@ pub static CHAT_TEMPLATES: Dir = include_dir!("$CARGO_MANIFEST_DIR/templates/.ch
 /// CLAUDE.md filename (used across install, status, sync)
 pub const CLAUDE_MD: &str = "CLAUDE.md";
 
+/// TODO.md filename (used across install, sync)
+pub const TODO_MD: &str = "TODO.md";
+
 // ============================================================================
 // Category System
 // ============================================================================
@@ -66,7 +69,7 @@ impl Category {
                 path_str == "mcp.json" || path_str == "settings.local.json"
             }
             Category::Docs => {
-                path_str == CLAUDE_MD || path_str == "TODO.md"
+                path_str == CLAUDE_MD || path_str == TODO_MD
             }
             Category::Designs => path_str.starts_with("designs/"),
         }
@@ -237,6 +240,12 @@ fn copy_file_entry(file: &include_dir::File, target_base: &Path, dry_run: bool, 
         .contents_utf8()
         .context("Template file is not valid UTF-8")?;
 
+    // User-owned files are seeded once and never replaced by later installs
+    if is_create_only(relative_path) && target_file.exists() {
+        println!("{} {}", "Kept existing:".dimmed(), target_file.display());
+        return Ok(());
+    }
+
     if dry_run {
         let action = if target_file.exists() { "Would overwrite:" } else { "Would create:" };
         println!("{} {}", action.yellow(), target_file.display());
@@ -261,6 +270,11 @@ fn copy_file_entry(file: &include_dir::File, target_base: &Path, dry_run: bool, 
     println!("{} {}", "Wrote:".green(), target_file.display());
 
     Ok(())
+}
+
+/// Check if a template is created only when missing (never overwritten)
+fn is_create_only(path: &Path) -> bool {
+    path == Path::new(TODO_MD)
 }
 
 /// Check if a path should be skipped based on skip_paths
@@ -375,4 +389,38 @@ pub fn update_claude_md(claude_md_path: &Path, dry_run: bool) -> Result<bool> {
 pub fn copy_chat_templates(target_dir: &Path, dry_run: bool) -> Result<()> {
     let filter = InstallFilter::default();
     copy_dir_recursive(&CHAT_TEMPLATES, target_dir, dry_run, &filter)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn copy_todo_template(dir: &Path) {
+        let file = TEMPLATES.get_file(TODO_MD).expect("TODO.md template missing");
+        copy_file_entry(file, dir, false, &InstallFilter::default()).unwrap();
+    }
+
+    #[test]
+    fn test_existing_todo_md_is_kept() {
+        let dir = std::env::temp_dir().join(format!("hagi-test-keep-{}", std::process::id()));
+        fs::create_dir_all(&dir).unwrap();
+        let todo = dir.join(TODO_MD);
+        fs::write(&todo, "user tasks").unwrap();
+
+        copy_todo_template(&dir);
+
+        assert_eq!(fs::read_to_string(&todo).unwrap(), "user tasks");
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn test_missing_todo_md_is_created() {
+        let dir = std::env::temp_dir().join(format!("hagi-test-new-{}", std::process::id()));
+        fs::create_dir_all(&dir).unwrap();
+
+        copy_todo_template(&dir);
+
+        assert!(dir.join(TODO_MD).exists());
+        fs::remove_dir_all(&dir).unwrap();
+    }
 }

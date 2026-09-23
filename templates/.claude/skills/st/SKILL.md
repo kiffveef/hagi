@@ -1,6 +1,6 @@
 ---
 name: st
-description: Use for complex problems requiring step-by-step analysis. Auto-selects WebSearch/Context7 for research, TaskCreate for multi-step tasks. Checks memory for similar patterns.
+description: Use for complex problems requiring step-by-step analysis. Auto-selects WebSearch/Context7 for research, TODO.md for multi-step tasks. Checks memory for similar patterns.
 memory: project
 ---
 
@@ -75,8 +75,7 @@ Use Claude's built-in thinking to break down complex problems systematically. In
 - Context7 MCP for library documentation
 
 **Multi-step tasks**:
-- TaskCreate for progress tracking
-- Sync with `.claude/TODO.md` if exists (see @instructions/task-management.md)
+- Track progress in `.claude/TODO.md` (see @instructions/task-management.md)
 
 **Design documentation needed**:
 - Suggest `/design` for capturing design decisions
@@ -97,7 +96,7 @@ Use Claude's built-in thinking to break down complex problems systematically. In
       "Approach: <key approach/methodology used>",
       "Solution: <outcome/answer summary>",
       "Steps: <number of steps taken>",
-      "Tools: <tools used - WebSearch/Context7/TaskCreate/etc>",
+      "Tools: <tools used - WebSearch/Context7/etc>",
       "Project: <current project name>",
       "Date: YYYY-MM-DD"
     ]
