@@ -54,7 +54,18 @@ hagi install --chat
 | `--chat` | チャットモードセットアップ |
 | `--dry-run` | 変更内容の確認のみ |
 | `--only <CATEGORY>` | 指定カテゴリのみインストール(複数指定可) |
+| `--refresh` | 導入済みプロジェクトでhagi管理ファイルを一括再適用 |
 | `--skip <PATH>` | 指定ファイル/ディレクトリをスキップ(複数指定可) |
+
+**`--refresh`(hagi更新後の追従):**
+
+```bash
+hagi install --refresh
+```
+
+全カテゴリのテンプレートとgit hooks(`pre-commit`, `commit-msg`)を再適用する。`--only`で何を指定するか考えずに、hagi更新のたびにこれだけ実行すればよい。
+JSON設定はマージ、CLAUDE.mdは管理セクションのみ更新、TODO.mdは既存を維持するため、プロジェクト側の追記は失われない。
+git初期化・`.gitignore`・`.mcp.json`シンボリックリンクは触らない(未導入のプロジェクトでは`hagi install`を使う)。`--global`/`--chat`/`--only`との併用不可。
 
 **`--only`のカテゴリ:**
 
