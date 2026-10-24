@@ -1,15 +1,15 @@
 # hagi
 
-Claude Code向けセットアップツール。パーミッション、hook、MCP設定、指示書・スキルのテンプレートを一括配置する。
+Claude Code向けセットアップツール。パーミッション、hook、MCP(Model Context Protocol)設定、指示書・スキルのテンプレートを一括配置する。
 
 ## 特徴
 
-- **一括セットアップ**: グローバル(`~/.claude`)とプロジェクト(`.claude/`)の設定をコマンド1つで配置
-- **MCP管理**: context7、memory、serenaの有効化/無効化
-- **複数マシン同期**: `.claude/`をプライベートGitリポジトリで同期
-- **安全な操作**: 上書き前にバックアップ(最新1世代保持)、ドライラン対応
-- **誤コミット防止**: `.claude/`へのgit操作をPreToolUse hookとgit pre-commitの2層でブロック
-- **更新検知**: 配置時のhagiバージョンを記録し、hagiが新しくなるとセッション開始時に`hagi install --refresh`を促す
+- 一括セットアップ: グローバル(`~/.claude`)とプロジェクト(`.claude/`)の設定をコマンド1つで配置
+- MCP管理: context7、memory、serenaの有効化/無効化
+- 複数マシン同期: `.claude/`をプライベートGitリポジトリで同期
+- 安全な操作: 上書き前にバックアップ(最新1世代保持)、ドライラン対応
+- 誤コミット防止: `.claude/`へのgit操作をPreToolUse hookとgit pre-commitの2層でブロック
+- 更新検知: 配置時のhagiバージョンを記録し、hagiが新しくなるとセッション開始時に`hagi install --refresh`を促す
 
 ## クイックスタート
 
@@ -44,7 +44,7 @@ hagi install                 # プロジェクト設定
 | [インストールガイド](./docs/installation.md) | 前提条件、インストール、更新 |
 | [コマンドリファレンス](./docs/commands.md) | 全コマンドの詳細 |
 | [使い方ガイド](./docs/usage.md) | スキル、チャットモード、ワークフロー |
-| [MCP導入ガイド](./docs/mcp-setup.md) | MCPサーバーの設定と活用 |
+| [MCP導入ガイド](./docs/mcp-setup.md) | MCPサーバーの一覧、有効化/無効化、各サーバーの詳細 |
 | [トラブルシューティング](./docs/troubleshooting.md) | よくある問題と解決策 |
 | [開発ガイド](./docs/development.md) | hagiへの貢献方法 |
 
