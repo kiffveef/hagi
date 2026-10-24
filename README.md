@@ -9,6 +9,7 @@ Claude Code向けセットアップツール。パーミッション、hook、MC
 - **複数マシン同期**: `.claude/`をプライベートGitリポジトリで同期
 - **安全な操作**: 上書き前にバックアップ(最新1世代保持)、ドライラン対応
 - **誤コミット防止**: `.claude/`へのgit操作をPreToolUse hookとgit pre-commitの2層でブロック
+- **更新検知**: 配置時のhagiバージョンを記録し、hagiが新しくなるとセッション開始時に`hagi install --refresh`を促す
 
 ## クイックスタート
 

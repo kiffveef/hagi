@@ -2,6 +2,7 @@ use anyhow::{Context, Result};
 use colored::*;
 use std::collections::{HashMap, HashSet};
 use std::env;
+use std::path::Path;
 
 use crate::templates;
 use crate::utils;
@@ -56,6 +57,42 @@ fn check_global_configuration() -> Result<()> {
     Ok(())
 }
 
+/// Compare the hagi version recorded at install time with the running binary (major.minor only)
+fn print_version_status(claude_dir: &Path) {
+    let name = templates::HAGI_VERSION_FILE;
+    let Ok(recorded) = std::fs::read_to_string(claude_dir.join(name)) else {
+        println!(
+            "  {} .claude/{} - {}",
+            "✗".red(),
+            name,
+            "not found (run 'hagi install --refresh')".dimmed()
+        );
+        return;
+    };
+    let recorded = recorded.trim();
+    let current = env!("CARGO_PKG_VERSION");
+
+    match utils::check_version(recorded, current) {
+        utils::VersionCheck::UpToDate => {
+            println!("  {} installed by hagi {}", "✓".green(), recorded);
+        }
+        utils::VersionCheck::Fix(cmd) => println!(
+            "  {} installed by hagi {} (current {}) - run {}",
+            "⚠".yellow(),
+            recorded,
+            current,
+            cmd.yellow()
+        ),
+        utils::VersionCheck::Unrecognized => println!(
+            "  {} .claude/{} holds '{}' - run {}",
+            "⚠".yellow(),
+            name,
+            recorded,
+            "hagi install --refresh".yellow()
+        ),
+    }
+}
+
 /// Check project configuration status
 fn check_project_configuration() -> Result<()> {
     println!("{}", "[Project Configuration]".cyan().bold());
@@ -85,6 +122,8 @@ fn check_project_configuration() -> Result<()> {
             println!("  {} .claude/{} - {}", "✗".red(), name, "not found".dimmed());
         }
     }
+
+    print_version_status(&claude_dir);
 
     // Check instructions directory
     let instructions_dir = claude_dir.join("instructions");

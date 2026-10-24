@@ -184,10 +184,11 @@ pub fn install_project(dry_run: bool, filter: &InstallFilter) -> Result<()> {
 
         create_mcp_symlink(&project_dir, dry_run)?;
 
-        setup_claude_hooks(&claude_dir, dry_run)?;
+        make_claude_hooks_executable(&claude_dir, dry_run)?;
 
         update_project_gitignore(&project_dir, dry_run)?;
         install_git_hooks(&project_dir, dry_run)?;
+        write_version_file(&claude_dir, dry_run)?;
 
         print_project_completion(dry_run)?;
     }
@@ -224,14 +225,31 @@ pub fn refresh_project(dry_run: bool, filter: &InstallFilter) -> Result<()> {
         install_claude_md(&claude_dir, dry_run)?;
     }
 
-    setup_claude_hooks(&claude_dir, dry_run)?;
+    make_claude_hooks_executable(&claude_dir, dry_run)?;
     install_git_hooks(&project_dir, dry_run)?;
+    write_version_file(&claude_dir, dry_run)?;
 
     print_dry_run_footer(dry_run);
     if !dry_run {
         println!("{}", "\n✅ hagi-managed files refreshed successfully!".green().bold());
     }
 
+    Ok(())
+}
+
+/// Record which hagi version applied the templates; only full installs and --refresh count
+fn write_version_file(claude_dir: &Path, dry_run: bool) -> Result<()> {
+    let path = claude_dir.join(templates::HAGI_VERSION_FILE);
+    let version = env!("CARGO_PKG_VERSION");
+
+    if dry_run {
+        println!("{} {} ({})", "Would write:".yellow(), path.display(), version);
+        return Ok(());
+    }
+
+    std::fs::write(&path, format!("{}\n", version))
+        .with_context(|| format!("Failed to write {}", path.display()))?;
+    println!("{} {} ({})", "Wrote:".green(), path.display(), version);
     Ok(())
 }
 
@@ -521,23 +539,34 @@ fn install_hook(hooks_dir: &std::path::Path, name: &str, content: &str) -> Resul
 }
 
 
-/// Make Claude Code hook script executable and print summary
-fn setup_claude_hooks(claude_dir: &Path, dry_run: bool) -> Result<()> {
+/// Give every hook script in .claude/hooks/ the executable bit
+///
+/// Registration lives in settings.local.json (template); this only keeps the scripts runnable directly.
+fn make_claude_hooks_executable(claude_dir: &Path, dry_run: bool) -> Result<()> {
     println!("\n{}", "Claude Code hooks...".green());
 
-    let hook_script = claude_dir.join("hooks").join("check-claude-git.sh");
+    let hooks_dir = claude_dir.join("hooks");
+    if !hooks_dir.is_dir() {
+        return Ok(());
+    }
 
-    if dry_run {
-        println!("{} PreToolUse hook for .claude/ git protection", "Would configure:".yellow());
-    } else {
-        #[cfg(unix)]
-        if hook_script.exists() {
-            make_executable(&hook_script)
-                .with_context(|| "Failed to make Claude hook script executable")?;
+    let entries = std::fs::read_dir(&hooks_dir)
+        .with_context(|| format!("Failed to read {}", hooks_dir.display()))?;
+    for entry in entries {
+        let path = entry
+            .with_context(|| format!("Failed to read an entry in {}", hooks_dir.display()))?
+            .path();
+        if !path.extension().is_some_and(|ext| ext == "sh") {
+            continue;
         }
-
-        println!("  ✅ {}", "Claude Code hooks configured".green());
-        println!("     {}", "- PreToolUse: Blocks .claude/ git operations".dimmed());
+        if dry_run {
+            println!("{} {}", "Would make executable:".yellow(), path.display());
+            continue;
+        }
+        #[cfg(unix)]
+        make_executable(&path)
+            .with_context(|| format!("Failed to make {} executable", path.display()))?;
+        println!("  ✅ {}", path.display());
     }
 
     Ok(())

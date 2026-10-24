@@ -229,6 +229,33 @@ pub fn merge_json_file(target_path: &Path, new_content: &serde_json::Value) -> R
     Ok(())
 }
 
+/// Parse "major.minor[.patch]" into (major, minor); patch is ignored for compatibility checks
+pub fn major_minor(version: &str) -> Option<(u64, u64)> {
+    let mut parts = version.trim().split('.');
+    let major = parts.next()?.parse().ok()?;
+    let minor = parts.next()?.parse().ok()?;
+    Some((major, minor))
+}
+
+/// Outcome of comparing the version recorded in `.claude/hagi-version` with the running hagi
+#[derive(Debug, PartialEq)]
+pub enum VersionCheck {
+    UpToDate,
+    /// Command that brings the project (or the binary) back in line
+    Fix(&'static str),
+    Unrecognized,
+}
+
+/// Same rule as the SessionStart hook: minor differences matter, patch differences do not
+pub fn check_version(recorded: &str, current: &str) -> VersionCheck {
+    match (major_minor(recorded), major_minor(current)) {
+        (Some(r), Some(c)) if c > r => VersionCheck::Fix("hagi install --refresh"),
+        (Some(r), Some(c)) if c < r => VersionCheck::Fix("hagi update"),
+        (Some(_), Some(_)) => VersionCheck::UpToDate,
+        _ => VersionCheck::Unrecognized,
+    }
+}
+
 /// Prompt user for confirmation
 #[expect(dead_code)]
 pub fn confirm(message: &str) -> Result<bool> {
@@ -398,6 +425,23 @@ pub fn get_repository_name() -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_major_minor_ignores_patch_and_rejects_garbage() {
+        assert_eq!(major_minor("0.5.1\n"), Some((0, 5)));
+        assert_eq!(major_minor("1.2"), Some((1, 2)));
+        assert_eq!(major_minor("hagi"), None);
+        assert_eq!(major_minor("1"), None);
+        assert!(major_minor("0.5.0") > major_minor("0.4.9"));
+    }
+
+    #[test]
+    fn test_check_version_outcomes() {
+        assert_eq!(check_version("0.4.1\n", "0.5.0"), VersionCheck::Fix("hagi install --refresh"));
+        assert_eq!(check_version("0.6.0", "0.5.0"), VersionCheck::Fix("hagi update"));
+        assert_eq!(check_version("0.5.3", "0.5.0"), VersionCheck::UpToDate);
+        assert_eq!(check_version("garbage", "0.5.0"), VersionCheck::Unrecognized);
+    }
 
     #[test]
     fn test_merge_json() {
