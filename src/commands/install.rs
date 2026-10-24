@@ -20,10 +20,12 @@ fn print_dry_run_header(dry_run: bool) {
     }
 }
 
-/// Print dry run mode footer if enabled
-fn print_dry_run_footer(dry_run: bool) {
+/// Close an install run with the dry-run footer or the success line
+fn print_completion(dry_run: bool, success: &str) {
     if dry_run {
         println!("{}", "\nDry run completed. No files were modified.".yellow());
+    } else {
+        println!("{}", format!("\n✅ {}", success).green().bold());
     }
 }
 
@@ -43,33 +45,37 @@ fn ensure_directory(path: &Path, dry_run: bool) -> Result<()> {
 
 /// Parse and validate category name strings into Category values
 pub fn parse_categories(names: &[String]) -> Result<Vec<Category>> {
-    let mut categories = Vec::new();
-    for name in names {
-        let cat: Category = name.parse()?;
-        categories.push(cat);
-    }
-    Ok(categories)
+    names.iter().map(|name| name.parse()).collect()
 }
 
 // ============================================================================
-// CLAUDE.md Install Helper
+// Shared Project Steps
 // ============================================================================
 
-/// Build a filter that skips CLAUDE.md from template copy (handled separately by update_claude_md)
-fn skip_claude_md_filter(filter: &InstallFilter, needs_separate_update: bool) -> InstallFilter {
-    if !needs_separate_update {
-        return filter.clone();
+/// Copy templates into .claude/; CLAUDE.md goes through update_claude_md so its project section survives
+fn apply_templates(claude_dir: &Path, filter: &InstallFilter, needs_claude_md: bool, dry_run: bool) -> Result<()> {
+    let mut copy_filter = filter.clone();
+    if needs_claude_md {
+        copy_filter.skip.push(templates::CLAUDE_MD.to_string());
     }
-    let mut extended_skip = filter.skip.clone();
-    extended_skip.push(templates::CLAUDE_MD.to_string());
-    templates::InstallFilter::new(filter.only.clone(), extended_skip)
-}
+    templates::copy_all_templates_filtered(claude_dir, dry_run, &copy_filter)?;
 
-/// Install CLAUDE.md via smart update (preserve project section)
-fn install_claude_md(claude_dir: &Path, dry_run: bool) -> Result<()> {
-    let claude_md = claude_dir.join(templates::CLAUDE_MD);
-    templates::update_claude_md(&claude_md, dry_run)?;
+    if needs_claude_md {
+        templates::update_claude_md(&claude_dir.join(templates::CLAUDE_MD), dry_run)?;
+    }
     Ok(())
+}
+
+/// Steps a full install and --refresh share once the templates are in place
+fn apply_hooks_and_version(project_dir: &Path, claude_dir: &Path, dry_run: bool) -> Result<()> {
+    make_claude_hooks_executable(claude_dir, dry_run)?;
+    install_git_hooks(project_dir, dry_run)?;
+    write_version_file(claude_dir, dry_run)
+}
+
+/// `--skip CLAUDE.md` opts out of regenerating CLAUDE.md
+fn wants_claude_md(filter: &InstallFilter) -> bool {
+    !filter.skip.iter().any(|s| s == templates::CLAUDE_MD)
 }
 
 // ============================================================================
@@ -92,10 +98,8 @@ pub fn install_global(dry_run: bool) -> Result<()> {
     // Only install settings.json (Claude Code reads ~/.claude/settings.json)
     install_settings(&claude_dir, dry_run)?;
 
-    if dry_run {
-        print_dry_run_footer(dry_run);
-    } else {
-        println!("{}", "\n✅ Global configuration installed successfully!".green().bold());
+    print_completion(dry_run, "Global configuration installed successfully!");
+    if !dry_run {
         println!("\nInstalled:");
         println!("  - ~/.claude/settings.json (permissions, hooks)");
         println!("\nNext steps:");
@@ -139,58 +143,39 @@ pub fn install_project(dry_run: bool, filter: &InstallFilter) -> Result<()> {
     }
 
     let project_dir = env::current_dir().context("Failed to get current directory")?;
-    let claude_dir = project_dir.join(".claude");
+    let claude_dir = project_dir.join(utils::CLAUDE_DIR_NAME);
 
     if selective {
-        // --only mode: only copy filtered templates
+        // --only mode: templates only, no setup steps
         ensure_directory(&claude_dir, dry_run)?;
 
         let needs_claude_md = filter.includes_category(Category::Docs)
             || filter.includes_category(Category::Instructions);
-        let copy_filter = skip_claude_md_filter(filter, needs_claude_md);
+        apply_templates(&claude_dir, filter, needs_claude_md, dry_run)?;
 
-        templates::copy_all_templates_filtered(&claude_dir, dry_run, &copy_filter)?;
+        print_completion(dry_run, "Selected categories installed successfully!");
+        return Ok(());
+    }
 
-        if needs_claude_md {
-            install_claude_md(&claude_dir, dry_run)?;
-        }
-
-        print_dry_run_footer(dry_run);
-        if !dry_run {
-            println!("{}", "\n✅ Selected categories installed successfully!".green().bold());
-        }
+    if filter.skip.iter().any(|s| s == "git") {
+        println!("{}", "⏭ Skipping git repository check (--skip git)".yellow());
     } else {
-        // Full install mode
-        if !filter.skip.iter().any(|s| s == "git") {
-            ensure_git_repository(dry_run)?;
-        } else {
-            println!("{}", "⏭ Skipping git repository check (--skip git)".yellow());
-        }
+        ensure_git_repository(dry_run)?;
+    }
 
-        print_skip_list(&filter.skip);
+    print_skip_list(&filter.skip);
+    ensure_directory(&claude_dir, dry_run)?;
+    migrate_commands_to_skills(&claude_dir, dry_run)?;
 
-        ensure_directory(&claude_dir, dry_run)?;
+    apply_templates(&claude_dir, filter, wants_claude_md(filter), dry_run)?;
 
-        migrate_commands_to_skills(&claude_dir, dry_run)?;
+    create_mcp_symlink(&project_dir, dry_run)?;
+    update_project_gitignore(&project_dir, dry_run)?;
+    apply_hooks_and_version(&project_dir, &claude_dir, dry_run)?;
 
-        let needs_claude_md = !filter.skip.iter().any(|s| s == templates::CLAUDE_MD);
-        let copy_filter = skip_claude_md_filter(filter, needs_claude_md);
-
-        templates::copy_all_templates_filtered(&claude_dir, dry_run, &copy_filter)?;
-
-        if needs_claude_md {
-            install_claude_md(&claude_dir, dry_run)?;
-        }
-
-        create_mcp_symlink(&project_dir, dry_run)?;
-
-        make_claude_hooks_executable(&claude_dir, dry_run)?;
-
-        update_project_gitignore(&project_dir, dry_run)?;
-        install_git_hooks(&project_dir, dry_run)?;
-        write_version_file(&claude_dir, dry_run)?;
-
-        print_project_completion(dry_run)?;
+    print_completion(dry_run, "Project configuration installed successfully!");
+    if !dry_run {
+        print_next_steps()?;
     }
 
     Ok(())
@@ -205,7 +190,7 @@ pub fn refresh_project(dry_run: bool, filter: &InstallFilter) -> Result<()> {
     println!("{}", "Refreshing hagi-managed files...".green());
 
     let project_dir = env::current_dir().context("Failed to get current directory")?;
-    let claude_dir = project_dir.join(".claude");
+    let claude_dir = project_dir.join(utils::CLAUDE_DIR_NAME);
 
     if !claude_dir.is_dir() {
         anyhow::bail!(
@@ -215,42 +200,18 @@ pub fn refresh_project(dry_run: bool, filter: &InstallFilter) -> Result<()> {
     }
 
     print_skip_list(&filter.skip);
+    apply_templates(&claude_dir, filter, wants_claude_md(filter), dry_run)?;
+    apply_hooks_and_version(&project_dir, &claude_dir, dry_run)?;
 
-    let needs_claude_md = !filter.skip.iter().any(|s| s == templates::CLAUDE_MD);
-    let copy_filter = skip_claude_md_filter(filter, needs_claude_md);
-
-    templates::copy_all_templates_filtered(&claude_dir, dry_run, &copy_filter)?;
-
-    if needs_claude_md {
-        install_claude_md(&claude_dir, dry_run)?;
-    }
-
-    make_claude_hooks_executable(&claude_dir, dry_run)?;
-    install_git_hooks(&project_dir, dry_run)?;
-    write_version_file(&claude_dir, dry_run)?;
-
-    print_dry_run_footer(dry_run);
-    if !dry_run {
-        println!("{}", "\n✅ hagi-managed files refreshed successfully!".green().bold());
-    }
-
+    print_completion(dry_run, "hagi-managed files refreshed successfully!");
     Ok(())
 }
 
 /// Record which hagi version applied the templates; only full installs and --refresh count
 fn write_version_file(claude_dir: &Path, dry_run: bool) -> Result<()> {
     let path = claude_dir.join(templates::HAGI_VERSION_FILE);
-    let version = env!("CARGO_PKG_VERSION");
-
-    if dry_run {
-        println!("{} {} ({})", "Would write:".yellow(), path.display(), version);
-        return Ok(());
-    }
-
-    std::fs::write(&path, format!("{}\n", version))
-        .with_context(|| format!("Failed to write {}", path.display()))?;
-    println!("{} {} ({})", "Wrote:".green(), path.display(), version);
-    Ok(())
+    let content = format!("{}\n", env!("CARGO_PKG_VERSION"));
+    utils::write_file(&path, &content, dry_run)
 }
 
 /// Ensure current directory is a git repository, initialize if not
@@ -276,21 +237,14 @@ fn print_skip_list(skip_paths: &[String]) {
     }
 }
 
-/// Print project installation completion message
-fn print_project_completion(dry_run: bool) -> Result<()> {
-    if dry_run {
-        print_dry_run_footer(dry_run);
-    } else {
-        println!("{}", "\n✅ Project configuration installed successfully!".green().bold());
-        println!("\nNext steps:");
-        println!("  1. Review .claude/CLAUDE.md for project guidelines");
-        println!("  2. Customize .claude/instructions/ as needed");
-        println!("  3. Enable additional MCP servers with 'hagi mcp enable <name>'");
-        print_claude_sync_notice()?;
-    }
-    Ok(())
+/// Guidance printed after a successful full project install
+fn print_next_steps() -> Result<()> {
+    println!("\nNext steps:");
+    println!("  1. Review .claude/CLAUDE.md for project guidelines");
+    println!("  2. Customize .claude/instructions/ as needed");
+    println!("  3. Enable additional MCP servers with 'hagi mcp enable <name>'");
+    print_claude_sync_notice()
 }
-
 
 // ============================================================================
 // Chat Install
@@ -310,10 +264,8 @@ pub fn install_chat(dry_run: bool) -> Result<()> {
     // Create .mcp.json symlink for Claude Code 2.1+ compatibility
     create_mcp_symlink(&chat_dir, dry_run)?;
 
-    if dry_run {
-        print_dry_run_footer(dry_run);
-    } else {
-        println!("{}", "\n✅ Chat mode configuration installed successfully!".green().bold());
+    print_completion(dry_run, "Chat mode configuration installed successfully!");
+    if !dry_run {
         println!("\nUsage:");
         println!("  cd ~/.chat && claude");
         println!("\nCustomize:");
@@ -327,74 +279,13 @@ pub fn install_chat(dry_run: bool) -> Result<()> {
 // Template Installation Helpers
 // ============================================================================
 
-/// Maximum characters to show in error messages for template preview
-const TEMPLATE_PREVIEW_LENGTH: usize = 200;
-
-/// Options for installing a JSON template
-struct JsonTemplateOptions<'a> {
-    claude_dir: &'a Path,
-    template_name: &'a str,
-    target_name: &'a str,
-    expand_env: bool,
-    dry_run: bool,
-}
-
-/// Install JSON configuration from embedded template
-fn install_json_template(opts: JsonTemplateOptions) -> Result<()> {
-    let target = opts.claude_dir.join(opts.target_name);
-    let template_str = templates::get_template(opts.template_name)
-        .with_context(|| format!("Failed to get embedded {} template", opts.template_name))?;
-
-    let mut template_content: serde_json::Value = serde_json::from_str(template_str)
-        .with_context(|| {
-            let preview = if template_str.len() > TEMPLATE_PREVIEW_LENGTH {
-                &template_str[..TEMPLATE_PREVIEW_LENGTH]
-            } else {
-                template_str
-            };
-            format!(
-                "Failed to parse {} template. Template may be corrupted.\nFirst {} chars: {}",
-                opts.template_name, TEMPLATE_PREVIEW_LENGTH, preview
-            )
-        })?;
-
-    if opts.expand_env {
-        utils::expand_json_env_vars(&mut template_content).with_context(|| {
-            format!(
-                "Failed to expand environment variables in {} template.\n\
-                 This may be due to missing HOME or other required environment variables.",
-                opts.template_name
-            )
-        })?;
-    }
-
-    if opts.dry_run {
-        let action = if target.exists() { "Would merge into" } else { "Would create" };
-        println!("{} {}", action.yellow(), target.display());
-
-        let env_note = if opts.expand_env { " (with environment variables expanded)" } else { "" };
-        if opts.template_name == opts.target_name {
-            println!("  Template: embedded {}{}", opts.template_name, env_note);
-        } else {
-            println!("  Template: embedded {} → {}{}", opts.template_name, opts.target_name, env_note);
-        }
-    } else {
-        utils::merge_json_file(&target, &template_content)
-            .with_context(|| format!("Failed to install {} to {}", opts.target_name, target.display()))?;
-    }
-
-    Ok(())
-}
-
-/// Install settings configuration from embedded template (rename settings.local.json → settings.json)
+/// Merge the settings template into ~/.claude/settings.json (the project file name differs)
 fn install_settings(claude_dir: &Path, dry_run: bool) -> Result<()> {
-    install_json_template(JsonTemplateOptions {
-        claude_dir,
-        template_name: "settings.local.json",
-        target_name: "settings.json",
-        expand_env: false,
+    templates::merge_config_template(
+        Path::new(templates::SETTINGS_LOCAL_JSON),
+        &claude_dir.join(templates::SETTINGS_JSON),
         dry_run,
-    })
+    )
 }
 
 // ============================================================================
@@ -617,8 +508,7 @@ fn print_claude_sync_notice() -> Result<()> {
     println!("across machines using a private Git repository.");
     println!();
 
-    let repo_name = utils::get_repository_name();
-    let claude_repo_name = format!("{}-claude", repo_name);
+    let claude_repo_name = utils::claude_repo_name();
 
     if utils::command_exists("gh") {
         println!("{}", "✨ GitHub CLI detected - Auto setup available:".green().bold());
@@ -642,9 +532,7 @@ fn print_claude_sync_notice() -> Result<()> {
         println!();
     }
 
-    println!("{}", "Daily workflow:".bold());
-    println!("  {} - Pull latest changes from other machines", "hagi sync pull".yellow());
-    println!("  {} - Push your changes to sync", "hagi sync push".yellow());
+    crate::commands::sync::print_daily_workflow();
     println!();
     println!("{}", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".cyan());
 

@@ -1,7 +1,8 @@
 use anyhow::{Context, Result};
 use colored::*;
-use std::io::{self, Write};
 use std::process::Command;
+
+use crate::utils;
 
 /// Update hagi to the latest version
 pub fn update() -> Result<()> {
@@ -12,15 +13,7 @@ pub fn update() -> Result<()> {
     println!("{} {}", "Current version:".green(), env!("CARGO_PKG_VERSION"));
     println!();
 
-    // Confirm before updating
-    print!("{}", "Do you want to update hagi to the latest version? [Y/n]: ".yellow());
-    io::stdout().flush()?;
-
-    let mut input = String::new();
-    io::stdin().read_line(&mut input)?;
-
-    let input = input.trim().to_lowercase();
-    if !input.is_empty() && input != "y" && input != "yes" {
+    if !utils::confirm("Do you want to update hagi to the latest version?")? {
         println!("{}", "Update cancelled.".yellow());
         return Ok(());
     }

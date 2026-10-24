@@ -57,8 +57,12 @@ enum Commands {
     /// Show installation status
     Status,
 
-    /// Update hagi templates and configuration
+    /// Update hagi itself to the latest release
     Update,
+
+    /// SessionStart hook backend: warn when .claude/ was set up by a different hagi minor version
+    #[command(hide = true)]
+    VersionCheck,
 
     /// MCP server management commands
     Mcp {
@@ -187,6 +191,9 @@ fn main() -> Result<()> {
         }
         Commands::Update => {
             commands::update::update()?;
+        }
+        Commands::VersionCheck => {
+            commands::version_check::version_check()?;
         }
         Commands::Mcp { command } => match command {
             McpCommands::List => {

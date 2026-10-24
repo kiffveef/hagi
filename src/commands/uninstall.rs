@@ -1,9 +1,8 @@
 use anyhow::{Context, Result};
 use colored::*;
-use std::env;
 use std::fs;
-use std::io::{self, Write};
 
+use crate::templates;
 use crate::utils;
 
 /// Uninstall global configuration from ~/.claude/
@@ -18,41 +17,28 @@ pub fn uninstall_global(skip_confirm: bool) -> Result<()> {
         }
     };
 
-    // Check what will be removed
-    let mcp_json = claude_dir.join("mcp.json");
-    let settings_json = claude_dir.join("settings.json");
+    // Only settings.json is installed globally; MCP config is per-project
+    let settings_json = claude_dir.join(templates::SETTINGS_JSON);
+    let display_name = format!("~/{}/{}", utils::CLAUDE_DIR_NAME, templates::SETTINGS_JSON);
 
-    let mut files_to_remove = Vec::new();
-    if mcp_json.exists() {
-        files_to_remove.push(("~/.claude/mcp.json", mcp_json.clone()));
-    }
-    if settings_json.exists() {
-        files_to_remove.push(("~/.claude/settings.json", settings_json.clone()));
-    }
-
-    if files_to_remove.is_empty() {
+    if !settings_json.exists() {
         println!("{} No global configuration found", "○".dimmed());
         return Ok(());
     }
 
     // Show what will be removed
     println!("\n{}", "The following files will be removed:".yellow());
-    for (display_name, _) in &files_to_remove {
-        println!("  - {}", display_name);
-    }
+    println!("  - {}", display_name);
 
     // Confirmation prompt
-    if !skip_confirm && !confirm("\nProceed with uninstallation?")? {
+    if !skip_confirm && !utils::confirm("\nProceed with uninstallation?")? {
         println!("{}", "Aborted.".dimmed());
         return Ok(());
     }
 
-    // Remove files
-    for (display_name, path) in files_to_remove {
-        match fs::remove_file(&path) {
-            Ok(_) => println!("{} Removed {}", "✓".green(), display_name),
-            Err(e) => println!("{} Failed to remove {}: {}", "✗".red(), display_name, e),
-        }
+    match fs::remove_file(&settings_json) {
+        Ok(_) => println!("{} Removed {}", "✓".green(), display_name),
+        Err(e) => println!("{} Failed to remove {}: {}", "✗".red(), display_name, e),
     }
 
     // Try to remove ~/.claude/ if empty
@@ -74,8 +60,10 @@ pub fn uninstall_global(skip_confirm: bool) -> Result<()> {
 pub fn uninstall_project(skip_confirm: bool) -> Result<()> {
     println!("{}", "Uninstalling project configuration...".yellow());
 
-    let project_dir = env::current_dir().context("Failed to get current directory")?;
-    let claude_dir = project_dir.join(".claude");
+    let claude_dir = utils::project_claude_dir()?;
+    let project_dir = claude_dir
+        .parent()
+        .context("Failed to get project directory")?;
 
     if !claude_dir.exists() {
         println!("{} .claude/ not found", "✗".red());
@@ -88,7 +76,7 @@ pub fn uninstall_project(skip_confirm: bool) -> Result<()> {
     println!("  - hagi-related patterns from .gitignore");
 
     // Confirmation prompt
-    if !skip_confirm && !confirm("\nProceed with uninstallation?")? {
+    if !skip_confirm && !utils::confirm("\nProceed with uninstallation?")? {
         println!("{}", "Aborted.".dimmed());
         return Ok(());
     }
@@ -103,7 +91,7 @@ pub fn uninstall_project(skip_confirm: bool) -> Result<()> {
     }
 
     // Clean up .gitignore
-    cleanup_gitignore(&project_dir)?;
+    cleanup_gitignore(project_dir)?;
 
     println!("{}", "\n✅ Project configuration uninstalled successfully!".green().bold());
     Ok(())
@@ -143,16 +131,4 @@ fn cleanup_gitignore(project_dir: &std::path::Path) -> Result<()> {
     }
 
     Ok(())
-}
-
-/// Show confirmation prompt and get user response
-fn confirm(message: &str) -> Result<bool> {
-    print!("{} [Y/n]: ", message);
-    io::stdout().flush()?;
-
-    let mut input = String::new();
-    io::stdin().read_line(&mut input)?;
-
-    let input = input.trim().to_lowercase();
-    Ok(input.is_empty() || input == "y" || input == "yes")
 }
