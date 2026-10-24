@@ -25,21 +25,29 @@ EOF
 input=$(cat)
 command=$(echo "$input" | jq -r '.tool_input.command // ""')
 
-# Block git add .claude/ (but allow templates/.claude/)
-# Extract just the git add portion (before && or ;)
-add_part=$(echo "$command" | sed 's/&&.*//' | sed 's/;.*//')
-if [[ "$add_part" =~ git[[:space:]]+add && "$add_part" =~ [[:space:]]\.claude ]]; then
-  deny '.claude/ is outside git workflow. Edit = done. No git operation needed.\n\n📖 See: .claude/instructions/git-workflow.md'
-  exit 0
-fi
+# Inspect only the arguments of each `git add`, up to the next separator or line end,
+# so text elsewhere in a multi-line command (e.g. a commit message) cannot trigger a false positive
+nl=$'\n'
+add_re="git[[:space:]]+add([^${nl}&;|]*)(.*)"
+rest=$command
+while [[ "$rest" =~ $add_re ]]; do
+  args=${BASH_REMATCH[1]}
+  rest=${BASH_REMATCH[2]}
 
-# Block git add . / git add -A / git add --all only if .claude/ is not gitignored
-if [[ "$command" =~ git[[:space:]]+add[[:space:]]+(\.|-A|--all)[[:space:]]*$ ]]; then
-  if [ -d ".claude" ] && ! git check-ignore -q .claude/ 2>/dev/null; then
-    deny '.claude/ is not gitignored. git add . would include it.\n\nAdd /.claude/ to .gitignore first, or run: hagi install'
+  # Block git add .claude/ (a path like templates/.claude/ is fine)
+  if [[ "$args" =~ [[:space:]](\./)?\.claude(/|[[:space:]]|$) ]]; then
+    deny '.claude/ is outside git workflow. Edit = done. No git operation needed.\n\n📖 See: .claude/instructions/git-workflow.md'
     exit 0
   fi
-fi
+
+  # Block git add . / -A / --all only if .claude/ is not gitignored
+  if [[ "$args" =~ ^[[:space:]]+(\.|-A|--all)[[:space:]]*$ ]]; then
+    if [ -d ".claude" ] && ! git check-ignore -q .claude/ 2>/dev/null; then
+      deny '.claude/ is not gitignored. git add . would include it.\n\nAdd /.claude/ to .gitignore first, or run: hagi install'
+      exit 0
+    fi
+  fi
+done
 
 # Block git commit if .claude/ is staged
 if [[ "$command" =~ git[[:space:]]+commit ]]; then
