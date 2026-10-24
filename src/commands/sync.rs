@@ -1,8 +1,7 @@
 use anyhow::{bail, Context, Result};
 use colored::*;
 use std::io::Write;
-use std::path::Path;
-use std::process::{Command, ExitStatus, Output, Stdio};
+use std::process::{Command, Output, Stdio};
 
 use crate::templates;
 use crate::utils;
@@ -11,27 +10,55 @@ use crate::utils;
 // Git Command Helpers
 // ============================================================================
 
-/// Run git command in .claude directory
-fn git_in_claude(args: &[&str]) -> Result<ExitStatus> {
-    Command::new("git")
+/// Run git command in .claude directory, failing with "git <what> failed" on non-zero exit
+fn git_in_claude_ok(args: &[&str], what: &str) -> Result<()> {
+    let status = Command::new("git")
         .args(args)
-        .current_dir(".claude")
+        .current_dir(utils::CLAUDE_DIR_NAME)
         .status()
-        .with_context(|| format!("Failed to run: git {}", args.join(" ")))
+        .with_context(|| format!("Failed to run: git {}", args.join(" ")))?;
+
+    if !status.success() {
+        bail!("git {} failed", what);
+    }
+
+    Ok(())
 }
 
 /// Run git command in .claude directory and capture output
 fn git_in_claude_output(args: &[&str]) -> Result<Output> {
     Command::new("git")
         .args(args)
-        .current_dir(".claude")
+        .current_dir(utils::CLAUDE_DIR_NAME)
         .output()
         .with_context(|| format!("Failed to run: git {}", args.join(" ")))
 }
 
+/// Clone the remote repository into the project's .claude directory
+fn git_clone_claude(remote_url: &str) -> Result<()> {
+    let status = Command::new("git")
+        .args(["clone", remote_url, utils::CLAUDE_DIR_NAME])
+        .status()
+        .context("Failed to run git clone")?;
+
+    if !status.success() {
+        bail!("git clone failed");
+    }
+
+    Ok(())
+}
+
+/// Print the pull/push commands used after sync is set up
+pub fn print_daily_workflow() {
+    println!("Daily workflow:");
+    println!("  {} - Pull latest changes", "hagi sync pull".yellow());
+    println!("  {} - Push your changes", "hagi sync push".yellow());
+    println!();
+}
+
 /// Initialize .claude sync with a private Git repository
 pub fn sync_init(remote_url: Option<&str>, message: Option<&str>) -> Result<()> {
-    let claude_dir = Path::new(".claude");
+    let claude_dir = utils::project_claude_dir()?;
 
     // If .claude/.git exists, already initialized
     if claude_dir.join(".git").exists() {
@@ -69,8 +96,7 @@ pub fn sync_init(remote_url: Option<&str>, message: Option<&str>) -> Result<()> 
     }
 
     // Check if <project>-claude repo already exists
-    let repo_name = utils::get_repository_name();
-    let claude_repo_name = format!("{}-claude", repo_name);
+    let claude_repo_name = utils::claude_repo_name();
 
     if check_repo_exists(&claude_repo_name) {
         println!("{}", format!("Found existing repository: {}", claude_repo_name).cyan());
@@ -83,12 +109,8 @@ pub fn sync_init(remote_url: Option<&str>, message: Option<&str>) -> Result<()> 
     create_private_repo_interactive().and_then(|remote| init_claude_git_repo(&remote, message))
 }
 
-/// Check if a repository exists on GitHub
+/// Check if a repository exists on GitHub (caller ensures gh is installed)
 fn check_repo_exists(repo_name: &str) -> bool {
-    if !utils::command_exists("gh") {
-        return false;
-    }
-
     Command::new("gh")
         .args(["repo", "view", repo_name])
         .stdout(Stdio::null())
@@ -100,27 +122,22 @@ fn check_repo_exists(repo_name: &str) -> bool {
 
 /// Clone existing repo and replace .claude directory
 fn clone_and_replace_claude(remote_url: &str) -> Result<()> {
-    let claude_dir = Path::new(".claude");
+    let claude_dir = utils::project_claude_dir()?;
 
     println!("{}", "Cloning existing .claude repository...".green());
 
     // Backup current .claude to .claude.backup
-    let backup_dir = Path::new(".claude.backup");
+    let backup_dir = claude_dir.with_file_name(format!("{}.backup", utils::CLAUDE_DIR_NAME));
     if backup_dir.exists() {
-        std::fs::remove_dir_all(backup_dir).context("Failed to remove old backup")?;
+        std::fs::remove_dir_all(&backup_dir).context("Failed to remove old backup")?;
     }
-    std::fs::rename(claude_dir, backup_dir).context("Failed to backup .claude")?;
+    std::fs::rename(&claude_dir, &backup_dir).context("Failed to backup .claude")?;
 
     // Clone the repository
-    let status = Command::new("git")
-        .args(["clone", remote_url, ".claude"])
-        .status()
-        .context("Failed to run git clone")?;
-
-    if !status.success() {
+    if let Err(e) = git_clone_claude(remote_url) {
         // Restore backup on failure
-        std::fs::rename(backup_dir, claude_dir).ok();
-        bail!("git clone failed");
+        std::fs::rename(&backup_dir, &claude_dir).ok();
+        return Err(e);
     }
 
     // An empty remote clones "successfully" but has no commits (unborn HEAD).
@@ -129,8 +146,8 @@ fn clone_and_replace_claude(remote_url: &str) -> Result<()> {
     if !claude_rev_exists("HEAD")? {
         std::fs::rename(claude_dir.join(".git"), backup_dir.join(".git"))
             .context("Failed to move cloned .git into backup")?;
-        std::fs::remove_dir_all(claude_dir).context("Failed to remove empty clone")?;
-        std::fs::rename(backup_dir, claude_dir).context("Failed to restore .claude backup")?;
+        std::fs::remove_dir_all(&claude_dir).context("Failed to remove empty clone")?;
+        std::fs::rename(&backup_dir, &claude_dir).context("Failed to restore .claude backup")?;
 
         println!("{}", "⚠ Remote repository is empty. Kept local .claude files.".yellow());
         println!();
@@ -140,14 +157,11 @@ fn clone_and_replace_claude(remote_url: &str) -> Result<()> {
     }
 
     // Remove backup on success
-    std::fs::remove_dir_all(backup_dir).ok();
+    std::fs::remove_dir_all(&backup_dir).ok();
 
     println!("{}", "✅ Cloned .claude repository".green().bold());
     println!();
-    println!("Daily workflow:");
-    println!("  {} - Pull latest changes", "hagi sync pull".yellow());
-    println!("  {} - Push your changes", "hagi sync push".yellow());
-    println!();
+    print_daily_workflow();
 
     Ok(())
 }
@@ -159,10 +173,7 @@ pub fn sync_pull() -> Result<()> {
     println!("{}", "Pulling latest .claude changes...".green());
 
     let branch = current_claude_branch()?;
-    let status = git_in_claude(&["pull", "origin", &branch, "--rebase"])?;
-    if !status.success() {
-        bail!("git pull failed");
-    }
+    git_in_claude_ok(&["pull", "origin", &branch, "--rebase"], "pull")?;
 
     println!("{}", "✅ Pulled latest .claude config".green().bold());
 
@@ -171,7 +182,7 @@ pub fn sync_pull() -> Result<()> {
 
 /// Ensure .claude directory exists and is a git repository
 fn ensure_claude_git_repo() -> Result<()> {
-    let claude_dir = Path::new(".claude");
+    let claude_dir = utils::project_claude_dir()?;
 
     if !claude_dir.exists() {
         bail!(".claude directory not found");
@@ -189,10 +200,7 @@ fn ensure_claude_git_repo() -> Result<()> {
 
 /// Stage all files, force-adding ones the parent repo's .gitignore may exclude
 fn stage_claude_files() -> Result<()> {
-    let status = git_in_claude(&["add", "."])?;
-    if !status.success() {
-        bail!("git add failed");
-    }
+    git_in_claude_ok(&["add", "."], "add")?;
 
     // Add individually: one missing pathspec aborts a combined add entirely
     let _ = git_in_claude_output(&["add", "--force", "--", templates::CLAUDE_MD]);
@@ -230,10 +238,7 @@ pub fn sync_push(message: Option<&str>) -> Result<()> {
         println!("{}", "⚠ Nothing to commit".yellow());
     } else {
         let commit_msg = message.unwrap_or("Update .claude config");
-        let status = git_in_claude(&["commit", "-m", commit_msg])?;
-        if !status.success() {
-            bail!("git commit failed");
-        }
+        git_in_claude_ok(&["commit", "-m", commit_msg], "commit")?;
     }
 
     // Unborn HEAD: fresh clone of an empty remote with no local files yet
@@ -262,16 +267,10 @@ pub fn sync_push(message: Option<&str>) -> Result<()> {
         }
 
         println!("{}", format!("Pushing {} commit(s)...", ahead_count).green());
-        let status = git_in_claude(&["push"])?;
-        if !status.success() {
-            bail!("git push failed");
-        }
+        git_in_claude_ok(&["push"], "push")?;
     } else {
         println!("{}", format!("First push: setting upstream to {}...", remote_ref).green());
-        let status = git_in_claude(&["push", "-u", "origin", &branch])?;
-        if !status.success() {
-            bail!("git push failed");
-        }
+        git_in_claude_ok(&["push", "-u", "origin", &branch], "push")?;
     }
 
     println!("{}", "✅ Pushed .claude changes".green().bold());
@@ -281,7 +280,7 @@ pub fn sync_push(message: Option<&str>) -> Result<()> {
 
 /// Show sync status
 pub fn sync_status() -> Result<()> {
-    let claude_dir = Path::new(".claude");
+    let claude_dir = utils::project_claude_dir()?;
 
     if !claude_dir.exists() {
         bail!(".claude directory not found");
@@ -297,12 +296,7 @@ pub fn sync_status() -> Result<()> {
     println!("{}", "📊 .claude sync status:".cyan().bold());
     println!();
 
-    let status = git_in_claude(&["status"])?;
-    if !status.success() {
-        bail!("git status failed");
-    }
-
-    Ok(())
+    git_in_claude_ok(&["status"], "status")
 }
 
 /// Create private repository interactively using gh CLI
@@ -312,8 +306,7 @@ fn create_private_repo_interactive() -> Result<String> {
         bail!("Please install gh CLI or specify remote URL manually");
     }
 
-    let repo_name = utils::get_repository_name();
-    let claude_repo_name = format!("{}-claude", repo_name);
+    let claude_repo_name = utils::claude_repo_name();
 
     println!();
     println!("{}", "📦 Creating private repository".cyan().bold());
@@ -355,24 +348,14 @@ fn create_private_repo_interactive() -> Result<String> {
     Ok(remote_url)
 }
 
-/// Initialize .claude as Git repository and push to remote
+/// Initialize .claude as Git repository and push to remote (caller ensures .claude/.git is absent)
 fn init_claude_git_repo(remote_url: &str, message: Option<&str>) -> Result<()> {
-    let claude_dir = Path::new(".claude");
-
-    if claude_dir.join(".git").exists() {
-        bail!(
-            ".claude is already a Git repository.\n\
-             Use 'hagi sync pull/push' to sync changes."
-        );
-    }
+    let claude_dir = utils::project_claude_dir()?;
 
     println!();
     println!("{}", "Initializing .claude as Git repository...".green());
 
-    let status = git_in_claude(&["init"])?;
-    if !status.success() {
-        bail!("git init failed");
-    }
+    git_in_claude_ok(&["init"], "init")?;
 
     println!("{}", "✅ Initialized Git repository".green());
 
@@ -383,32 +366,19 @@ fn init_claude_git_repo(remote_url: &str, message: Option<&str>) -> Result<()> {
 
     println!("{}", "✅ Created .gitignore (excludes backup files)".green());
 
-    let status = git_in_claude(&["remote", "add", "origin", remote_url])?;
-    if !status.success() {
-        bail!("git remote add failed");
-    }
+    git_in_claude_ok(&["remote", "add", "origin", remote_url], "remote add")?;
 
     println!("{}", format!("✅ Added remote: {}", remote_url).green());
 
     stage_claude_files()?;
 
     let commit_msg = message.unwrap_or("🌱 first: Initial .claude config");
-    let status = git_in_claude(&["commit", "-m", commit_msg])?;
-    if !status.success() {
-        bail!("git commit failed");
-    }
+    git_in_claude_ok(&["commit", "-m", commit_msg], "commit")?;
 
     println!("{}", "✅ Created initial commit".green());
 
-    let status = git_in_claude(&["branch", "-M", "main"])?;
-    if !status.success() {
-        bail!("git branch failed");
-    }
-
-    let status = git_in_claude(&["push", "-u", "origin", "main"])?;
-    if !status.success() {
-        bail!("git push failed");
-    }
+    git_in_claude_ok(&["branch", "-M", "main"], "branch")?;
+    git_in_claude_ok(&["push", "-u", "origin", "main"], "push")?;
 
     println!("{}", "✅ Pushed to remote".green().bold());
     println!();
@@ -418,18 +388,20 @@ fn init_claude_git_repo(remote_url: &str, message: Option<&str>) -> Result<()> {
     println!();
     println!("On other machines:");
     println!("  1. Clone your project repository");
-    println!("  2. Run: {}", format!("git clone {} .claude", remote_url).yellow());
+    println!(
+        "  2. Run: {}",
+        format!("git clone {} {}", remote_url, utils::CLAUDE_DIR_NAME).yellow()
+    );
     println!();
-    println!("Daily workflow:");
-    println!("  {} - Pull latest changes", "hagi sync pull".yellow());
-    println!("  {} - Push your changes", "hagi sync push".yellow());
-    println!();
+    print_daily_workflow();
 
     Ok(())
 }
 
 /// Print manual setup instructions
 fn print_manual_setup_instructions() {
+    let claude_repo_name = utils::claude_repo_name();
+
     println!();
     println!("{}", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".yellow());
     println!("{}", "  📋 Manual Setup Instructions".yellow().bold());
@@ -438,11 +410,14 @@ fn print_manual_setup_instructions() {
     println!("1. Create private repository on GitHub:");
     println!("   {}", "https://github.com/new".cyan());
     println!();
-    println!("   Repository name: {}", format!("{}-claude", utils::get_repository_name()).cyan());
+    println!("   Repository name: {}", claude_repo_name.cyan());
     println!("   Visibility: {}", "Private".green());
     println!();
     println!("2. Initialize sync:");
-    println!("   {}", format!("hagi sync init git@github.com:<username>/{}-claude.git", utils::get_repository_name()).yellow());
+    println!(
+        "   {}",
+        format!("hagi sync init git@github.com:<username>/{}.git", claude_repo_name).yellow()
+    );
     println!();
     println!("💡 Tip: Install GitHub CLI for automatic setup:");
     println!("   {}", "https://cli.github.com/".cyan());
@@ -467,31 +442,19 @@ fn get_github_username() -> Result<String> {
 
 /// Clone .claude repository from URL (handles both fresh clone and replace)
 fn clone_claude_repo(remote_url: &str) -> Result<()> {
-    let claude_dir = Path::new(".claude");
-
     // If .claude exists, use backup/replace logic
-    if claude_dir.exists() {
+    if utils::project_claude_dir()?.exists() {
         return clone_and_replace_claude(remote_url);
     }
 
     // Fresh clone - .claude doesn't exist
     println!("{}", "Cloning .claude repository...".green());
 
-    let status = Command::new("git")
-        .args(["clone", remote_url, ".claude"])
-        .status()
-        .context("Failed to run git clone")?;
-
-    if !status.success() {
-        bail!("git clone failed");
-    }
+    git_clone_claude(remote_url)?;
 
     println!("{}", "✅ Cloned .claude repository".green().bold());
     println!();
-    println!("Daily workflow:");
-    println!("  {} - Pull latest changes", "hagi sync pull".yellow());
-    println!("  {} - Push your changes", "hagi sync push".yellow());
-    println!();
+    print_daily_workflow();
 
     Ok(())
 }

@@ -5,8 +5,11 @@ use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
-/// Maximum number of backup files to keep (default)
-pub const DEFAULT_MAX_BACKUPS: usize = 1;
+/// Number of timestamped backups kept next to a file that hagi rewrites
+const MAX_BACKUPS: usize = 1;
+
+/// Name of the Claude Code config directory, both under $HOME and inside a project
+pub const CLAUDE_DIR_NAME: &str = ".claude";
 
 /// Get the home directory path
 pub fn home_dir() -> Result<PathBuf> {
@@ -17,13 +20,18 @@ pub fn home_dir() -> Result<PathBuf> {
 
 /// Get the ~/.claude/ directory path
 pub fn claude_dir() -> Result<PathBuf> {
-    Ok(home_dir()?.join(".claude"))
+    Ok(home_dir()?.join(CLAUDE_DIR_NAME))
 }
 
-/// Get the ~/.local/share/claude/ directory path
-#[expect(dead_code)]
-pub fn claude_data_dir() -> Result<PathBuf> {
-    Ok(home_dir()?.join(".local/share/claude"))
+/// Get the current project's .claude/ directory path (whether or not it exists)
+pub fn project_claude_dir() -> Result<PathBuf> {
+    let project_dir = std::env::current_dir().context("Failed to get current directory")?;
+    Ok(project_dir.join(CLAUDE_DIR_NAME))
+}
+
+/// Name of the private repository that `hagi sync` uses for this project's .claude/
+pub fn claude_repo_name() -> String {
+    format!("{}-claude", get_repository_name())
 }
 
 /// Create a directory if it doesn't exist
@@ -38,19 +46,12 @@ pub fn ensure_dir(path: &Path) -> Result<()> {
     Ok(())
 }
 
-/// Create a backup of a file with timestamp
+/// Back up a file as `<name>.backup.<timestamp>` and drop older backups beyond MAX_BACKUPS
 ///
-/// # Naming Convention
-/// - Original: `settings.json`
-/// - Backup: `settings.json.backup.20250101_120000`
-///
-/// This ensures:
-/// - Clear identification of backup files
-/// - Chronological sorting by timestamp
-/// - Easy restoration (remove .backup.TIMESTAMP suffix)
-pub fn backup_file(path: &Path) -> Result<PathBuf> {
+/// Missing files are a no-op so callers can back up unconditionally before writing.
+pub fn backup_file(path: &Path) -> Result<()> {
     if !path.exists() {
-        return Ok(PathBuf::new());
+        return Ok(());
     }
 
     let timestamp = chrono::Local::now().format("%Y%m%d_%H%M%S");
@@ -77,15 +78,11 @@ pub fn backup_file(path: &Path) -> Result<PathBuf> {
         backup_path.display()
     );
 
-    Ok(backup_path)
+    cleanup_old_backups(path, MAX_BACKUPS)
 }
 
-/// Clean up old backup files, keeping only the most recent N backups
-pub fn cleanup_old_backups(original_path: &Path, max_backups: usize) -> Result<()> {
-    if !original_path.exists() {
-        return Ok(());
-    }
-
+/// Remove backup files of `original_path` beyond the most recent `max_backups`
+fn cleanup_old_backups(original_path: &Path, max_backups: usize) -> Result<()> {
     let parent_dir = original_path
         .parent()
         .context("Failed to get parent directory")?;
@@ -113,7 +110,7 @@ pub fn cleanup_old_backups(original_path: &Path, max_backups: usize) -> Result<(
     }
 
     // Sort by modification time (newest first)
-    backup_files.sort_by(|a, b| b.1.cmp(&a.1));
+    backup_files.sort_by_key(|(_, modified)| std::cmp::Reverse(*modified));
 
     // Remove old backups beyond max_backups
     let to_remove: Vec<_> = backup_files
@@ -194,11 +191,18 @@ pub fn read_json_file(path: &Path) -> Result<serde_json::Value> {
     })
 }
 
-/// Write JSON file
-pub fn write_json_file(path: &Path, value: &serde_json::Value) -> Result<()> {
-    let content = serde_json::to_string_pretty(value)
-        .context("Failed to serialize JSON")?;
+/// Write a text file, creating parent directories; in dry-run mode only report what would happen
+pub fn write_file(path: &Path, content: &str, dry_run: bool) -> Result<()> {
+    if dry_run {
+        let action = if path.exists() { "Would overwrite:" } else { "Would create:" };
+        println!("{} {}", action.yellow(), path.display());
+        return Ok(());
+    }
 
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent)
+            .with_context(|| format!("Failed to create directory: {}", parent.display()))?;
+    }
     fs::write(path, content)
         .with_context(|| format!("Failed to write file: {}", path.display()))?;
 
@@ -206,13 +210,18 @@ pub fn write_json_file(path: &Path, value: &serde_json::Value) -> Result<()> {
     Ok(())
 }
 
+/// Write JSON file
+pub fn write_json_file(path: &Path, value: &serde_json::Value) -> Result<()> {
+    let content = serde_json::to_string_pretty(value)
+        .context("Failed to serialize JSON")?;
+    write_file(path, &content, false)
+}
+
 /// Merge JSON configuration files (preserving existing configuration)
 pub fn merge_json_file(target_path: &Path, new_content: &serde_json::Value) -> Result<()> {
     let mut base = if target_path.exists() {
         println!("{} {}", "Merging into existing:".blue(), target_path.display());
         backup_file(target_path)?;
-        // Clean up old backups after creating new one
-        cleanup_old_backups(target_path, DEFAULT_MAX_BACKUPS)?;
         read_json_file(target_path)
             .with_context(|| format!("Failed to read existing JSON file: {}", target_path.display()))?
     } else {
@@ -241,23 +250,35 @@ pub fn major_minor(version: &str) -> Option<(u64, u64)> {
 #[derive(Debug, PartialEq)]
 pub enum VersionCheck {
     UpToDate,
-    /// Command that brings the project (or the binary) back in line
-    Fix(&'static str),
+    /// The project's templates predate the installed hagi
+    TemplatesBehind,
+    /// The templates came from a newer hagi (e.g. via `hagi sync` from another machine)
+    BinaryBehind,
     Unrecognized,
 }
 
-/// Same rule as the SessionStart hook: minor differences matter, patch differences do not
+impl VersionCheck {
+    /// Command that resolves the mismatch, if there is one
+    pub fn fix(&self) -> Option<&'static str> {
+        match self {
+            VersionCheck::TemplatesBehind => Some("hagi install --refresh"),
+            VersionCheck::BinaryBehind => Some("hagi update"),
+            VersionCheck::UpToDate | VersionCheck::Unrecognized => None,
+        }
+    }
+}
+
+/// Minor differences matter, patch differences do not (hagi bumps minor for Claude Code follow-ups)
 pub fn check_version(recorded: &str, current: &str) -> VersionCheck {
     match (major_minor(recorded), major_minor(current)) {
-        (Some(r), Some(c)) if c > r => VersionCheck::Fix("hagi install --refresh"),
-        (Some(r), Some(c)) if c < r => VersionCheck::Fix("hagi update"),
+        (Some(r), Some(c)) if c > r => VersionCheck::TemplatesBehind,
+        (Some(r), Some(c)) if c < r => VersionCheck::BinaryBehind,
         (Some(_), Some(_)) => VersionCheck::UpToDate,
         _ => VersionCheck::Unrecognized,
     }
 }
 
-/// Prompt user for confirmation
-#[expect(dead_code)]
+/// Ask a yes/no question; Enter and "y" mean yes
 pub fn confirm(message: &str) -> Result<bool> {
     print!("{} [Y/n]: ", message.yellow());
     io::stdout().flush()?;
@@ -267,21 +288,6 @@ pub fn confirm(message: &str) -> Result<bool> {
 
     let input = input.trim().to_lowercase();
     Ok(input.is_empty() || input == "y" || input == "yes")
-}
-
-/// Copy file with message
-#[expect(dead_code)]
-pub fn copy_file(from: &Path, to: &Path) -> Result<()> {
-    fs::copy(from, to).with_context(|| {
-        format!(
-            "Failed to copy: {} -> {}",
-            from.display(),
-            to.display()
-        )
-    })?;
-
-    println!("{} {} -> {}", "Copied:".green(), from.display(), to.display());
-    Ok(())
 }
 
 /// Add lines to .gitignore if they don't exist
@@ -317,80 +323,6 @@ pub fn update_gitignore(project_dir: &Path, entries: &[&str]) -> Result<()> {
 
     Ok(())
 }
-
-/// Expand shell-like environment variable syntax to absolute paths
-///
-/// Supports the following patterns:
-/// - `${HOME}` → actual home directory path
-/// - `${XDG_CACHE_HOME:-$HOME/.cache}` → XDG_CACHE_HOME or fallback
-/// - `${XDG_DATA_HOME:-$HOME/.local/share}` → XDG_DATA_HOME or fallback
-///
-/// # Examples
-/// ```
-/// let expanded = expand_env_vars("${HOME}/.config")?;
-/// // Returns: "/home/username/.config"
-/// ```
-pub fn expand_env_vars(input: &str) -> Result<String> {
-    let home = std::env::var("HOME").with_context(|| {
-        format!(
-            "HOME environment variable not set. Cannot expand: {}",
-            input
-        )
-    })?;
-
-    let xdg_cache = std::env::var("XDG_CACHE_HOME")
-        .unwrap_or_else(|_| format!("{}/.cache", home));
-
-    let xdg_data = std::env::var("XDG_DATA_HOME")
-        .unwrap_or_else(|_| format!("{}/.local/share", home));
-
-    let mut result = input.to_string();
-
-    // Replace ${HOME}
-    result = result.replace("${HOME}", &home);
-
-    // Replace ${XDG_CACHE_HOME:-$HOME/.cache}
-    result = result.replace(
-        "${XDG_CACHE_HOME:-$HOME/.cache}",
-        &xdg_cache
-    );
-
-    // Replace ${XDG_DATA_HOME:-$HOME/.local/share}
-    result = result.replace(
-        "${XDG_DATA_HOME:-$HOME/.local/share}",
-        &xdg_data
-    );
-
-    Ok(result)
-}
-
-/// Recursively expand environment variables in JSON values
-///
-/// Traverses JSON structure and replaces shell-like environment variable syntax
-/// with absolute paths in all string values.
-pub fn expand_json_env_vars(value: &mut serde_json::Value) -> Result<()> {
-    match value {
-        serde_json::Value::String(s) => {
-            *s = expand_env_vars(s)
-                .with_context(|| format!("Failed to expand environment variables in: {}", s))?;
-        }
-        serde_json::Value::Array(arr) => {
-            for (index, item) in arr.iter_mut().enumerate() {
-                expand_json_env_vars(item)
-                    .with_context(|| format!("Failed to expand variables in array index {}", index))?;
-            }
-        }
-        serde_json::Value::Object(map) => {
-            for (key, v) in map {
-                expand_json_env_vars(v)
-                    .with_context(|| format!("Failed to expand variables in object key: {}", key))?;
-            }
-        }
-        _ => {}
-    }
-    Ok(())
-}
-
 
 /// Check if a command exists in PATH
 pub fn command_exists(cmd: &str) -> bool {
@@ -437,10 +369,12 @@ mod tests {
 
     #[test]
     fn test_check_version_outcomes() {
-        assert_eq!(check_version("0.4.1\n", "0.5.0"), VersionCheck::Fix("hagi install --refresh"));
-        assert_eq!(check_version("0.6.0", "0.5.0"), VersionCheck::Fix("hagi update"));
+        assert_eq!(check_version("0.4.1\n", "0.5.0"), VersionCheck::TemplatesBehind);
+        assert_eq!(check_version("0.6.0", "0.5.0"), VersionCheck::BinaryBehind);
         assert_eq!(check_version("0.5.3", "0.5.0"), VersionCheck::UpToDate);
         assert_eq!(check_version("garbage", "0.5.0"), VersionCheck::Unrecognized);
+        assert_eq!(VersionCheck::TemplatesBehind.fix(), Some("hagi install --refresh"));
+        assert_eq!(VersionCheck::UpToDate.fix(), None);
     }
 
     #[test]

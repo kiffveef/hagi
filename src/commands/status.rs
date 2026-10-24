@@ -1,7 +1,5 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use colored::*;
-use std::collections::{HashMap, HashSet};
-use std::env;
 use std::path::Path;
 
 use crate::templates;
@@ -38,20 +36,13 @@ fn check_global_configuration() -> Result<()> {
         }
     };
 
-    // Check ~/.claude/mcp.json
-    let mcp_json = claude_dir.join("mcp.json");
-    if mcp_json.exists() {
-        println!("{} {} - {}", "✓".green(), "~/.claude/mcp.json".bold(), "installed".dimmed());
-    } else {
-        println!("{} {} - {}", "✗".red(), "~/.claude/mcp.json".bold(), "not found".dimmed());
-    }
-
-    // Check ~/.claude/settings.json
-    let settings_json = claude_dir.join("settings.json");
+    // Only settings.json is installed globally; MCP config is per-project
+    let settings_json = claude_dir.join(templates::SETTINGS_JSON);
+    let display_name = format!("~/{}/{}", utils::CLAUDE_DIR_NAME, templates::SETTINGS_JSON);
     if settings_json.exists() {
-        println!("{} {} - {}", "✓".green(), "~/.claude/settings.json".bold(), "installed".dimmed());
+        println!("{} {} - {}", "✓".green(), display_name.bold(), "installed".dimmed());
     } else {
-        println!("{} {} - {}", "✗".red(), "~/.claude/settings.json".bold(), "not found".dimmed());
+        println!("{} {} - {}", "✗".red(), display_name.bold(), "not found".dimmed());
     }
 
     Ok(())
@@ -72,18 +63,19 @@ fn print_version_status(claude_dir: &Path) {
     let recorded = recorded.trim();
     let current = env!("CARGO_PKG_VERSION");
 
-    match utils::check_version(recorded, current) {
-        utils::VersionCheck::UpToDate => {
-            println!("  {} installed by hagi {}", "✓".green(), recorded);
-        }
-        utils::VersionCheck::Fix(cmd) => println!(
+    let check = utils::check_version(recorded, current);
+    match check.fix() {
+        Some(cmd) => println!(
             "  {} installed by hagi {} (current {}) - run {}",
             "⚠".yellow(),
             recorded,
             current,
             cmd.yellow()
         ),
-        utils::VersionCheck::Unrecognized => println!(
+        None if check == utils::VersionCheck::UpToDate => {
+            println!("  {} installed by hagi {}", "✓".green(), recorded);
+        }
+        None => println!(
             "  {} .claude/{} holds '{}' - run {}",
             "⚠".yellow(),
             name,
@@ -97,8 +89,7 @@ fn print_version_status(claude_dir: &Path) {
 fn check_project_configuration() -> Result<()> {
     println!("{}", "[Project Configuration]".cyan().bold());
 
-    let project_dir = env::current_dir().context("Failed to get current directory")?;
-    let claude_dir = project_dir.join(".claude");
+    let claude_dir = utils::project_claude_dir()?;
 
     if !claude_dir.exists() {
         println!("{} {} - {}", "✗".red(), ".claude/".bold(), "not found".dimmed());
@@ -109,14 +100,8 @@ fn check_project_configuration() -> Result<()> {
     println!("{} {} - {}", "✓".green(), ".claude/".bold(), "installed".dimmed());
 
     // Check key template files
-    let files = [
-        (templates::CLAUDE_MD, claude_dir.join(templates::CLAUDE_MD)),
-        ("mcp.json", claude_dir.join("mcp.json")),
-        ("settings.local.json", claude_dir.join("settings.local.json")),
-    ];
-
-    for (name, path) in files {
-        if path.exists() {
+    for name in [templates::CLAUDE_MD, templates::MCP_JSON, templates::SETTINGS_LOCAL_JSON] {
+        if claude_dir.join(name).exists() {
             println!("  {} .claude/{}", "✓".green(), name);
         } else {
             println!("  {} .claude/{} - {}", "✗".red(), name, "not found".dimmed());
@@ -125,119 +110,47 @@ fn check_project_configuration() -> Result<()> {
 
     print_version_status(&claude_dir);
 
-    // Check instructions directory
-    let instructions_dir = claude_dir.join("instructions");
-    if instructions_dir.exists() && instructions_dir.is_dir() {
-        let count = std::fs::read_dir(&instructions_dir)
-            .map(|entries| entries.filter_map(Result::ok).count())
-            .unwrap_or(0);
-        println!("  {} .claude/instructions/ ({} files)", "✓".green(), count);
-    } else {
-        println!("  {} .claude/instructions/ - {}", "✗".red(), "not found".dimmed());
-    }
-
-    // Check skills directory (v0.2.0+)
-    let skills_dir = claude_dir.join("skills");
-    if skills_dir.exists() && skills_dir.is_dir() {
-        let count = std::fs::read_dir(&skills_dir)
-            .map(|entries| entries.filter_map(Result::ok).count())
-            .unwrap_or(0);
-        println!("  {} .claude/skills/ ({} files)", "✓".green(), count);
-    } else {
-        println!("  {} .claude/skills/ - {}", "✗".red(), "not found".dimmed());
+    // Check template directories
+    for dir_name in ["instructions", "skills"] {
+        let dir = claude_dir.join(dir_name);
+        if dir.is_dir() {
+            let count = std::fs::read_dir(&dir)
+                .map(|entries| entries.filter_map(Result::ok).count())
+                .unwrap_or(0);
+            println!("  {} .claude/{}/ ({} files)", "✓".green(), dir_name, count);
+        } else {
+            println!("  {} .claude/{}/ - {}", "✗".red(), dir_name, "not found".dimmed());
+        }
     }
 
     Ok(())
 }
 
-/// Check MCP server configuration
+/// Show the project's MCP servers and whether each is enabled
 fn check_mcp_servers() -> Result<()> {
     println!("{}", "[MCP Servers]".cyan().bold());
 
-    // Read global configuration
-    let global_config = if let Ok(claude_dir) = utils::claude_dir() {
-        let global_mcp = claude_dir.join("mcp.json");
-        if global_mcp.exists() {
-            Some(utils::read_json_file(&global_mcp)?)
-        } else {
-            None
-        }
-    } else {
-        None
-    };
-
-    // Read project-local configuration
-    let project_dir = env::current_dir().context("Failed to get current directory")?;
-    let local_mcp = project_dir.join(".claude/mcp.json");
-    let local_config = if local_mcp.exists() {
-        Some(utils::read_json_file(&local_mcp)?)
-    } else {
-        None
-    };
-
-    if global_config.is_none() && local_config.is_none() {
+    let mcp_path = utils::project_claude_dir()?.join(templates::MCP_JSON);
+    if !mcp_path.exists() {
         println!("{} No MCP configuration found", "✗".red());
-        println!("\nRun {} to install MCP configuration", "hagi install --global".yellow());
+        println!("\nRun {} to install MCP configuration", "hagi install".yellow());
         return Ok(());
     }
 
-    // Compare configurations and show differences
-    println!();
-    println!("{}", "Global vs Local Configuration:".yellow().bold());
-    println!();
+    let config = utils::read_json_file(&mcp_path)?;
+    let Some(servers) = config.get("mcpServers").and_then(|v| v.as_object()) else {
+        println!("{} .claude/{} has no mcpServers section", "✗".red(), templates::MCP_JSON);
+        return Ok(());
+    };
 
-    // Extract server status from both configs
-    let global_servers = extract_server_status(&global_config);
-    let local_servers = extract_server_status(&local_config);
-
-    // Get all server names from both configs
-    let all_servers: HashSet<String> = global_servers
-        .keys()
-        .chain(local_servers.keys())
-        .cloned()
-        .collect();
-
-    let mut differences_found = false;
-
-    for name in all_servers.iter() {
-        let global_enabled = global_servers.get(name).copied().unwrap_or(false);
-        let local_enabled = local_servers.get(name).copied().unwrap_or(false);
-
-        if global_enabled != local_enabled {
-            differences_found = true;
-            let global_status = if global_enabled { "enabled".green() } else { "disabled".red() };
-            let local_status = if local_enabled { "enabled".green() } else { "disabled".red() };
-            println!("  {} {} [global: {}, local: {}]",
-                "⚠".yellow(), name.cyan(), global_status, local_status);
-        } else {
-            let status = if global_enabled { "enabled".green() } else { "disabled".dimmed() };
-            println!("  {} {} [{}]", "✓".dimmed(), name.cyan(), status);
-        }
-    }
-
-    if !differences_found {
-        println!();
-        println!("{}", "✓ No configuration differences between global and local".green());
+    for (name, server_config) in servers {
+        let disabled = server_config
+            .get("disabled")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+        let status = if disabled { "disabled".dimmed() } else { "enabled".green() };
+        println!("  {} {} [{}]", "✓".dimmed(), name.cyan(), status);
     }
 
     Ok(())
-}
-
-/// Extract server names and their enabled status from config
-fn extract_server_status(config: &Option<serde_json::Value>) -> HashMap<String, bool> {
-    let mut result = HashMap::new();
-
-    if let Some(config) = config
-        && let Some(servers) = config.get("mcpServers").and_then(|v| v.as_object())
-    {
-        for (name, server_config) in servers {
-            let is_enabled = !server_config
-                .get("disabled")
-                .and_then(|v| v.as_bool())
-                .unwrap_or(false);
-            result.insert(name.clone(), is_enabled);
-        }
-    }
-
-    result
 }

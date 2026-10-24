@@ -5,3 +5,4 @@ pub mod status;
 pub mod sync;
 pub mod uninstall;
 pub mod update;
+pub mod version_check;

@@ -20,8 +20,17 @@ pub const CLAUDE_MD: &str = "CLAUDE.md";
 /// TODO.md filename (used across install, sync)
 pub const TODO_MD: &str = "TODO.md";
 
-/// Records the hagi version that applied the templates (read by the SessionStart hook and status)
+/// Records the hagi version that applied the templates (read by `hagi version-check` and status)
 pub const HAGI_VERSION_FILE: &str = "hagi-version";
+
+/// Project MCP config filename (also symlinked as /.mcp.json)
+pub const MCP_JSON: &str = "mcp.json";
+
+/// Project settings template; installed as-is in a project and as settings.json globally
+pub const SETTINGS_LOCAL_JSON: &str = "settings.local.json";
+
+/// Global settings filename under ~/.claude/
+pub const SETTINGS_JSON: &str = "settings.json";
 
 // ============================================================================
 // Category System
@@ -68,9 +77,7 @@ impl Category {
             Category::Instructions => path_str.starts_with("instructions/"),
             Category::Skills => path_str.starts_with("skills/"),
             Category::Hooks => path_str.starts_with("hooks/"),
-            Category::Config => {
-                path_str == "mcp.json" || path_str == "settings.local.json"
-            }
+            Category::Config => path_str == MCP_JSON || path_str == SETTINGS_LOCAL_JSON,
             Category::Docs => {
                 path_str == CLAUDE_MD || path_str == TODO_MD
             }
@@ -251,39 +258,22 @@ fn copy_file_entry(file: &include_dir::File, target_base: &Path, dry_run: bool, 
 
     // JSON configs are merged so keys written by Claude Code or the user survive reinstalls
     if Category::Config.matches_path(relative_path) {
-        return merge_config_template(relative_path, content, &target_file, dry_run);
+        return merge_config_template(relative_path, &target_file, dry_run);
     }
 
-    if dry_run {
-        let action = if target_file.exists() { "Would overwrite:" } else { "Would create:" };
-        println!("{} {}", action.yellow(), target_file.display());
-        return Ok(());
-    }
-
-    // Backup existing file
-    if target_file.exists() {
+    if !dry_run {
         utils::backup_file(&target_file)?;
-        utils::cleanup_old_backups(&target_file, utils::DEFAULT_MAX_BACKUPS)?;
     }
-
-    // Ensure parent directory exists
-    if let Some(parent) = target_file.parent() {
-        utils::ensure_dir(parent)?;
-    }
-
-    fs::write(&target_file, content).with_context(|| {
-        format!("Failed to write template file: {}", target_file.display())
-    })?;
-
-    println!("{} {}", "Wrote:".green(), target_file.display());
-
-    Ok(())
+    utils::write_file(&target_file, content, dry_run)
 }
 
-/// Merge a JSON config template into the target instead of overwriting it
-fn merge_config_template(relative_path: &Path, content: &str, target_file: &Path, dry_run: bool) -> Result<()> {
+/// Merge an embedded JSON template into `target_file` instead of overwriting it
+///
+/// Used for project configs and for the global settings.json (built from settings.local.json).
+pub fn merge_config_template(template_name: &Path, target_file: &Path, dry_run: bool) -> Result<()> {
+    let content = get_template(&template_name.to_string_lossy())?;
     let mut template: serde_json::Value = serde_json::from_str(content)
-        .with_context(|| format!("Failed to parse template JSON: {}", relative_path.display()))?;
+        .with_context(|| format!("Failed to parse template JSON: {}", template_name.display()))?;
 
     if target_file.exists() {
         let existing = utils::read_json_file(target_file)?;
@@ -297,7 +287,8 @@ fn merge_config_template(relative_path: &Path, content: &str, target_file: &Path
     }
 
     if let Some(parent) = target_file.parent() {
-        utils::ensure_dir(parent)?;
+        fs::create_dir_all(parent)
+            .with_context(|| format!("Failed to create directory: {}", parent.display()))?;
     }
 
     utils::merge_json_file(target_file, &template)
@@ -376,13 +367,7 @@ pub fn update_claude_md(claude_md_path: &Path, dry_run: bool) -> Result<bool> {
     let template = get_template(CLAUDE_MD)?;
 
     if !claude_md_path.exists() {
-        if dry_run {
-            println!("{} {}", "Would create:".yellow(), claude_md_path.display());
-        } else {
-            fs::write(claude_md_path, &template)
-                .with_context(|| format!("Failed to write {}", claude_md_path.display()))?;
-            println!("{} {}", "Created:".green(), claude_md_path.display());
-        }
+        utils::write_file(claude_md_path, template, dry_run)?;
         return Ok(true);
     }
 
@@ -402,7 +387,7 @@ pub fn update_claude_md(claude_md_path: &Path, dry_run: bool) -> Result<bool> {
     };
 
     // Replace project section placeholder in template with existing project content
-    let new_content = match extract_project_section(&template) {
+    let new_content = match extract_project_section(template) {
         Some((start, end, _)) => {
             format!("{}{}{}", &template[..start], project_section, &template[end..])
         }
@@ -420,11 +405,7 @@ pub fn update_claude_md(claude_md_path: &Path, dry_run: bool) -> Result<bool> {
     }
 
     utils::backup_file(claude_md_path)?;
-    utils::cleanup_old_backups(claude_md_path, utils::DEFAULT_MAX_BACKUPS)?;
-
-    fs::write(claude_md_path, new_content)
-        .with_context(|| format!("Failed to write {}", claude_md_path.display()))?;
-
+    utils::write_file(claude_md_path, &new_content, false)?;
     println!("{} CLAUDE.md (project section preserved)", "Updated:".green());
     Ok(true)
 }
@@ -483,12 +464,12 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("hagi-test-settings-{}", std::process::id()));
         fs::create_dir_all(&dir).unwrap();
         fs::write(
-            dir.join("settings.local.json"),
+            dir.join(SETTINGS_LOCAL_JSON),
             r#"{"enabledMcpjsonServers":["context7"],"permissions":{"allow":["Bash(old:*)"]}}"#,
         )
         .unwrap();
 
-        let merged = copy_config_template(&dir, "settings.local.json");
+        let merged = copy_config_template(&dir, SETTINGS_LOCAL_JSON);
 
         assert_eq!(merged["enabledMcpjsonServers"][0], "context7");
         assert!(merged["attribution"].is_object());
@@ -502,12 +483,12 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("hagi-test-mcp-{}", std::process::id()));
         fs::create_dir_all(&dir).unwrap();
         fs::write(
-            dir.join("mcp.json"),
+            dir.join(MCP_JSON),
             r#"{"mcpServers":{"memory":{"command":"npx","args":[]}}}"#,
         )
         .unwrap();
 
-        let merged = copy_config_template(&dir, "mcp.json");
+        let merged = copy_config_template(&dir, MCP_JSON);
 
         assert!(merged["mcpServers"]["memory"].get("disabled").is_none());
         assert_eq!(merged["mcpServers"]["serena"]["disabled"], true);

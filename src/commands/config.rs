@@ -5,21 +5,14 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 
+use crate::templates;
 use crate::utils;
 
 /// Show configuration file content
 pub fn show(config_type: &str) -> Result<()> {
-    let config_path = get_config_path(config_type)?;
-
-    if !config_path.exists() {
-        println!(
-            "{} Configuration file not found: {}",
-            "❌".red(),
-            config_path.display()
-        );
-        println!("Run 'hagi install --global' first.");
+    let Some(config_path) = existing_config_path(config_type)? else {
         return Ok(());
-    }
+    };
 
     let content = fs::read_to_string(&config_path).with_context(|| {
         format!("Failed to read configuration file: {}", config_path.display())
@@ -35,17 +28,9 @@ pub fn show(config_type: &str) -> Result<()> {
 
 /// Validate configuration file (JSON syntax check)
 pub fn validate(config_type: &str) -> Result<()> {
-    let config_path = get_config_path(config_type)?;
-
-    if !config_path.exists() {
-        println!(
-            "{} Configuration file not found: {}",
-            "❌".red(),
-            config_path.display()
-        );
-        println!("Run 'hagi install --global' first.");
+    let Some(config_path) = existing_config_path(config_type)? else {
         return Ok(());
-    }
+    };
 
     match utils::read_json_file(&config_path) {
         Ok(_) => {
@@ -74,17 +59,9 @@ pub fn validate(config_type: &str) -> Result<()> {
 
 /// Edit configuration file with $EDITOR
 pub fn edit(config_type: &str) -> Result<()> {
-    let config_path = get_config_path(config_type)?;
-
-    if !config_path.exists() {
-        println!(
-            "{} Configuration file not found: {}",
-            "❌".red(),
-            config_path.display()
-        );
-        println!("Run 'hagi install --global' first.");
+    let Some(config_path) = existing_config_path(config_type)? else {
         return Ok(());
-    }
+    };
 
     // Get editor from environment (default: vim)
     let editor = env::var("EDITOR").unwrap_or_else(|_| {
@@ -94,7 +71,6 @@ pub fn edit(config_type: &str) -> Result<()> {
 
     // Create backup before editing
     utils::backup_file(&config_path)?;
-    utils::cleanup_old_backups(&config_path, utils::DEFAULT_MAX_BACKUPS)?;
 
     println!("{} {}", "Opening with:".green(), editor);
     println!();
@@ -122,17 +98,21 @@ pub fn edit(config_type: &str) -> Result<()> {
     Ok(())
 }
 
-/// Get configuration file path based on type
-fn get_config_path(config_type: &str) -> Result<PathBuf> {
-    let claude_dir = utils::claude_dir()?;
-
-    let path = match config_type {
-        "mcp" => claude_dir.join("mcp.json"),
-        "global" => claude_dir.join("settings.json"),
+/// Resolve a config type to its file path and the install command that creates it
+fn config_target(config_type: &str) -> Result<(PathBuf, &'static str)> {
+    match config_type {
+        "mcp" => Ok((
+            utils::project_claude_dir()?.join(templates::MCP_JSON),
+            "hagi install",
+        )),
+        "global" => Ok((
+            utils::claude_dir()?.join(templates::SETTINGS_JSON),
+            "hagi install --global",
+        )),
         "hook" => {
             println!("{}", "❌ Hook configuration is not yet supported".red());
             println!("This feature will be added in a future release.");
-            return Err(anyhow::anyhow!("Unsupported config type"));
+            Err(anyhow::anyhow!("Unsupported config type"))
         }
         _ => {
             println!("{} Unknown config type: {}", "❌".red(), config_type);
@@ -141,9 +121,24 @@ fn get_config_path(config_type: &str) -> Result<PathBuf> {
             println!("  - {} (MCP server configuration)", "mcp".cyan());
             println!("  - {} (Global Claude settings)", "global".cyan());
             println!("  - {} (Hooks - coming soon)", "hook".dimmed());
-            return Err(anyhow::anyhow!("Unknown config type"));
+            Err(anyhow::anyhow!("Unknown config type"))
         }
-    };
+    }
+}
 
-    Ok(path)
+/// Path of the config file, or None (after printing a hint) when it has not been installed yet
+fn existing_config_path(config_type: &str) -> Result<Option<PathBuf>> {
+    let (config_path, install_cmd) = config_target(config_type)?;
+
+    if !config_path.exists() {
+        println!(
+            "{} Configuration file not found: {}",
+            "❌".red(),
+            config_path.display()
+        );
+        println!("Run '{}' first.", install_cmd);
+        return Ok(None);
+    }
+
+    Ok(Some(config_path))
 }
