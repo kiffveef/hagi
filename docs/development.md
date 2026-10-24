@@ -11,7 +11,7 @@ cargo build
 cargo test
 ```
 
-前提条件: Rust1.80+、Git、Node.js v18+(MCPテスト用)、uv(MCPテスト用)
+前提条件: Rust1.85+(edition2024)、Git、Node.js v18+(MCPテスト用)、uv(MCPテスト用)
 
 ---
 

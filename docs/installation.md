@@ -8,7 +8,7 @@
 
 | ツール | 用途 | インストール |
 |--------|------|-------------|
-| Rust/cargo 1.80+ | hagiのビルド | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh` |
+| Rust/cargo 1.85+ | hagiのビルド | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh` |
 | jq | .claude/ git保護 | `sudo apt install jq` |
 
 ### MCP利用時
