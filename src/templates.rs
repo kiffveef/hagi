@@ -246,6 +246,11 @@ fn copy_file_entry(file: &include_dir::File, target_base: &Path, dry_run: bool, 
         return Ok(());
     }
 
+    // JSON configs are merged so keys written by Claude Code or the user survive reinstalls
+    if Category::Config.matches_path(relative_path) {
+        return merge_config_template(relative_path, content, &target_file, dry_run);
+    }
+
     if dry_run {
         let action = if target_file.exists() { "Would overwrite:" } else { "Would create:" };
         println!("{} {}", action.yellow(), target_file.display());
@@ -270,6 +275,46 @@ fn copy_file_entry(file: &include_dir::File, target_base: &Path, dry_run: bool, 
     println!("{} {}", "Wrote:".green(), target_file.display());
 
     Ok(())
+}
+
+/// Merge a JSON config template into the target instead of overwriting it
+fn merge_config_template(relative_path: &Path, content: &str, target_file: &Path, dry_run: bool) -> Result<()> {
+    let mut template: serde_json::Value = serde_json::from_str(content)
+        .with_context(|| format!("Failed to parse template JSON: {}", relative_path.display()))?;
+
+    if target_file.exists() {
+        let existing = utils::read_json_file(target_file)?;
+        keep_existing_server_state(&mut template, &existing);
+    }
+
+    if dry_run {
+        let action = if target_file.exists() { "Would merge into:" } else { "Would create:" };
+        println!("{} {}", action.yellow(), target_file.display());
+        return Ok(());
+    }
+
+    if let Some(parent) = target_file.parent() {
+        utils::ensure_dir(parent)?;
+    }
+
+    utils::merge_json_file(target_file, &template)
+}
+
+/// Drop `disabled` from template servers the target already has, so `hagi mcp enable` choices survive
+fn keep_existing_server_state(template: &mut serde_json::Value, existing: &serde_json::Value) {
+    let Some(existing_servers) = existing.get("mcpServers").and_then(|v| v.as_object()) else {
+        return;
+    };
+    let Some(template_servers) = template.get_mut("mcpServers").and_then(|v| v.as_object_mut()) else {
+        return;
+    };
+    for (name, server) in template_servers.iter_mut() {
+        if existing_servers.contains_key(name)
+            && let Some(obj) = server.as_object_mut()
+        {
+            obj.remove("disabled");
+        }
+    }
 }
 
 /// Check if a template is created only when missing (never overwritten)
@@ -421,6 +466,48 @@ mod tests {
         copy_todo_template(&dir);
 
         assert!(dir.join(TODO_MD).exists());
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    fn copy_config_template(dir: &Path, name: &str) -> serde_json::Value {
+        let file = TEMPLATES.get_file(name).expect("config template missing");
+        copy_file_entry(file, dir, false, &InstallFilter::default()).unwrap();
+        utils::read_json_file(&dir.join(name)).unwrap()
+    }
+
+    #[test]
+    fn test_settings_merge_keeps_user_keys_and_replaces_lists() {
+        let dir = std::env::temp_dir().join(format!("hagi-test-settings-{}", std::process::id()));
+        fs::create_dir_all(&dir).unwrap();
+        fs::write(
+            dir.join("settings.local.json"),
+            r#"{"enabledMcpjsonServers":["context7"],"permissions":{"allow":["Bash(old:*)"]}}"#,
+        )
+        .unwrap();
+
+        let merged = copy_config_template(&dir, "settings.local.json");
+
+        assert_eq!(merged["enabledMcpjsonServers"][0], "context7");
+        assert!(merged["attribution"].is_object());
+        let allow = merged["permissions"]["allow"].as_array().unwrap();
+        assert!(!allow.iter().any(|r| r == "Bash(old:*)"));
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn test_mcp_merge_keeps_enabled_state_of_existing_servers() {
+        let dir = std::env::temp_dir().join(format!("hagi-test-mcp-{}", std::process::id()));
+        fs::create_dir_all(&dir).unwrap();
+        fs::write(
+            dir.join("mcp.json"),
+            r#"{"mcpServers":{"memory":{"command":"npx","args":[]}}}"#,
+        )
+        .unwrap();
+
+        let merged = copy_config_template(&dir, "mcp.json");
+
+        assert!(merged["mcpServers"]["memory"].get("disabled").is_none());
+        assert_eq!(merged["mcpServers"]["serena"]["disabled"], true);
         fs::remove_dir_all(&dir).unwrap();
     }
 }

@@ -63,7 +63,7 @@ hagi install --chat
 | `instructions` | `instructions/` + CLAUDE.md更新(プロジェクトセクション保持) |
 | `skills` | `skills/` |
 | `hooks` | `hooks/` |
-| `config` | `mcp.json`, `settings.local.json` |
+| `config` | `mcp.json`, `settings.local.json`(既存ファイルへマージ。追加キーとMCPサーバーの有効状態は保持、配列はテンプレートで置換) |
 | `docs` | CLAUDE.md更新(プロジェクトセクション保持), `TODO.md`(未作成時のみ) |
 | `designs` | `designs/` |
 
