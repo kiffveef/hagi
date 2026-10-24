@@ -64,11 +64,11 @@ hagi install --refresh
 ```
 
 全カテゴリのテンプレートとgit hooks(`pre-commit`, `commit-msg`)を再適用する。`--only`で何を指定するか考えずに、hagi更新のたびにこれだけ実行すればよい。
-JSON設定はマージ、CLAUDE.mdは管理セクションのみ更新、TODO.mdは既存を維持するため、プロジェクト側の追記は失われない。
-git初期化・`.gitignore`・`.mcp.json`シンボリックリンクは触らない(未導入のプロジェクトでは`hagi install`を使う)。`--global`/`--chat`/`--only`との併用不可。
+プロジェクト側の追記は失われない。JSON設定はマージし、CLAUDE.mdは管理セクションのみ更新し、TODO.mdは既存を維持する。
+git初期化・`.gitignore`・`.mcp.json`シンボリックリンクは行わない(未導入のプロジェクトでは`hagi install`を使う)。`--global`/`--chat`/`--only`との併用不可。
 
 フルインストールと`--refresh`は適用時のhagiバージョンを`.claude/hagi-version`に記録する(`--only`では更新しない)。
-配布されるSessionStart hook(`hooks/check-hagi-version.sh`)がセッション開始時に`hagi version-check`(隠しサブコマンド)を呼び、この値と現在の`hagi`のマイナーバージョンを比較して、差があれば`hagi install --refresh`(hagiの方が新しい)または`hagi update`(記録の方が新しい)を促す警告を表示する。`hagi`が見つからない場合は何もしない。`hagi status`でも同じ比較結果を確認できる。
+配布されるSessionStart hook(`hooks/check-hagi-version.sh`)は、セッション開始時に`hagi version-check`(隠しサブコマンド)を呼ぶ。この値と現在の`hagi`のマイナーバージョンを比較し、差があれば警告を表示する。hagiの方が新しければ`hagi install --refresh`を、記録の方が新しければ`hagi update`を促す。`hagi`が見つからない場合は何もしない。`hagi status`でも同じ比較結果を確認できる。
 
 注意点:
 - `settings.local.json`の`hooks`配下の配列(`PreToolUse`、`SessionStart`)はテンプレートで置換される。プロジェクト独自のhookは別のイベント名か`~/.claude/settings.json`に置く
