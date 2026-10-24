@@ -37,6 +37,10 @@ enum Commands {
         /// Install only specific categories (instructions, skills, hooks, config, docs, designs)
         #[arg(long = "only", value_name = "CATEGORY", num_args = 1..)]
         only: Vec<String>,
+
+        /// Re-apply all hagi-managed files to an already set up project (templates + git hooks)
+        #[arg(long)]
+        refresh: bool,
     },
 
     /// Uninstall hagi configuration
@@ -148,9 +152,12 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Install { global, chat, dry_run, skip, only } => {
+        Commands::Install { global, chat, dry_run, skip, only, refresh } => {
             if !only.is_empty() && (global || chat) {
                 bail!("--only cannot be used with --global or --chat");
+            }
+            if refresh && (global || chat || !only.is_empty()) {
+                bail!("--refresh cannot be used with --global, --chat or --only");
             }
 
             // Validate and parse category names
@@ -160,6 +167,9 @@ fn main() -> Result<()> {
                 commands::install::install_global(dry_run)?;
             } else if chat {
                 commands::install::install_chat(dry_run)?;
+            } else if refresh {
+                let filter = templates::InstallFilter::new(Vec::new(), skip);
+                commands::install::refresh_project(dry_run, &filter)?;
             } else {
                 let filter = templates::InstallFilter::new(categories, skip);
                 commands::install::install_project(dry_run, &filter)?;

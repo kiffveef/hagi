@@ -195,6 +195,46 @@ pub fn install_project(dry_run: bool, filter: &InstallFilter) -> Result<()> {
     Ok(())
 }
 
+/// Re-apply every hagi-managed file to a project that already has `.claude/`
+///
+/// Covers all template categories and git hooks. Setup-only steps (git init,
+/// .gitignore, .mcp.json symlink, completion guidance) are left to `hagi install`.
+pub fn refresh_project(dry_run: bool, filter: &InstallFilter) -> Result<()> {
+    print_dry_run_header(dry_run);
+    println!("{}", "Refreshing hagi-managed files...".green());
+
+    let project_dir = env::current_dir().context("Failed to get current directory")?;
+    let claude_dir = project_dir.join(".claude");
+
+    if !claude_dir.is_dir() {
+        anyhow::bail!(
+            ".claude/ not found in {}. Run 'hagi install' first.",
+            project_dir.display()
+        );
+    }
+
+    print_skip_list(&filter.skip);
+
+    let needs_claude_md = !filter.skip.iter().any(|s| s == templates::CLAUDE_MD);
+    let copy_filter = skip_claude_md_filter(filter, needs_claude_md);
+
+    templates::copy_all_templates_filtered(&claude_dir, dry_run, &copy_filter)?;
+
+    if needs_claude_md {
+        install_claude_md(&claude_dir, dry_run)?;
+    }
+
+    setup_claude_hooks(&claude_dir, dry_run)?;
+    install_git_hooks(&project_dir, dry_run)?;
+
+    print_dry_run_footer(dry_run);
+    if !dry_run {
+        println!("{}", "\n✅ hagi-managed files refreshed successfully!".green().bold());
+    }
+
+    Ok(())
+}
+
 /// Ensure current directory is a git repository, initialize if not
 fn ensure_git_repository(dry_run: bool) -> Result<()> {
     if !is_git_repository() {
