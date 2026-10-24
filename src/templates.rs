@@ -20,6 +20,9 @@ pub const CLAUDE_MD: &str = "CLAUDE.md";
 /// TODO.md filename (used across install, sync)
 pub const TODO_MD: &str = "TODO.md";
 
+/// Records the hagi version that applied the templates (read by the SessionStart hook and status)
+pub const HAGI_VERSION_FILE: &str = "hagi-version";
+
 // ============================================================================
 // Category System
 // ============================================================================

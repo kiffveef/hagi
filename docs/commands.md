@@ -67,6 +67,13 @@ hagi install --refresh
 JSON設定はマージ、CLAUDE.mdは管理セクションのみ更新、TODO.mdは既存を維持するため、プロジェクト側の追記は失われない。
 git初期化・`.gitignore`・`.mcp.json`シンボリックリンクは触らない(未導入のプロジェクトでは`hagi install`を使う)。`--global`/`--chat`/`--only`との併用不可。
 
+フルインストールと`--refresh`は適用時のhagiバージョンを`.claude/hagi-version`に記録する(`--only`では更新しない)。
+配布されるSessionStart hook(`hooks/check-hagi-version.sh`)がセッション開始時にこの値と現在の`hagi`のマイナーバージョンを比較し、差があれば`hagi install --refresh`(hagiの方が新しい)または`hagi update`(記録の方が新しい)を促す警告を表示する。`hagi status`でも同じ比較結果を確認できる。
+
+注意点:
+- `settings.local.json`の`hooks`配下の配列(`PreToolUse`、`SessionStart`)はテンプレートで置換される。プロジェクト独自のhookは別のイベント名か`~/.claude/settings.json`に置く
+- hookスクリプトは`hooks`カテゴリ、その登録は`config`カテゴリに属する。`--only`で片方だけ入れるとセッション開始時にスクリプト不在のエラーが出るので、両方まとめて入れる`--refresh`を使う
+
 **`--only`のカテゴリ:**
 
 | カテゴリ | 対象 |
