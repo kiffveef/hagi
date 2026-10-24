@@ -57,15 +57,17 @@
       "Bash(mkdir:*)",
       "Bash(cp:*)",
       "Bash(mv:*)",
-      "mcp__sqlite__*",
-      "mcp__file-search__*",
       "mcp__serena__*",
       "mcp__context7__*",
       "mcp__memory__*",
-      "mcp__github__*",
       "WebSearch",
       "WebFetch"
     ]
+  },
+  "attribution": {
+    "commit": "",
+    "pr": "",
+    "sessionUrl": false
   },
   "language": "japanese",
   "respectGitignore": true,
