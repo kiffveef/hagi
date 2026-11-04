@@ -32,6 +32,9 @@ pub const SETTINGS_LOCAL_JSON: &str = "settings.local.json";
 /// Global settings filename under ~/.claude/
 pub const SETTINGS_JSON: &str = "settings.json";
 
+/// Delegation rules ship with the agents they refer to, not with the other instructions
+pub const DELEGATION_MD: &str = "instructions/delegation.md";
+
 // ============================================================================
 // Category System
 // ============================================================================
@@ -45,6 +48,7 @@ pub enum Category {
     Config,
     Docs,
     Designs,
+    Agents,
 }
 
 impl Category {
@@ -56,6 +60,7 @@ impl Category {
         Category::Config,
         Category::Docs,
         Category::Designs,
+        Category::Agents,
     ];
 
     /// Category name as string
@@ -67,6 +72,7 @@ impl Category {
             Category::Config => "config",
             Category::Docs => "docs",
             Category::Designs => "designs",
+            Category::Agents => "agents",
         }
     }
 
@@ -74,7 +80,9 @@ impl Category {
     fn matches_path(&self, path: &Path) -> bool {
         let path_str = path.to_string_lossy();
         match self {
-            Category::Instructions => path_str.starts_with("instructions/"),
+            Category::Instructions => {
+                path_str.starts_with("instructions/") && path_str != DELEGATION_MD
+            }
             Category::Skills => path_str.starts_with("skills/"),
             Category::Hooks => path_str.starts_with("hooks/"),
             Category::Config => path_str == MCP_JSON || path_str == SETTINGS_LOCAL_JSON,
@@ -82,6 +90,7 @@ impl Category {
                 path_str == CLAUDE_MD || path_str == TODO_MD
             }
             Category::Designs => path_str.starts_with("designs/"),
+            Category::Agents => path_str.starts_with("agents/") || path_str == DELEGATION_MD,
         }
     }
 }
@@ -493,5 +502,32 @@ mod tests {
         assert!(merged["mcpServers"]["memory"].get("disabled").is_none());
         assert_eq!(merged["mcpServers"]["serena"]["disabled"], true);
         fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn test_every_category_name_parses() {
+        for cat in Category::ALL {
+            assert_eq!(cat.as_str().parse::<Category>().unwrap(), *cat);
+        }
+    }
+
+    #[test]
+    fn test_every_template_path_has_a_category() {
+        let mut stack = vec![&TEMPLATES];
+        while let Some(dir) = stack.pop() {
+            for entry in dir.entries() {
+                match entry {
+                    include_dir::DirEntry::Dir(sub) => stack.push(sub),
+                    include_dir::DirEntry::File(file) => {
+                        let path = file.path();
+                        assert!(
+                            Category::ALL.iter().any(|c| c.matches_path(path)),
+                            "template has no category: {}",
+                            path.display()
+                        );
+                    }
+                }
+            }
+        }
     }
 }

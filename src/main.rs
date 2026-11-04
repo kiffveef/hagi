@@ -34,7 +34,7 @@ enum Commands {
         #[arg(long = "skip", value_name = "PATH", num_args = 1..)]
         skip: Vec<String>,
 
-        /// Install only specific categories (instructions, skills, hooks, config, docs, designs)
+        /// Install only specific categories (instructions, skills, hooks, config, docs, designs, agents)
         #[arg(long = "only", value_name = "CATEGORY", num_args = 1..)]
         only: Vec<String>,
 
