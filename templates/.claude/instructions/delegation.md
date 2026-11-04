@@ -9,6 +9,7 @@ The main thread is for dialogue and supervision: understand the request, brief s
 | Code change beyond a one-line fix | `implementer` |
 | Question spanning several files or needing external docs | `researcher` (codebase-only search: built-in `Explore`) |
 | Review before reporting done | `reviewer` |
+| Documentation beyond a sentence | `writer` |
 
 One scoped task per agent. Independent tasks launch in the same message.
 

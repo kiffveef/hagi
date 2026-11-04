@@ -84,7 +84,7 @@ git初期化・`.gitignore`・`.mcp.json`シンボリックリンクは行わな
 | `config` | `mcp.json`, `settings.local.json`(既存ファイルへマージ。追加キーとMCPサーバーの有効状態は保持、配列はテンプレートで置換) |
 | `docs` | CLAUDE.md更新(プロジェクトセクション保持), `TODO.md`(未作成時のみ) |
 | `designs` | `designs/` |
-| `agents` | `agents/`(サブエージェント定義: implementer/researcher/reviewer) |
+| `agents` | `agents/`(サブエージェント定義: implementer/researcher/reviewer/writer) |
 
 `--only`使用時はテンプレートコピーのみ実行し、git初期化・hooks設置等のセットアップステップはスキップされる。`--global`/`--chat`との併用不可。
 
