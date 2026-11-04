@@ -29,7 +29,7 @@ hagi install
 ```
 
 **配置されるファイル:**
-- `.claude/CLAUDE.md`, `instructions/`, `skills/` - テンプレート
+- `.claude/CLAUDE.md`, `instructions/`, `skills/`, `agents/` - テンプレート(委譲ルール `instructions/delegation.md` を含む)
 - `.claude/mcp.json` - MCP設定
 - `.claude/settings.local.json` - パーミッション設定
 - `.mcp.json` → `.claude/mcp.json` (シンボリックリンク)
@@ -78,17 +78,17 @@ git初期化・`.gitignore`・`.mcp.json`シンボリックリンクは行わな
 
 | カテゴリ | 対象 |
 |---------|------|
-| `instructions` | `instructions/` + CLAUDE.md更新(プロジェクトセクション保持) |
+| `instructions` | `instructions/`(`delegation.md` を除く)+ CLAUDE.md更新(プロジェクトセクション保持) |
 | `skills` | `skills/` |
 | `hooks` | `hooks/` |
 | `config` | `mcp.json`, `settings.local.json`(既存ファイルへマージ。追加キーとMCPサーバーの有効状態は保持、配列はテンプレートで置換) |
 | `docs` | CLAUDE.md更新(プロジェクトセクション保持), `TODO.md`(未作成時のみ) |
 | `designs` | `designs/` |
-| `agents` | `agents/`(サブエージェント定義: implementer/researcher/reviewer/writer) |
+| `agents` | `agents/`(サブエージェント定義: implementer/researcher/reviewer/writer)+ `instructions/delegation.md` + CLAUDE.md更新(プロジェクトセクション保持) |
 
 `--only`使用時はテンプレートコピーのみ実行し、git初期化・hooks設置等のセットアップステップはスキップされる。`--global`/`--chat`との併用不可。
 
-`instructions`または`docs`指定時、CLAUDE.mdはテンプレートから再生成されるが、`<!-- hagi:project:start/end -->`マーカーで囲まれたプロジェクト固有セクションは保持される。
+`instructions`、`docs`、`agents`指定時、CLAUDE.mdはテンプレートから再生成されるが、`<!-- hagi:project:start/end -->`マーカーで囲まれたプロジェクト固有セクションは保持される。
 
 ```bash
 # instructionsのみ更新

@@ -85,6 +85,7 @@ MCPはデフォルト無効。Web検索は組み込みWebSearch、記憶は組�
 | `CLAUDE.md` | プロジェクトガイドライン |
 | `instructions/` | Git操作、タスク管理、推奨ツール等のルール |
 | `skills/` | スラッシュコマンド |
+| `agents/` | サブエージェント定義(implementer/researcher/reviewer/writer)と委譲ルール `instructions/delegation.md` |
 | `mcp.json` | MCP設定 |
 | `settings.local.json` | パーミッション、language/thinking設定、auto memory有効化 |
 

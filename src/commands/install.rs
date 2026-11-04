@@ -150,7 +150,8 @@ pub fn install_project(dry_run: bool, filter: &InstallFilter) -> Result<()> {
         ensure_directory(&claude_dir, dry_run)?;
 
         let needs_claude_md = filter.includes_category(Category::Docs)
-            || filter.includes_category(Category::Instructions);
+            || filter.includes_category(Category::Instructions)
+            || filter.includes_category(Category::Agents);
         apply_templates(&claude_dir, filter, needs_claude_md, dry_run)?;
 
         print_completion(dry_run, "Selected categories installed successfully!");
