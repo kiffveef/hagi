@@ -40,6 +40,8 @@
 
 @instructions/memory.md
 
+@instructions/delegation.md
+
 ---
 
 <!-- hagi:project:start -->

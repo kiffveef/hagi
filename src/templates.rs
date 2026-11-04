@@ -45,6 +45,7 @@ pub enum Category {
     Config,
     Docs,
     Designs,
+    Agents,
 }
 
 impl Category {
@@ -56,6 +57,7 @@ impl Category {
         Category::Config,
         Category::Docs,
         Category::Designs,
+        Category::Agents,
     ];
 
     /// Category name as string
@@ -67,6 +69,7 @@ impl Category {
             Category::Config => "config",
             Category::Docs => "docs",
             Category::Designs => "designs",
+            Category::Agents => "agents",
         }
     }
 
@@ -82,6 +85,7 @@ impl Category {
                 path_str == CLAUDE_MD || path_str == TODO_MD
             }
             Category::Designs => path_str.starts_with("designs/"),
+            Category::Agents => path_str.starts_with("agents/"),
         }
     }
 }
