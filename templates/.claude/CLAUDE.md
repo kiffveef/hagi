@@ -44,6 +44,12 @@
 
 ---
 
+## Compact Instructions
+
+Keep, concretely: the user's decisions and rejected options, the immediate next action, files being edited, open questions, the path of the notes file in use. Quote paths, identifiers and commands verbatim. Drop exploration that led nowhere. Do not restate CLAUDE.md, instructions or TODO.md; they are reloaded from disk.
+
+---
+
 <!-- hagi:project:start -->
 ## プロジェクト概要
 
