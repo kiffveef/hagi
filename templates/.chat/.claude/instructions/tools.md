@@ -1,26 +1,5 @@
 # Preferred Tools
 
-## Text Search
-
-**MUST use `rg` (ripgrep) instead of `grep`:**
-
-❌ NEVER: `grep -r "pattern" .`
-✅ ALWAYS: `rg "pattern"`
-
-## File Display
-
-**MUST use `bat -p` instead of `cat`:**
-
-❌ NEVER: `cat file.txt`
-✅ ALWAYS: `bat -p file.txt`
-
-## File Search
-
-**MUST use `fd` instead of `find`:**
-
-❌ NEVER: `find . -name "*.js"`
-✅ ALWAYS: `fd "\.js$"` or `fd -e js`
-
 ## Claude Code Tools
 
 **Use specialized tools instead of bash:**
@@ -69,8 +48,5 @@ Chat mode: temp files only
 
 | Operation | ❌ NEVER | ✅ ALWAYS |
 |-----------|----------|-----------|
-| Text search | `grep` | `rg` |
-| File display | `cat` | `bat -p` |
-| File search | `find` | `fd` |
 | File ops | Bash | Read/Edit/Write |
 | Web search | curl | WebSearch |

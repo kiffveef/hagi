@@ -270,7 +270,7 @@ pub fn install_chat(dry_run: bool) -> Result<()> {
         println!("\nUsage:");
         println!("  cd ~/.chat && claude");
         println!("\nCustomize:");
-        println!("  Edit ~/.chat/CLAUDE.md to personalize your chat experience");
+        println!("  Edit ~/.chat/.claude/CLAUDE.md to personalize your chat experience");
     }
 
     Ok(())
