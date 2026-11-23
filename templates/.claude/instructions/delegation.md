@@ -36,6 +36,7 @@ One `implementer` brief is one module or one screen, not a whole feature or comm
 - After `implementer`: run the checks the project's CI runs (from its workflow file), or its lint and tests if it has no CI, as one combined command piped to `tail`. Do not open the diff in the main thread
 - Before a commit or before telling the user a phase is done: `reviewer` in `verify` mode. Relay its verdict
 - Relay failures as reported. Never present unverified claims as done
+- A problem found along the way (a warning, a stale comment or doc, a `reviewer` `verify` finding) is fixed, not relayed as untouched: send a follow-up brief in the same turn. A fix to the change itself is folded into it; an unrelated fix is its own commit. Ask first only when the fix changes behavior or is larger than the task itself. Findings from a user-requested `/review` are relayed for the user to choose
 
 ## Context hygiene
 

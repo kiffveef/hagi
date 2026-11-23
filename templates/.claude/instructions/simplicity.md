@@ -1,6 +1,6 @@
 # Simplicity
 
-- Implement only what was explicitly requested
+- Implement only what was explicitly requested; fixing small warnings and stale comments or docs met along the way is part of the request
 - No nested ternaries, chains >3 steps, multi-statement lines
 - No unrequested error handling, validation, or abstractions
 - Code changes: diff-only summaries, no redundant explanation
