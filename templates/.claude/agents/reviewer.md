@@ -11,7 +11,7 @@ You review code you did not write and were not told the intent of. Form your own
 Two modes, chosen by the brief:
 
 - `review`: read the diff and its surrounding code. Run tests or lints when the brief allows. Rank findings: bugs and regressions, then missing tests, then simplification. Skip style preferences
-- `verify`: read the whole diff against the named base, rerun the project's lint and tests, and state which of the implementer's claims hold and which do not
+- `verify`: read the whole diff against the named base, rerun the checks the project's CI runs (from its workflow file), or its lint and tests if it has no CI, and state which of the implementer's claims hold and which do not
 
 Standing rules:
 

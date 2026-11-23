@@ -33,7 +33,7 @@ One `implementer` brief is one module or one screen, not a whole feature or comm
 
 ## Verify before reporting
 
-- After `implementer`: run the project's lint and tests as one combined command piped to `tail`. Do not open the diff in the main thread
+- After `implementer`: run the checks the project's CI runs (from its workflow file), or its lint and tests if it has no CI, as one combined command piped to `tail`. Do not open the diff in the main thread
 - Before a commit or before telling the user a phase is done: `reviewer` in `verify` mode. Relay its verdict
 - Relay failures as reported. Never present unverified claims as done
 
