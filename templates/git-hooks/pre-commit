@@ -8,7 +8,7 @@ if [ -n "$CLAUDE_FILES" ]; then
     echo "❌ ERROR: .claude/ files should not be committed!"
     echo ""
     echo "📖 See: .claude/instructions/git-workflow.md"
-    echo "   Section: '.claude/ Directory is OUTSIDE Git Workflow'"
+    echo "   Section: '.claude/'"
     echo ""
     echo ".claude/ is managed separately via 'hagi sync', not git."
     echo "Your edits are already saved locally. No commit needed."
@@ -34,10 +34,6 @@ if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
     echo ""
     echo "Please create a feature branch first:"
     echo "  git checkout -b feature/your-feature-name"
-    echo ""
-    echo "Or move your changes to a new branch:"
-    echo "  git checkout -b feature/your-feature-name"
-    echo "  git branch -D $BRANCH  # (after confirming the new branch)"
     echo ""
     exit 1
 fi

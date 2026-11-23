@@ -9,10 +9,9 @@
 
 ## Pre-Work Checklist
 
-**Before editing files:**
+**Main thread, before editing files:**
 1. `git branch --show-current` → If on main, create branch first
 2. Resume from In Progress in TODO.md if any
-3. Track progress by editing TODO.md directly
 
 ---
 

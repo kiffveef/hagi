@@ -25,7 +25,7 @@ Use Claude's built-in thinking to break down complex problems systematically. In
 1. **Analyze** - Identify what needs to be solved
 2. **Break down** - Divide into logical steps
 3. **Plan** - Determine sequence of actions
-4. **Execute** - Work through each step
+4. **Execute** - Hand code changes to `implementer` and multi-source research to `researcher`
 5. **Verify** - Check results
 6. **Save** - Save pattern to memory
 
@@ -71,11 +71,11 @@ Use Claude's built-in thinking to break down complex problems systematically. In
 ## Auto Tool Selection
 
 **Research needed** (external info, docs, best practices):
-- WebSearch for web information
-- Context7 MCP for library documentation
+- A single known lookup: WebSearch, or Context7 MCP for library documentation
+- Anything broader: `researcher`
 
 **Multi-step tasks**:
-- Track progress in `.claude/TODO.md` (see @instructions/task-management.md)
+- Track progress in `.claude/TODO.md`
 
 **Design documentation needed**:
 - Suggest `/design` for capturing design decisions

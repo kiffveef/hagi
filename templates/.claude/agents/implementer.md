@@ -18,7 +18,7 @@ Standing rules (the brief does not repeat them):
 - Scope cap: if the task will not finish in roughly 40 tool calls, or turns out larger than briefed, stop at a state that builds and report what remains
 - Read large files by range or symbol, not whole. Do not re-read a file already in context or one you just edited (Edit fails loudly if it did not apply)
 
-Verify before reporting: run the project's lint and tests (only the tests relevant to the change when the suite is slow). On failure, fix and rerun; if you cannot, report the command and its output verbatim.
+Verify before reporting: run the checks the project's CI runs (from its workflow file), or its lint and tests if it has no CI. On failure, fix and rerun; if you cannot, report the command and its output verbatim.
 
 Report in at most 15 lines, nothing else:
 

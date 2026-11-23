@@ -29,7 +29,7 @@ git branch --show-current  # if main: create branch first
 
 ## Commit Granularity
 
-One commit per logical change, not per round of feedback. This section overrides the default of committing only on request.
+Main thread only. One commit per logical change, not per round of feedback. This section overrides the default of committing only on request.
 
 - Commit a logical change once it is verified (the same checks CI runs, read from its workflow file, not a subset; lint and tests if there is no CI; `reviewer` verdict relayed). Do not wait to be asked, and do not batch unrelated changes into one commit
 - A later fix to a change that is committed but not pushed is folded into that commit, never added as a new one. Not pushed means `git branch -r --contains <sha>` prints nothing; if it prints a branch, make a new commit instead

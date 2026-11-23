@@ -161,7 +161,6 @@ Create and maintain design documents in `.claude/designs/` to preserve design in
 3. **Display confirmation:**
    ```
    Design also saved to memory for cross-project reference.
-   Find later with: /st "<related problem>"
    ```
 
 ## Output Format
@@ -199,12 +198,11 @@ Next steps:
 
 | Skill | Integration |
 |-------|-------------|
-| `/st` | Design decisions can be referenced during problem-solving |
 | `/serena` | Code patterns can be documented as design patterns |
 
 ## Notes
 
-- Design documents are stored in `.claude/designs/` (git-trackable)
-- Design decisions are automatically saved to memory for cross-project reference
+- Design documents are stored in `.claude/designs/` (outside git, synced by `hagi sync`)
+- Design decisions are saved to memory when the memory MCP is enabled, for cross-project reference
 - Keep designs concise but complete enough to understand intent later
 - Update status as design progresses: Draft → Approved → Implemented
