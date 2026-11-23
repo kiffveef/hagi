@@ -34,3 +34,12 @@ TODO.md is a task list, not a log. It is imported into every turn, so keep it sh
   - [ ] CSV escaping for multi-line cells
   - [ ] Decide: default delimiter
 ```
+
+## Open Decisions
+
+Main thread only. A pending decision needs a TODO.md entry even when its task would not.
+
+- When presenting decisions, write each to TODO.md in the same turn as a `- [ ] Decide: <question>` sub-item under its task (add a one-line task if none exists); options and background go to its notes file (create one if missing). Chat scrolls away; TODO.md is re-read every turn
+- When one is made, delete its sub-item and record the decision and rejected options in the notes file
+- When asked what is still open, answer from the `Decide:` sub-items, not from the conversation
+- Raise one decision per message, with a recommended option; the rest wait as `Decide:` sub-items until it is answered. If it can be answered by picking from 2–4 options, ask it with `AskUserQuestion` (one question per call), not prose: the dialog stays until answered. Write it to TODO.md first, in case the dialog is dismissed. Decisions needing discussion stay as prose
