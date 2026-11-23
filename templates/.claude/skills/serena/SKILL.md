@@ -7,7 +7,6 @@ memory: project
 # Serena
 
 Analyze code with serena while **automatically** checking past patterns from memory.
-No need to run `/code-pattern` separately - this command does both.
 
 ## Usage
 
@@ -104,7 +103,7 @@ No need to run `/code-pattern` separately - this command does both.
       - Notes: [Any notable aspects]
    ```
 
-3. **If serena MCP not available:**
+3. **If serena MCP not available:** show the message below and stop (see Error Handling)
    ```
    Serena not available. Please enable with:
       hagi mcp enable serena
@@ -219,14 +218,8 @@ Recommendations: [3-5 actionable items]
 - Continue with serena-only analysis
 - Suggest enabling memory for future use
 
-**If both are unavailable:**
-- Display error
-- Suggest enabling at least serena
-- Stop execution
-
 ## Notes
 
-- This command **replaces the need for manual `/code-pattern` execution**
 - Memory check and save are automatic (unless `--skip-memory`)
 - Use `--skip-memory` for faster results when you don't need historical context
 - Patterns accumulate over time, making this command more valuable with use

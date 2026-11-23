@@ -72,7 +72,7 @@ hagi install --chat
 cd ~/.chat && claude
 ```
 
-MCPはデフォルト無効。Web検索は組み込みWebSearch、記憶は組み込みauto memoryを使用。`~/.chat/.claude/CLAUDE.md`で応答スタイルをカスタマイズ可能。
+MCPはcontext7のみ有効。Web検索は組み込みWebSearch、記憶は組み込みauto memoryを使用。`~/.chat/.claude/CLAUDE.md`で応答スタイルをカスタマイズ可能。
 
 ---
 

@@ -84,7 +84,7 @@ fn wants_claude_md(filter: &InstallFilter) -> bool {
 
 /// Install global configuration to ~/.claude/
 ///
-/// Only installs settings.json (permissions, hooks, etc.)
+/// Only installs settings.json (permissions etc., without the project-only hooks)
 /// MCP configuration is handled per-project via .mcp.json symlink.
 pub fn install_global(dry_run: bool) -> Result<()> {
     print_dry_run_header(dry_run);
@@ -101,7 +101,7 @@ pub fn install_global(dry_run: bool) -> Result<()> {
     print_completion(dry_run, "Global configuration installed successfully!");
     if !dry_run {
         println!("\nInstalled:");
-        println!("  - ~/.claude/settings.json (permissions, hooks)");
+        println!("  - ~/.claude/settings.json (permissions; hooks are installed per project)");
         println!("\nNext steps:");
         println!("  Run 'hagi install' in your project directory for MCP configuration");
     }
@@ -270,7 +270,7 @@ pub fn install_chat(dry_run: bool) -> Result<()> {
         println!("\nUsage:");
         println!("  cd ~/.chat && claude");
         println!("\nCustomize:");
-        println!("  Edit ~/.chat/CLAUDE.md to personalize your chat experience");
+        println!("  Edit ~/.chat/.claude/CLAUDE.md to personalize your chat experience");
     }
 
     Ok(())
@@ -280,11 +280,18 @@ pub fn install_chat(dry_run: bool) -> Result<()> {
 // Template Installation Helpers
 // ============================================================================
 
+/// Top-level settings keys kept out of ~/.claude/settings.json
+///
+/// The template's hooks run scripts under `$CLAUDE_PROJECT_DIR/.claude/hooks/`, which exist only
+/// in projects hagi installed into; globally they would fail on every Bash call elsewhere.
+const GLOBAL_OMIT_KEYS: &[&str] = &["hooks"];
+
 /// Merge the settings template into ~/.claude/settings.json (the project file name differs)
 fn install_settings(claude_dir: &Path, dry_run: bool) -> Result<()> {
     templates::merge_config_template(
         Path::new(templates::SETTINGS_LOCAL_JSON),
         &claude_dir.join(templates::SETTINGS_JSON),
+        GLOBAL_OMIT_KEYS,
         dry_run,
     )
 }

@@ -7,7 +7,6 @@
 
 ## Communication
 
-- **Think in English, respond in Japanese**: Internal thought process in English, user responses in Japanese
 - **Be conversational**: Prioritize natural flow over format
 
 ## Scope
@@ -26,8 +25,6 @@
 
 ## Tools & MCP
 
-See @instructions/tools.md for details
-
 **Available MCPs:**
 - Context7 MCP (library docs)
 
@@ -39,7 +36,6 @@ Memory: built-in auto memory
 - Built-in thinking used (no extra MCP overhead)
 - Brief for casual chat
 - Detailed for deep discussion (no limit)
-- Claude context window: 200K tokens (unlikely to exhaust in chat)
 
 ## Notes
 

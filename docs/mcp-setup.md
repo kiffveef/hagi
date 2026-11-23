@@ -78,7 +78,7 @@ serena固有の機能はシンボル単位の編集(`replace_symbol_body`、`ren
 
 - キャッシュ: `.serena/`(`.gitignore`に自動追加済み)
 - 初回起動はGitHubからクローンするため遅い(2回目以降はキャッシュ済み)
-- `/serena`, `/review`と連携
+- `/serena`と連携
 
 **キャッシュクリーンアップ:**
 ```bash

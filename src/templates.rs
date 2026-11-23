@@ -267,7 +267,7 @@ fn copy_file_entry(file: &include_dir::File, target_base: &Path, dry_run: bool, 
 
     // JSON configs are merged so keys written by Claude Code or the user survive reinstalls
     if Category::Config.matches_path(relative_path) {
-        return merge_config_template(relative_path, &target_file, dry_run);
+        return merge_config_template(relative_path, &target_file, &[], dry_run);
     }
 
     if !dry_run {
@@ -279,10 +279,21 @@ fn copy_file_entry(file: &include_dir::File, target_base: &Path, dry_run: bool, 
 /// Merge an embedded JSON template into `target_file` instead of overwriting it
 ///
 /// Used for project configs and for the global settings.json (built from settings.local.json).
-pub fn merge_config_template(template_name: &Path, target_file: &Path, dry_run: bool) -> Result<()> {
+/// `omit_keys` are top-level template keys left out of the merge; the target's own values for them are kept.
+pub fn merge_config_template(
+    template_name: &Path,
+    target_file: &Path,
+    omit_keys: &[&str],
+    dry_run: bool,
+) -> Result<()> {
     let content = get_template(&template_name.to_string_lossy())?;
     let mut template: serde_json::Value = serde_json::from_str(content)
         .with_context(|| format!("Failed to parse template JSON: {}", template_name.display()))?;
+    if let Some(obj) = template.as_object_mut() {
+        for key in omit_keys {
+            obj.remove(*key);
+        }
+    }
 
     if target_file.exists() {
         let existing = utils::read_json_file(target_file)?;
@@ -484,6 +495,22 @@ mod tests {
         assert!(merged["attribution"].is_object());
         let allow = merged["permissions"]["allow"].as_array().unwrap();
         assert!(!allow.iter().any(|r| r == "Bash(old:*)"));
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn test_settings_merge_omits_keys_and_keeps_existing_ones() {
+        let dir = std::env::temp_dir().join(format!("hagi-test-omit-{}", std::process::id()));
+        fs::create_dir_all(&dir).unwrap();
+        let target = dir.join(SETTINGS_JSON);
+        fs::write(&target, r#"{"hooks":{"Stop":[]}}"#).unwrap();
+
+        merge_config_template(Path::new(SETTINGS_LOCAL_JSON), &target, &["hooks"], false).unwrap();
+
+        let merged = utils::read_json_file(&target).unwrap();
+        assert!(merged["permissions"]["allow"].is_array());
+        assert!(merged["hooks"]["Stop"].is_array());
+        assert!(merged["hooks"].get("PreToolUse").is_none());
         fs::remove_dir_all(&dir).unwrap();
     }
 

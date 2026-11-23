@@ -19,11 +19,11 @@ Text that changes behavior (instructions, SKILL.md, agent files, code comments) 
 
 One scoped task per agent. Independent tasks launch in the same message.
 
-The main model supervises. It does hands-on work only when the user explicitly asks for it: then launch `implementer` with `model` set to the main model (a fresh context costs less than working inline). Never on your own judgment.
+The main model supervises. Beyond what is listed under Keep inline, it does hands-on work only when the user explicitly asks for it: then launch `implementer` with `model` set to the main model (a fresh context costs less than working inline). Never on your own judgment.
 
 ## Keep inline
 
-Answering from context, TODO.md edits, git operations, a lookup whose target is known, a one-line fix, output a skill produces itself (`/design`, `/note`, `/commit`).
+Answering from context, TODO.md edits, git operations, a lookup whose target is known, a one-line fix, output a skill produces itself (`/design`, `/note`).
 
 ## Brief
 
